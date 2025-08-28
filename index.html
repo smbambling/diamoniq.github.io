@@ -820,35 +820,57 @@ function unlockPlayHit(){
   const btn = document.getElementById('playHitBtn');
   if (btn){ btn.disabled = false; btn.title = 'Start Situation'; }
 }
-function populateSelect(){
-  sitSelect.innerHTML='';
+function populateSelect(selectedKey){
+  sitSelect.innerHTML = '';
   SITUATIONS.forEach(s=>{
-    const o=document.createElement('option'); o.value=s.key; o.textContent=s.title;
+    const o=document.createElement('option');
+    o.value=s.key; o.textContent=s.title;
     sitSelect.appendChild(o);
   });
+  // Prefer an explicit key, then currentSituation, else first item
+  const key = selectedKey || (currentSituation && currentSituation.key) || (SITUATIONS[0] && SITUATIONS[0].key);
+  if (key) sitSelect.value = key;
 }
-function setSituation(key){
-  clearBallCanvas && clearBallCanvas();
+function setSituation(key, {fromUser=false}={}){
+  // Resolve the situation
+  const next = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
+  if (!next) return;
 
-  currentSituation = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
-  sitSelect.value = currentSituation.key;
-  sitText.textContent = currentSituation.desc || '—';
-  outsBadge.textContent = `Outs: ${Number(currentSituation.outs ?? 0)}`;
-  if (curSitLabel) curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
-
+  // Update state
+  currentSituation = JSON.parse(JSON.stringify(next)); // decouple
   attemptCount = 0;
-  currentRunners = (currentSituation.runners || []).slice();
+  currentRunners = [...(currentSituation.runners || [])];
 
-  resetPlayers();        // if you call resetPlayers here, it already unlocks
-  // If you do NOT call resetPlayers here, then make sure to place:
-  // unlockPlayHit();    // ✅ explicitly unlock on situation change
+  // Sync UI primitives
+  // 1) dropdown
+  if (sitSelect.value !== currentSituation.key) {
+    sitSelect.value = currentSituation.key;
+  }
+  // 2) header info
+  if (typeof outsBadge !== 'undefined' && outsBadge) {
+    const outs = Number.isFinite(currentSituation.outs) ? currentSituation.outs : 0;
+    outsBadge.textContent = `Outs: ${outs}`;
+  }
+  if (typeof sitText !== 'undefined' && sitText) {
+    sitText.textContent = currentSituation.desc || currentSituation.title || '';
+  }
+  // 3) score + tries
+  if (typeof scoreBox !== 'undefined' && scoreBox) {
+    scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
+  }
 
+  // 4) rebuild visuals
   buildTargets();
-  const preview = getBuilderRunners();
-  drawRunners(preview.length ? preview : undefined);
-  syncHitUI && syncHitUI();
-}
+  drawRunners();           // uses currentSituation.runners by default
+  resetPlayers();          // puts chips back to starts
+  clearBallCanvas && clearBallCanvas();  // remove any prior hit path/ball
+  unlockPlayHit && unlockPlayHit();      // allow “Start Situation” again
 
+  // 5) calibration label (if present)
+  if (typeof curSitLabel !== 'undefined' && curSitLabel) {
+    curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
+  }
+}
 
 function drawCalibrationBallAtNative(nativePt){
   const ctx = ballCanvas.getContext('2d');
@@ -1636,12 +1658,10 @@ function tryUnlock(){
 
 /* Select + labels */
 function populateSelectAndLabels(){
-  sitSelect.innerHTML='';
-  SITUATIONS.forEach(s=>{
-    const o=document.createElement('option'); o.value=s.key; o.textContent=s.title;
-    sitSelect.appendChild(o);
-  });
-  if (curSitLabel) curSitLabel.textContent=`${currentSituation.key} — ${currentSituation.title}`;
+  populateSelect(currentSituation?.key);
+  if (typeof curSitLabel !== 'undefined' && curSitLabel) {
+    curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
+  }
 }
 
 /* INIT */
