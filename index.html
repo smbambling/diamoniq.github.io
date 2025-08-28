@@ -154,6 +154,7 @@
     <header id="topBar">
       <h1>Diamond IQ - Situational Baseball</h1>
       <select id="sitSelect" aria-label="Select situation"></select>
+      <span id="outsBadge" class="pill" title="Outs in this situation">Outs: 0</span>
       <button id="randomBtn">Random</button>
       <button id="checkBtn" class="primary">Check Positions</button>
       <button id="resetBtn" class="warn">Reset Situation</button>
@@ -331,6 +332,14 @@
             <label><input type="checkbox" id="sbR3"> 3B</label>
           </div>
           <div class="calibBar" style="background:#fff;border-style:solid">
+            <label style="min-width:72px">Outs</label>
+            <select id="sbOuts">
+              <option value="0">0 outs</option>
+              <option value="1">1 out</option>
+              <option value="2">2 outs</option>
+            </select>
+          </div>
+          <div class="calibBar" style="background:#fff;border-style:solid">
             <textarea id="sbDesc" rows="2" placeholder="What each player does, cuts/covers, backups, etc." style="width:100%"></textarea>
           </div>
           <div class="calibBar">
@@ -413,6 +422,7 @@ const SITUATIONS=[
   {
     key: 'S1',
   title: "Single to LF (no runners) – cut to 2B",
+  outs: 0,
   runners: [],
   desc: "Base hit single to first base, no runners on",
   targets: {
@@ -475,6 +485,7 @@ const SITUATIONS=[
   {
     key:'S2',
     title:'Popup to shallow CF (R1)',
+    outs: 0,
     runners:['1B'],
     desc:'Base hit popup to shallow center field',
     targets:{
@@ -499,6 +510,7 @@ const SITUATIONS=[
   {
     key:'S3',
     title:'Chopper to 3B (R1, R2)',
+    outs: 0,
     runners:['1B','2B'],
     desc:'Base hit hard chopper towards third base.',
     targets:{
@@ -821,6 +833,7 @@ function setSituation(key){
   currentSituation = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
   sitSelect.value = currentSituation.key;
   sitText.textContent = currentSituation.desc || '—';
+  outsBadge.textContent = `Outs: ${Number(currentSituation.outs ?? 0)}`;
   if (curSitLabel) curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
 
   attemptCount = 0;
@@ -1418,7 +1431,8 @@ function buildSituationFromUI(){
   const desc=(sbDesc.value||'').trim();
   const tol=currentTolerancesObject();
   const hit = Fcopy(hitsMap[currentSituation.key] || {type:'line', target:F(0.55,0.65)});
-  return { key: nextSituationKey(), title, runners: builderRunners(), desc, targets: t, tolerances: tol, hit };
+  const outs = Number(document.getElementById('sbOuts').value || 0);
+  return { key: nextSituationKey(), title, outs, runners: builderRunners(), desc, targets: t, tolerances: tol, hit };
 }
 function addSituationToApp(){
   const obj=buildSituationFromUI();
@@ -1471,6 +1485,7 @@ function loadBuilderFromCurrent(){
   sbName.value = s.title || '';
   sbDesc.value = s.desc || '';
   setBuilderRunners(s.runners || []);
+  document.getElementById('sbOuts').value = Number(currentSituation.outs ?? 0);
   if (curSitLabel) curSitLabel.textContent = `${s.key} — ${s.title}`;
   // Ensure hitsMap has an entry
   hitsMap[s.key] = Fcopy(hitsMap[s.key] || s.hit || {type:'line', target:F(0.55,0.65)});
@@ -1486,6 +1501,7 @@ function updateCurrentSituation(){
   s.targets = Fcopy(targetsMap[key] || {});
   s.tolerances = Fcopy(tolerancesMap[key] || currentTolerancesObject());
   s.hit = Fcopy(hitsMap[key] || s.hit || {type:'line', target:F(0.55,0.65)});
+  s.outs = Number(document.getElementById('sbOuts').value || s.outs || 0);
   const idx = SITUATIONS.findIndex(x=>x.key===key);
   if (idx>=0) SITUATIONS[idx] = s;
   saveTargets(); saveTols(); saveHits();
