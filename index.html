@@ -389,10 +389,22 @@ const DEFAULT_STARTS={
 
 /* Base anchors defaults */
 const BASES_DEFAULT={
-  '1B': F(0.770, 0.640),
-  '2B': F(0.500, 0.415),
-  '3B': F(0.230, 0.640),
-  'HP': F(0.500, 0.905)
+  "1B": {
+    "x": 1903,
+    "y": 1577
+  },
+  "2B": {
+    "x": 1465,
+    "y": 1192
+  },
+  "3B": {
+    "x": 1101,
+    "y": 1630
+  },
+  "HP": {
+    "x": 1501,
+    "y": 2032
+  }
 };
 let BASES = JSON.parse(JSON.stringify(BASES_DEFAULT));
 
