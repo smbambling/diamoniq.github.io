@@ -157,7 +157,7 @@
       <button id="randomBtn">Random</button>
       <button id="checkBtn" class="primary">Check Positions</button>
       <button id="resetBtn" class="warn">Reset Situation</button>
-      <button id="playHitBtn">Play Hit</button>
+      <button id="playHitBtn">Start Situation</button>
       <div class="score" id="score">Score: 0/9 • Try 0/3</div>
       <button id="unlockBtn" title="Unlock calibration tools">🔒 Unlock Calibration</button>
     </header>
@@ -186,7 +186,7 @@
           <li>Drag chips to the correct positions.</li>
           <li>Click <em>Check Positions</em> (you have 3 tries).</li>
           <li>Correct chips reveal their ring each try; on try 3, all rings show and incorrect ones are labeled.</li>
-          <li>Use <em>Play Hit</em> to animate the ball for the situation.</li>
+          <li>Use <em>Start Situation</em> to animate the ball for the situation.</li>
         </ol>
       </div>
 
@@ -806,7 +806,7 @@ function lockPlayHit(){
 function unlockPlayHit(){
   playLocked = false;
   const btn = document.getElementById('playHitBtn');
-  if (btn){ btn.disabled = false; btn.title = 'Play Hit'; }
+  if (btn){ btn.disabled = false; btn.title = 'Start Situation'; }
 }
 function populateSelect(){
   sitSelect.innerHTML='';
