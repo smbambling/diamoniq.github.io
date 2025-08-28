@@ -160,7 +160,7 @@
       <button id="resetBtn" class="warn">Reset Situation</button>
       <button id="playHitBtn">Start Situation</button>
       <div class="score" id="score">Score: 0/9 • Try 0/3</div>
-      <button id="unlockBtn" title="Unlock calibration tools">🔒 Unlock Calibration</button>
+      <button id="unlockBtn" title="Unlock Coach Tools">🔒 Unlock Coach Tools</button>
     </header>
 
     <div class="board">
@@ -359,7 +359,7 @@
   <!-- Password Modal -->
   <div class="modal" id="pwModal" aria-modal="true" role="dialog">
     <div class="modalCard">
-      <h3>Unlock Calibration</h3>
+      <h3>Unlock Coach Tools</h3>
       <p class="small" style="margin-top:0">Enter the coach password to enable calibration & builder.</p>
       <div style="display:flex; gap:8px; align-items:center; margin-top:8px">
         <input id="pwInput" type="password" placeholder="Password" autocomplete="current-password" style="flex:1" />
@@ -1536,7 +1536,7 @@ function updateCurrentSituation(){
 function isCalibUnlocked(){ return sessionStorage.getItem(SESSION_CALIB_UNLOCK)==='yes'; }
 function showCalibUI(show){
   targetsBuilderCard.style.display = show ? 'block' : 'none';
-  unlockBtn.textContent = show ? '🔓 Calibration Unlocked' : '🔒 Unlock Calibration';
+  unlockBtn.textContent = show ? '🔓 Coach Tools Unlocked' : '🔒 Unlock Coach Tools';
   if(show){
     if(calibrationTargetsOn) { tolPanel.style.display='block'; syncTolUI(selectedTargetId); }
     drawRunners(getBuilderRunners());
