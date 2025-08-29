@@ -1664,20 +1664,48 @@ function populateSelectAndLabels(){
   }
 }
 
+// --- Situations JSON loader (non-destructive) ---
+async function loadSituationsFromJson(){
+  try{
+    const res = await fetch('./situations.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const arr = await res.json();
+    if (!Array.isArray(arr)) throw new Error('situations.json must be an array');
+
+    // Replace the global SITUATIONS (keep your same shape)
+    window.SITUATIONS = arr;
+    console.info('[Situations] Loaded from situations.json:', arr.length);
+  }catch(err){
+    console.warn('[Situations] Using inline SITUATIONS (could not load situations.json):', err?.message || err);
+    // Do nothing; your inline SITUATIONS remains in place
+  }
+}
+
 /* INIT */
-function init(){
+async function init(){
+  // 1) Prefer file-based situations, but keep your inline array as fallback
+  await loadSituationsFromJson();
+
+  // 2) Proceed with your normal boot
   sizeOverlays();
   loadStarts();
   loadTargets();
   loadTols();
   loadBases();
   loadHits();
+
+  // Rebuild the dropdown/labels using your own helper
   populateSelectAndLabels();
+
   buildTokens();
-  setSituation(SITUATIONS[0].key);
+
+  // Ensure a valid key exists (handles both JSON & inline)
+  const firstKey = (window.SITUATIONS && window.SITUATIONS[0] && window.SITUATIONS[0].key) || 'S1';
+  setSituation(firstKey);
+
   showCalibUI(isCalibUnlocked());
 
-  // Hide all controls by default
+  // Hide all controls by default (as you already do)
   startsControls?.classList.remove('show');
   chipPickerStarts?.classList.remove('show');
   targetsControls?.classList.remove('show');
