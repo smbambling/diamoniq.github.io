@@ -396,6 +396,24 @@ const DEFAULT_STARTS={
   RF:{x:2313.1241084165476,y:827.4290379808081}
 };
 
+// NEW — per-situation player starts (migration-aware)
+const STORAGE_STARTS_V1 = typeof STORAGE_STARTS !== 'undefined'
+  ? STORAGE_STARTS                         // legacy name in your file
+  : 'BaseballIQ_Starts_v1';               // legacy fallback (flat map)
+const STORAGE_STARTS_V2 = 'BaseballIQ_StartsMap_v2';      // per-situation map
+
+// Runtime store: { [situationKey]: { P:{x,y}, C:{x,y}, ... } }
+let startsMap = {};
+
+// Helpers to access the correct starts object
+function ensureStartsKey(key){
+  if (!startsMap[key]) startsMap[key] = JSON.parse(JSON.stringify(DEFAULT_STARTS));
+}
+function getStartsForCurrent(){
+  ensureStartsKey(currentSituation.key);
+  return startsMap[currentSituation.key];
+}
+
 /* Base anchors defaults */
 const BASES_DEFAULT={
   "1B": {
@@ -697,8 +715,37 @@ function defaultHitsMap(){
     map[s.key]=Fcopy(s.hit || { type:'line', target:F(0.55,0.65) });
   }); return map;
 }
-function loadStarts(){ starts=Fcopy(DEFAULT_STARTS); try{ const raw=localStorage.getItem(STORAGE_STARTS); if(raw) Object.assign(starts, JSON.parse(raw)); }catch(e){} }
-function saveStarts(){ localStorage.setItem(STORAGE_STARTS, JSON.stringify(starts)); }
+function loadStarts(){
+  // Prefer V2 per-situation map
+  try {
+    const rawV2 = localStorage.getItem(STORAGE_STARTS_V2);
+    if (rawV2) {
+      startsMap = JSON.parse(rawV2) || {};
+      return;
+    }
+  } catch(e){}
+
+  // Migrate from V1 (flat) or fallback to defaults per situation
+  let flat = JSON.parse(JSON.stringify(DEFAULT_STARTS));
+  try {
+    const rawV1 = localStorage.getItem(STORAGE_STARTS_V1);
+    if (rawV1) flat = Object.assign(flat, JSON.parse(rawV1));
+  } catch(e){}
+
+  // Seed every existing situation with the same flat starts (can calibrate per-sit later)
+  startsMap = {};
+  (SITUATIONS || []).forEach(s => { startsMap[s.key] = JSON.parse(JSON.stringify(flat)); });
+
+  // Save as V2 so we don’t repeat migration
+  saveStarts();
+}
+
+function saveStarts(){
+  try {
+    localStorage.setItem(STORAGE_STARTS_V2, JSON.stringify(startsMap));
+  } catch(e){}
+}
+
 function loadTargets(){
   targetsMap=defaultTargetsMap();
   try{ const raw=localStorage.getItem(STORAGE_TARGETS); if(raw){ const saved=JSON.parse(raw); Object.keys(saved).forEach(k=> targetsMap[k]=Object.assign(targetsMap[k]||{}, saved[k])); } }catch(e){}
@@ -720,12 +767,13 @@ function saveHits(){ localStorage.setItem(STORAGE_HITS, JSON.stringify(hitsMap))
 /* ================== TOKENS / TARGETS / RUNNERS ================== */
 function buildTokens(){
   tokensLayer.innerHTML=''; tokens.clear();
+  const startsFor = getStartsForCurrent(); // NEW
   ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
     const el=document.createElement('div');
     el.className=`chip ${(['P','C'].includes(id)?'Battery':(['1B','2B','SS','3B'].includes(id)?'Infield':'Outfield'))}`;
     el.textContent=id;
     tokensLayer.appendChild(el);
-    tokens.set(id,{el,pos:Fcopy(starts[id])});
+    tokens.set(id,{el,pos: JSON.parse(JSON.stringify(startsFor[id]))});
     placeToken(id);
     makeDraggable(el,id);
   });
@@ -831,46 +879,49 @@ function populateSelect(selectedKey){
   const key = selectedKey || (currentSituation && currentSituation.key) || (SITUATIONS[0] && SITUATIONS[0].key);
   if (key) sitSelect.value = key;
 }
-function setSituation(key, {fromUser=false}={}){
-  // Resolve the situation
-  const next = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
+function setSituation(key, {fromUser=false} = {}){
+  // 1) resolve the situation (fallback to first if key missing)
+  const next = SITUATIONS.find(s => s.key === key) || SITUATIONS[0];
   if (!next) return;
 
-  // Update state
-  currentSituation = JSON.parse(JSON.stringify(next)); // decouple
-  attemptCount = 0;
-  currentRunners = [...(currentSituation.runners || [])];
+  // 2) set state and guarantee a starts bucket for this situation
+  currentSituation = next;            // keep a direct ref (keys/maps use this key)
+  ensureStartsKey(currentSituation.key);
 
-  // Sync UI primitives
-  // 1) dropdown
-  if (sitSelect.value !== currentSituation.key) {
+  // 3) reset counters and live runners
+  attemptCount   = 0;
+  currentRunners = (currentSituation.runners || []).slice();
+
+  // 4) sync header / sidebar UI
+  if (sitSelect && sitSelect.value !== currentSituation.key) {
     sitSelect.value = currentSituation.key;
   }
-  // 2) header info
-  if (typeof outsBadge !== 'undefined' && outsBadge) {
-    const outs = Number.isFinite(currentSituation.outs) ? currentSituation.outs : 0;
-    outsBadge.textContent = `Outs: ${outs}`;
-  }
-  if (typeof sitText !== 'undefined' && sitText) {
+  if (sitText) {
     sitText.textContent = currentSituation.desc || currentSituation.title || '';
   }
-  // 3) score + tries
-  if (typeof scoreBox !== 'undefined' && scoreBox) {
+  if (typeof outsBadge !== 'undefined' && outsBadge) {
+    const outs = Number.isFinite(currentSituation.outs) ? Number(currentSituation.outs) : 0;
+    outsBadge.textContent = `Outs: ${outs}`;
+  }
+  if (scoreBox) {
     scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
   }
-
-  // 4) rebuild visuals
-  buildTargets();
-  drawRunners();           // uses currentSituation.runners by default
-  resetPlayers();          // puts chips back to starts
-  clearBallCanvas && clearBallCanvas();  // remove any prior hit path/ball
-  unlockPlayHit && unlockPlayHit();      // allow “Start Situation” again
-
-  // 5) calibration label (if present)
   if (typeof curSitLabel !== 'undefined' && curSitLabel) {
     curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
   }
+
+  // 5) visuals: clear ball, rebuild targets, reset chips to per-situation starts, show runners
+  if (typeof clearBallCanvas === 'function') clearBallCanvas();
+  buildTargets();
+  resetPlayers(); // now reads from getStartsForCurrent()
+  const preview = (typeof getBuilderRunners === 'function') ? getBuilderRunners() : [];
+  drawRunners(preview.length ? preview : undefined);
+
+  // 6) other UI pieces
+  if (typeof syncHitUI === 'function') syncHitUI();
+  if (typeof unlockPlayHit === 'function') unlockPlayHit(); // re-enable Play Hit for new situation
 }
+
 
 function drawCalibrationBallAtNative(nativePt){
   const ctx = ballCanvas.getContext('2d');
@@ -921,7 +972,8 @@ function resetPlayers(){
 
   clearBallCanvas && clearBallCanvas();
 
-  tokens.forEach((_,id)=>{ tokens.get(id).pos = JSON.parse(JSON.stringify(starts[id])); placeToken(id); });
+  const startsFor = getStartsForCurrent();
+  tokens.forEach((_,id)=>{ tokens.get(id).pos = JSON.parse(JSON.stringify(startsFor[id])); placeToken(id); });
 
   attemptCount = 0;
   document.querySelectorAll('.tgt').forEach(el=>{
@@ -1247,15 +1299,23 @@ function clickPlaceStart(e){
   if(!calibrationStartsOn) return;
   const {native,css}=getClickNative(e);
   xyStarts.textContent=`x:${native.x} y:${native.y}`;
-  starts[selectedStartId]={x:native.x,y:native.y};
+
+  ensureStartsKey(currentSituation.key);
+  const startsFor = getStartsForCurrent();
+  startsFor[selectedStartId] = {x:native.x,y:native.y};    // write into this situation
   saveStarts();
-  tokens.get(selectedStartId).pos=Fcopy(starts[selectedStartId]);
+
+  tokens.get(selectedStartId).pos = JSON.parse(JSON.stringify(startsFor[selectedStartId]));
   placeToken(selectedStartId);
   crosshairShowAt(css.x,css.y);
 }
 function resetSelectedStart(){
-  starts[selectedStartId]=Fcopy(DEFAULT_STARTS[selectedStartId]);
-  saveStarts(); tokens.get(selectedStartId).pos=Fcopy(starts[selectedStartId]); placeToken(selectedStartId);
+  ensureStartsKey(currentSituation.key);
+  const startsFor = getStartsForCurrent();
+  startsFor[selectedStartId] = JSON.parse(JSON.stringify(DEFAULT_STARTS[selectedStartId]));
+  saveStarts();
+  tokens.get(selectedStartId).pos = JSON.parse(JSON.stringify(startsFor[selectedStartId]));
+  placeToken(selectedStartId);
 }
 
 /* ================== CALIBRATION – TARGETS + TOLERANCE ================== */
@@ -1457,17 +1517,38 @@ function buildSituationFromUI(){
   return { key: nextSituationKey(), title, outs, runners: builderRunners(), desc, targets: t, tolerances: tol, hit };
 }
 function addSituationToApp(){
-  const obj=buildSituationFromUI();
-  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
+  const obj = buildSituationFromUI();
+  if (!obj.targets || Object.keys(obj.targets).length === 0) {
+    alert('No targets on this situation. Enable Calibration and place rings.');
+    return;
+  }
+
+  // 1) add to catalog
   SITUATIONS.push(obj);
-  targetsMap[obj.key]=Fcopy(obj.targets);
-  tolerancesMap[obj.key]=Fcopy(obj.tolerances);
-  hitsMap[obj.key]=Fcopy(obj.hit);
-  saveTargets(); saveTols(); saveHits();
-  populateSelect();
+
+  // 2) persist per-situation assets (targets/tols/hits) into live maps
+  targetsMap[obj.key]     = Fcopy(obj.targets);
+  tolerancesMap[obj.key]  = Fcopy(obj.tolerances);
+  hitsMap[obj.key]        = Fcopy(obj.hit);
+
+  // 3) NEW: seed per-situation starts from DEFAULT_STARTS
+  ensureStartsKey(obj.key);                // creates if missing
+  startsMap[obj.key] = Fcopy(DEFAULT_STARTS);
+  saveStarts();
+
+  // 4) save others
+  saveTargets();
+  saveTols();
+  saveHits();
+
+  // 5) refresh UI and switch to the new situation
+  populateSelect(obj.key);                 // keep dropdown in sync
   setSituation(obj.key);
-  sbStatus.textContent=`Added "${obj.title}" as ${obj.key}`;
+  if (typeof sbStatus !== 'undefined' && sbStatus) {
+    sbStatus.textContent = `Added "${obj.title}" as ${obj.key}`;
+  }
 }
+
 function exportSituationSnippet(){
   const obj=buildSituationFromUI();
   if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
@@ -1490,17 +1571,43 @@ function exportSituationSnippet(){
   sbStatus.textContent='Snippet generated (copied). Paste inside SITUATIONS[].';
 }
 function setActiveFromBuilder(){
-  const obj=buildSituationFromUI();
-  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
-  targetsMap[obj.key]=Fcopy(obj.targets);
-  tolerancesMap[obj.key]=Fcopy(obj.tolerances);
-  hitsMap[obj.key]=Fcopy(obj.hit);
-  SITUATIONS.push({ key: obj.key, title: obj.title, runners: obj.runners, desc: obj.desc, targets: Fcopy(obj.targets), tolerances: Fcopy(obj.tolerances), hit:Fcopy(obj.hit) });
-  saveTargets(); saveTols(); saveHits();
-  populateSelect();
+  const obj = buildSituationFromUI();
+  if (!obj.targets || Object.keys(obj.targets).length === 0) {
+    alert('No targets on this situation. Enable Calibration and place rings.');
+    return;
+  }
+
+  // 1) upsert into SITUATIONS (replace if key exists, else push)
+  const idx = SITUATIONS.findIndex(s => s.key === obj.key);
+  if (idx >= 0) {
+    SITUATIONS[idx] = obj;
+  } else {
+    SITUATIONS.push(obj);
+  }
+
+  // 2) write live maps for this key
+  targetsMap[obj.key]     = Fcopy(obj.targets);
+  tolerancesMap[obj.key]  = Fcopy(obj.tolerances);
+  hitsMap[obj.key]        = Fcopy(obj.hit);
+
+  // 3) NEW: ensure & seed per-situation starts for this key
+  ensureStartsKey(obj.key);
+  if (!startsMap[obj.key]) startsMap[obj.key] = Fcopy(DEFAULT_STARTS);
+  saveStarts();
+
+  // 4) persist others
+  saveTargets();
+  saveTols();
+  saveHits();
+
+  // 5) refresh UI and activate
+  populateSelect(obj.key);
   setSituation(obj.key);
-  sbStatus.textContent=`Set active: ${obj.title} (${obj.key})`;
+  if (typeof sbStatus !== 'undefined' && sbStatus) {
+    sbStatus.textContent = `Set active: ${obj.title} (${obj.key})`;
+  }
 }
+
 /* Load/Update current */
 function loadBuilderFromCurrent(){
   const s = currentSituation;
@@ -1562,16 +1669,49 @@ toggleCalibStarts.addEventListener('click', ()=> enableCalibStarts(!calibrationS
 chipPickerStarts.querySelectorAll('.pill[data-id]').forEach(b=> b.addEventListener('click', ()=> setSelectedStart(b.dataset.id)));
 resetStartSelectedBtn.addEventListener('click', resetSelectedStart);
 exportStartsBtn.addEventListener('click', ()=>{
-  const blob=new Blob([JSON.stringify(starts,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-starts.json'; a.click(); URL.revokeObjectURL(a.href);
+  const blob=new Blob([JSON.stringify(startsMap,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-starts-map.json'; a.click(); URL.revokeObjectURL(a.href);
 });
 importStartsInput.addEventListener('change', e=>{
   const f=e.target.files[0]; if(!f) return;
   const reader=new FileReader();
-  reader.onload=()=>{ try{ const map=JSON.parse(reader.result); Object.assign(starts,map); saveStarts(); resetPlayers(); } catch(err){ alert('Invalid Starts JSON'); } };
+  reader.onload=()=>{
+    try{
+      const incoming = JSON.parse(reader.result);
+      if (incoming && typeof incoming === 'object'){
+        // Detect if it's a map (value is an object with P/C/1B...)
+        const firstVal = Object.values(incoming)[0];
+        const looksLikeMap = firstVal && typeof firstVal === 'object' && 'P' in firstVal;
+
+        if (looksLikeMap){
+          // Merge per situation key
+          Object.keys(incoming).forEach(k=>{
+            // always layer over defaults for safety
+            startsMap[k] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STARTS)), incoming[k]);
+          });
+        }else{
+          // Legacy flat → apply to the current situation only
+          ensureStartsKey(currentSituation.key);
+          startsMap[currentSituation.key] = Object.assign({}, JSON.parse(JSON.stringify(DEFAULT_STARTS)), incoming);
+        }
+        saveStarts();
+        resetPlayers();
+      }else{
+        alert('Invalid Starts JSON');
+      }
+    }catch(err){ alert('Invalid Starts JSON'); }
+  };
   reader.readAsText(f);
 });
-clearStartsBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_STARTS); loadStarts(); resetPlayers(); });
+
+clearStartsBtn.addEventListener('click', ()=>{
+  localStorage.removeItem(STORAGE_STARTS_V2);
+  localStorage.removeItem(STORAGE_STARTS_V1); // optional: purge legacy
+  startsMap = {};
+  (SITUATIONS||[]).forEach(s=> startsMap[s.key] = JSON.parse(JSON.stringify(DEFAULT_STARTS)));
+  saveStarts();
+  resetPlayers();
+});
 
 /* Targets calibration */
 toggleCalibTargets.addEventListener('click', ()=> enableCalibTargets(!calibrationTargetsOn));
