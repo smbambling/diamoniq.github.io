@@ -171,7 +171,9 @@
       <div class="fieldWrap" id="wrap">
         <img id="fieldImg" src="https://github.com/smbambling/diamoniq.github.io/blob/main/baseballfield.png?raw=true" width="3000" height="2487" alt="Baseball Field">
         <div id="targets" class="overlay"></div>
+        <div id="targetsLayer" class="overlay"></div>
         <div id="tokens"  class="overlay" aria-label="players"></div>
+        <div id="runnersLayer" class="overlay"></div>
         <div id="runners" class="overlay"></div>
         <!-- Ball animation canvas -->
         <canvas id="ballCanvas" class="overlay"></canvas>
@@ -657,16 +659,23 @@ function saveHits(){ localStorage.setItem(STORAGE_HITS, JSON.stringify(hitsMap))
 
 /* ================== TOKENS / TARGETS / RUNNERS ================== */
 function buildTokens(){
+  if (!window.tokensLayer) window.tokensLayer = document.getElementById('tokens');
+  if (!window.tokens) window.tokens = new Map();
   tokensLayer.innerHTML=''; tokens.clear();
-  const startsFor = getStartsForCurrent(); // NEW
+
+  const startsFor = (typeof window.getStartsForCurrent === 'function')
+    ? window.getStartsForCurrent()
+    : (window.starts || window.DEFAULT_STARTS); // fallback if you haven't migrated
+
   ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
-    const el=document.createElement('div');
-    el.className=`chip ${(['P','C'].includes(id)?'Battery':(['1B','2B','SS','3B'].includes(id)?'Infield':'Outfield'))}`;
-    el.textContent=id;
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = id;
     tokensLayer.appendChild(el);
-    tokens.set(id,{el,pos: JSON.parse(JSON.stringify(startsFor[id]))});
-    placeToken(id);
-    makeDraggable(el,id);
+    const pos = JSON.parse(JSON.stringify(startsFor[id]));
+    window.tokens.set(id, { el, pos });
+    if (typeof window.placeToken === 'function') window.placeToken(id);
+    if (typeof window.makeDraggable === 'function') window.makeDraggable(el, id);
   });
 }
 function placeToken(id){
@@ -771,35 +780,40 @@ function populateSelect(selectedKey){
   if (key) sitSelect.value = key;
 }
 function setSituation(key, {fromUser=false} = {}){
-  // 1) resolve the situation (fallback to first if key missing)
-  const next = SITUATIONS.find(s => s.key === key) || SITUATIONS[0];
+  const next = (window.SITUATIONS || []).find(s => s.key === key) || (window.SITUATIONS && window.SITUATIONS[0]);
   if (!next) return;
 
-  // 2) set state and guarantee a starts bucket for this situation
-  currentSituation = next;            // keep a direct ref (keys/maps use this key)
-  ensureStartsKey(currentSituation.key);
+  window.currentSituation = next;
 
-  // 3) reset counters and live runners
-  attemptCount   = 0;
-  currentRunners = (currentSituation.runners || []).slice();
+  // Ensure per-situation starts exist (if you implemented startsMap)
+  if (typeof window.ensureStartsKey === 'function') window.ensureStartsKey(next.key);
 
-  // 4) sync header / sidebar UI
-  if (sitSelect && sitSelect.value !== currentSituation.key) {
-    sitSelect.value = currentSituation.key;
-  }
-  if (sitText) {
-    sitText.textContent = currentSituation.desc || currentSituation.title || '';
-  }
-  if (typeof outsBadge !== 'undefined' && outsBadge) {
-    const outs = Number.isFinite(currentSituation.outs) ? Number(currentSituation.outs) : 0;
-    outsBadge.textContent = `Outs: ${outs}`;
-  }
-  if (scoreBox) {
-    scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-  }
-  if (typeof curSitLabel !== 'undefined' && curSitLabel) {
-    curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
-  }
+  // Reset counters and live runners
+  window.attemptCount   = 0;
+  window.currentRunners = (next.runners || []).slice();
+
+  // Sync select
+  const sitSelect = document.getElementById('sitSelect');
+  if (sitSelect && sitSelect.value !== next.key) sitSelect.value = next.key;
+
+  // Header text & outs
+  const sitText = window.sitText || document.getElementById('sitText');
+  if (sitText) sitText.textContent = next.desc || next.title || '';
+  const outsBadge = window.outsBadge || document.getElementById('outsBadge');
+  if (outsBadge) outsBadge.textContent = `Outs: ${Number.isFinite(next.outs) ? Number(next.outs) : 0}`;
+
+  const scoreBox = window.scoreBox || document.getElementById('score');
+  if (scoreBox) scoreBox.textContent = `Score: 0/9 • Try 0/${window.MAX_TRIES || 3}`;
+
+  // Visuals
+  if (typeof window.clearBallCanvas === 'function') window.clearBallCanvas();
+  if (typeof window.buildTargets === 'function') window.buildTargets();
+  if (typeof window.resetPlayers === 'function') window.resetPlayers(); // should place chips from per-sit starts
+  if (typeof window.drawRunners === 'function') window.drawRunners();
+
+  if (typeof window.syncHitUI === 'function') window.syncHitUI();
+  if (typeof window.unlockPlayHit === 'function') window.unlockPlayHit();
+}
 
   // 5) visuals: clear ball, rebuild targets, reset chips to per-situation starts, show runners
   if (typeof clearBallCanvas === 'function') clearBallCanvas();
@@ -1732,41 +1746,20 @@ new ResizeObserver(()=>{ sizeOverlays(); tokens.forEach((_,id)=>placeToken(id));
 window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunners(getBuilderRunners()); clearBallCanvas(); });
 </script>
 <script>
+/* ---------------------------------------------
+   Situations JSON loader + robust app bootstrap
+   --------------------------------------------- */
 (function(){
-  // Don’t clobber anything that already exists
-  if (!Array.isArray(window.SITUATIONS)) window.SITUATIONS = [];
-
+  // 0) Globals we hook into if present
   const sitSelect = document.getElementById('sitSelect');
   const exportBtn = document.getElementById('exportSituationsBtn');
   const importBtn = document.getElementById('importSituationsBtn');
   const importInp = document.getElementById('importSituationsInput');
 
-  // -------- JSON loader --------
-  async function loadSituationsFromJson(){
-    try{
-      const res = await fetch('./situations.json', { cache: 'no-store' });
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const arr = await res.json();
-      if(!Array.isArray(arr)) throw new Error('situations.json must be an array');
-      window.SITUATIONS = arr;
-      window.__situationsLoaded = true;
-    }catch(err){
-      console.warn('[Situations] Failed to load situations.json:', err);
-      if (!Array.isArray(window.SITUATIONS) || window.SITUATIONS.length === 0){
-        // Minimal fallback so the UI isn’t empty
-        window.SITUATIONS = [{
-          key:'S1',
-          title:'Sample (fallback)',
-          outs:0, runners:[],
-          desc:'Fallback inline situation. Create or import situations.json.',
-          targets:{}, tolerances:{},
-          hit:{type:'line', target:{x:0.55,y:0.65}}
-        }];
-      }
-    }
-  }
+  // Provide SITUATIONS placeholder early
+  if (!Array.isArray(window.SITUATIONS)) window.SITUATIONS = [];
 
-  // -------- Dropdown helpers --------
+  // --- Helpers
   function basicPopulateSelect(selectedKey){
     if (!sitSelect) return;
     sitSelect.innerHTML = '';
@@ -1781,8 +1774,6 @@ window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunn
       || (window.SITUATIONS[0] && window.SITUATIONS[0].key);
     if (key) sitSelect.value = key;
   }
-
-  // Use your app’s populate function if present; else use ours
   function repopulateSelect(selectedKey){
     if (typeof window.populateSelect === 'function') {
       window.populateSelect(selectedKey);
@@ -1794,26 +1785,97 @@ window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunn
     }
   }
 
-  function refreshUIAfterSituationsChange(){
-    const preferredKey =
-      (sitSelect && sitSelect.value)
-      || (window.currentSituation && window.currentSituation.key)
-      || (window.SITUATIONS[0] && window.SITUATIONS[0].key)
-      || null;
-
-    repopulateSelect(preferredKey);
-
-    // Switch app state to selected/first situation if setSituation exists
-    if (typeof window.setSituation === 'function') {
-      const key = (sitSelect && sitSelect.value) || preferredKey;
-      if (key) window.setSituation(key);
-    } else if (typeof window.sitText !== 'undefined' && window.sitText) {
-      const s = (window.SITUATIONS || [])[0];
-      if (s) window.sitText.textContent = s.desc || s.title || '';
+  async function loadSituationsFromJson(){
+    try{
+      const res = await fetch('./situations.json', { cache: 'no-store' });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const arr = await res.json();
+      if(!Array.isArray(arr)) throw new Error('situations.json must be an array');
+      window.SITUATIONS = arr;
+      window.__situationsLoaded = true;
+    }catch(err){
+      console.warn('[Situations] Failed to load situations.json:', err);
+      if (!Array.isArray(window.SITUATIONS) || window.SITUATIONS.length === 0){
+        window.SITUATIONS = [{
+          key:'S1',
+          title:'Sample (fallback)',
+          outs:0, runners:[],
+          desc:'Fallback inline situation. Create or import situations.json.',
+          targets:{}, tolerances:{},
+          hit:{type:'line', target:{x:0.55,y:0.65}}
+        }];
+      }
     }
   }
 
-  // -------- Export / Import wiring --------
+  function waitForFieldImage(){
+    // assumes your field <img> has id="fieldImg" OR use the one inside #wrap
+    const img = document.getElementById('fieldImg') ||
+                document.querySelector('#wrap img, #field img, img.field');
+    if (!img) return Promise.resolve(); // nothing to wait for
+    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    return new Promise(res=>{
+      img.addEventListener('load', ()=>res(), {once:true});
+      img.addEventListener('error', ()=>res(), {once:true}); // still continue
+    });
+  }
+
+  async function ensureAppReady(){
+    // 1) load JSON unless explicitly skipped
+    if (!window.__skipSituationsFetch) {
+      await loadSituationsFromJson();
+    }
+    // 2) repopulate dropdown
+    repopulateSelect();
+    // 3) wait for field image to have dimensions
+    await waitForFieldImage();
+    // 4) size overlays if your app has such a function
+    if (typeof window.sizeOverlays === 'function') window.sizeOverlays();
+  }
+
+  function safeBuildTokensOnce(){
+    // If your app already built tokens, skip; else build them.
+    if (window.tokensLayer && window.tokensLayer.children && window.tokensLayer.children.length>0) return;
+    if (typeof window.buildTokens === 'function') window.buildTokens();
+  }
+
+  function showRunnersNow(){
+    if (typeof window.drawRunners === 'function'){
+      // Use current situation’s runners by default
+      window.drawRunners();
+    }
+  }
+
+  async function boot(){
+    await ensureAppReady();
+
+    // Ensure a valid situation key chosen in the select
+    const key = (sitSelect && sitSelect.value) ||
+                (window.SITUATIONS[0] && window.SITUATIONS[0].key);
+
+    // Build tokens (chips) now that field size and situations exist
+    safeBuildTokensOnce();
+
+    // Switch app state to the selected/first situation
+    if (typeof window.setSituation === 'function' && key){
+      window.setSituation(key);
+    }
+
+    // Make sure runners are visible for the situation
+    showRunnersNow();
+
+    // Wire the select → setSituation if not already done elsewhere
+    if (sitSelect && typeof window.__sitSelectHooked === 'undefined'){
+      sitSelect.addEventListener('change', e=>{
+        if (typeof window.setSituation === 'function'){
+          window.setSituation(e.target.value, {fromUser:true});
+        }
+      });
+      window.__sitSelectHooked = true;
+    }
+  }
+
+  // --- Export / Import (optional but recommended)
   if (exportBtn){
     exportBtn.addEventListener('click', ()=>{
       try{
@@ -1828,7 +1890,6 @@ window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunn
       }
     });
   }
-
   if (importBtn && importInp){
     importBtn.addEventListener('click', ()=> importInp.click());
     importInp.addEventListener('change', e=>{
@@ -1841,31 +1902,22 @@ window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunn
           if(!Array.isArray(arr)) throw new Error('Expected an array at top-level');
           window.SITUATIONS = arr;
           window.__situationsLoaded = true;
-          refreshUIAfterSituationsChange();
-          alert('Situations loaded (not saved to GitHub). Use Export to download situations.json and commit it to the repo.');
+          repopulateSelect();
+          if (sitSelect && typeof window.setSituation === 'function'){
+            window.setSituation(sitSelect.value || (arr[0] && arr[0].key), {fromUser:true});
+          }
+          alert('Situations loaded. Use Export to download situations.json and commit it to GitHub.');
         }catch(err){
           alert('Invalid situations.json: ' + err.message);
         }
       };
       reader.readAsText(f);
-      e.target.value = ''; // allow re-uploading the same file
+      e.target.value = '';
     });
   }
 
-  // -------- Boot: load JSON then refresh UI --------
-  window.addEventListener('DOMContentLoaded', async ()=>{
-    // If you want to bypass fetch (e.g., during local dev), set window.__skipSituationsFetch = true before this script runs.
-    if (!window.__skipSituationsFetch) await loadSituationsFromJson();
-
-    refreshUIAfterSituationsChange();
-
-    // Keep select → setSituation linked (harmless if you already do this elsewhere)
-    if (sitSelect && typeof window.setSituation === 'function'){
-      sitSelect.addEventListener('change', e=>{
-        window.setSituation(e.target.value, {fromUser:true});
-      });
-    }
-  });
+  // Boot after DOM ready
+  window.addEventListener('DOMContentLoaded', boot);
 })();
 </script>
 </body>
