@@ -1578,40 +1578,77 @@ async function loadSituationsFromJson(){
 }
 
 /* INIT */
+/* INIT */
 async function init(){
-  // 1) Prefer file-based situations, but keep your inline array as fallback
-  await loadSituationsFromJson();
+  // 1) Try to load ./situations.json (mutates the existing const SITUATIONS array)
+  const loadedFromFile = await loadSituationsFromJson();
 
-  // 2) Proceed with your normal boot
-  sizeOverlays();
-  loadStarts();
-  loadTargets();
-  loadTols();
-  loadBases();
-  loadHits();
+  // 2) Ensure SITUATIONS is always an array
+  if (!Array.isArray(window.SITUATIONS)) window.SITUATIONS = [];
 
-  // Rebuild the dropdown/labels using your own helper
-  populateSelectAndLabels();
+  // 3) Wait for the field image so overlay sizing is correct
+  if (typeof waitForFieldImage === 'function') {
+    try { await waitForFieldImage(); } catch {}
+  }
 
-  buildTokens();
+  // 4) Size overlays (canvas, layers)
+  if (typeof sizeOverlays === 'function') sizeOverlays();
 
-  // Ensure a valid key exists (handles both JSON & inline)
-  const firstKey = (window.SITUATIONS && window.SITUATIONS[0] && window.SITUATIONS[0].key) || 'S1';
-  setSituation(firstKey);
+  // 5) Load persisted calibration/state (no-ops if you don't use them)
+  if (typeof loadStarts  === 'function') loadStarts();
+  if (typeof loadTargets === 'function') loadTargets();
+  if (typeof loadTols    === 'function') loadTols();
+  if (typeof loadBases   === 'function') loadBases();
+  if (typeof loadHits    === 'function') loadHits();
 
-  showCalibUI(isCalibUnlocked());
+  // 6) Rebuild the situation dropdown/labels using your app helper (if present)
+  if (typeof populateSelectAndLabels === 'function') {
+    populateSelectAndLabels();
+  } else if (typeof populateSelect === 'function') {
+    populateSelect();
+  } else {
+    // minimal fallback populate
+    const sel = document.getElementById('sitSelect');
+    if (sel) {
+      sel.innerHTML = '';
+      SITUATIONS.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.key;
+        o.textContent = s.title || s.key;
+        sel.appendChild(o);
+      });
+    }
+  }
 
-  // Hide all controls by default (as you already do)
-  startsControls?.classList.remove('show');
-  chipPickerStarts?.classList.remove('show');
-  targetsControls?.classList.remove('show');
-  chipPickerTargets?.classList.remove('show');
-  runnersControls?.classList.remove('show');
-  hitControls?.classList.remove('show');
-  tolPanel.style.display='none';
+  // 7) Build player chips layer
+  if (typeof buildTokens === 'function') buildTokens();
 
-  scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-  clearBallCanvas();
+  // 8) Choose initial situation key (handles empty JSON gracefully)
+  const firstKey = (SITUATIONS[0] && SITUATIONS[0].key) || null;
+
+  if (firstKey && typeof setSituation === 'function') {
+    setSituation(firstKey);
+  } else {
+    // No situations available: make the UI safe and informative
+    const sel = document.getElementById('sitSelect');
+    if (sel) sel.innerHTML = '';
+    const sitText = document.getElementById('sitText');
+    if (sitText) sitText.textContent = loadedFromFile
+      ? 'No situations found in situations.json.'
+      : 'No situations available. Add situations.json or inline situations.';
+  }
+
+  // 9) Calibration UI badge/panels (if your app exposes these helpers)
+  if (typeof showCalibUI === 'function' && typeof isCalibUnlocked === 'function') {
+    showCalibUI(isCalibUnlocked());
+  }
+
+  // 10) Reset score & clear any previous ball path
+  if (typeof scoreBox !== 'undefined' && scoreBox) {
+    const MAX_TRIES = (typeof window.MAX_TRIES === 'number') ? window.MAX_TRIES : 3;
+    scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
+  }
+  if (typeof clearBallCanvas === 'function') clearBallCanvas();
 }
 
 // Initialize even if the image errors
