@@ -5,80 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Diamond IQ - Situational Baseball</title>
 <style>
-  :root{
-    --bg:#f5f7fb;
-    --card:#ffffff;
-    --ink:#0f172a;
-    --muted:#6b7280;
-    --accent:#ff8a00;  /* line-drive path */
-    --popup:#06b6d4;   /* popup path */
-    --ground:#374151;  /* grounder path */
-    --pill:#e7eefc;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
-  header#topBar{
-    position:sticky; top:0; z-index:1000;
-    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
-    padding:12px 16px; background:#fff; border-bottom:1px solid #e5e7eb;
-  }
-  header h1{margin:0 12px 0 0; font-size:18px}
-  select, button{
-    border:1px solid #d1d5db; background:#fff; color:#111827; border-radius:8px;
-    padding:8px 10px; font-weight:600; cursor:pointer;
-  }
-  button.primary{background:#2563eb;color:#fff;border-color:#1d4ed8}
-  button.warn{background:#fee2e2;color:#991b1b;border-color:#fecaca}
-  .pill{
-    display:inline-block; padding:6px 10px; border-radius:999px;
-    background:var(--pill); color:#1f2937; font-weight:700; border:1px solid #c7d2fe;
-  }
-  .score{ margin-left:auto; font-weight:700; }
-  .app{
-    display:grid; grid-template-columns: 1fr 360px; gap:16px;
-    padding:16px; max-width:1400px; margin:0 auto;
-  }
-  .fieldCard, .sideCard{
-    background:var(--card); border:1px solid #e5e7eb; border-radius:12px; padding:12px;
-  }
-  .sideCol{ display:flex; flex-direction:column; gap:12px; }
+:root{
+  --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#6b7280;
+  --accent:#ff8a00;  /* line-drive */
+  --popup:#06b6d4;   /* popup */
+  --ground:#374151;  /* grounder (dashed) */
+  --pill:#e7eefc;
+  --good:#10b981; --bad:#ef4444;
+}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+header#topBar{
+  position:sticky; top:0; z-index:1000; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+  padding:12px 16px; background:#fff; border-bottom:1px solid #e5e7eb;
+}
+header h1{margin:0 12px 0 0; font-size:18px}
+select, button, input[type="password"]{
+  border:1px solid #d1d5db; background:#fff; color:#111827; border-radius:8px; padding:8px 10px; font-weight:600;
+}
+button{cursor:pointer} button.primary{background:#2563eb;color:#fff;border-color:#1d4ed8} button.warn{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--pill);color:#1f2937;font-weight:700;border:1px solid #c7d2fe}
+.score{margin-left:auto;font-weight:700}
 
-  /* Field & overlays */
-  #wrap{ position:relative; width:100%; }
-  #fieldImg{ display:block; width:100%; height:auto; border-radius:10px; }
-  .overlay{ position:absolute; inset:0; pointer-events:none; }
-  #targetsLayer{ z-index:20; }
-  #tokens      { z-index:30; }
-  #runnersLayer{ z-index:40; }
-  #ballCanvas  { z-index:50; width:100%; height:100%; }
+.app{display:grid;grid-template-columns:1fr 380px;gap:16px;padding:16px;max-width:1500px;margin:0 auto}
+.fieldCard,.sideCard{background:var(--card);border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+.sideCol{display:flex;flex-direction:column;gap:12px}
 
-  /* Chips (players) */
-  #tokens .chip{
-    position:absolute; transform:translate(-50%,-50%);
-    width:36px; height:36px; border-radius:50%;
-    background:#0f172a; color:#fff; border:2px solid #fff;
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,.25);
-    pointer-events:auto; user-select:none; touch-action:none;
-  }
-  /* Runners (badges on bases) */
-  #runnersLayer .runner{
-    position:absolute; transform:translate(-50%,-50%);
-    width:26px; height:26px; border-radius:50%;
-    background:#10b981; color:#fff; border:2px solid #fff;
-    display:flex; align-items:center; justify-content:center;
-    font-weight:800; font-size:12px; box-shadow:0 1px 4px rgba(0,0,0,.2);
-  }
+/* Field & overlays */
+#wrap{position:relative;width:100%}
+#fieldImg{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
+.overlay{position:absolute;inset:0;pointer-events:none}
+#targetsLayer{z-index:20} #tokens{z-index:30} #runnersLayer{z-index:40} #ballCanvas{z-index:50;width:100%;height:100%}
 
-  /* How-to card scales on large screens */
-  .howto{ font-size: clamp(14px, 0.45vw + 13px, 18px); line-height:1.6; }
-  .howto strong{ display:block; font-size: clamp(15px, 0.5vw + 14px, 20px); margin-bottom:6px; }
-  .howto ol{ margin:10px 0 0 1.25em; padding:0 clamp(4px, 0.6vw, 14px); }
-  .howto li{ margin: clamp(6px, 0.6vw, 14px) 0; }
+/* Chips (players) */
+#tokens .chip{
+  position:absolute; transform:translate(-50%,-50%); width:36px;height:36px;border-radius:50%;
+  color:#fff;border:2px solid #fff; display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,.25); pointer-events:auto; user-select:none; touch-action:none
+}
+.chip.Battery{background:#111827}
+.chip.Infield{background:#0d9488}  /* teal-ish */
+.chip.Outfield{background:#9333ea} /* purple */
+.chip:active{transform:translate(-50%,-50%) scale(1.04)}
 
-  @media (max-width: 1024px){
-    .app{ grid-template-columns: 1fr; }
-  }
+/* Targets */
+#targetsLayer .tgt{position:absolute; transform:translate(-50%,-50%); border-radius:50%; border:2px dashed #64748b; width:56px;height:56px; display:none}
+#targetsLayer .tgt.show{display:block}
+#targetsLayer .tgt.good{border-color:var(--good)}
+#targetsLayer .tgt.bad {border-color:var(--bad)}
+#targetsLayer .tgt .lbl{
+  position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:#ffffffea; border:1px solid #e5e7eb; padding:2px 6px; border-radius:6px;
+  font-size:11px; color:#111827; display:none; white-space:nowrap
+}
+#targetsLayer .tgt.show-label .lbl{display:block}
+
+/* Runners */
+#runnersLayer .runner{
+  position:absolute; transform:translate(-50%,-50%); width:26px;height:26px;border-radius:50%;
+  background:#10b981;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.2)
+}
+
+/* Calib / builder UI */
+.group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cardRow{display:flex; gap:8px; flex-wrap:wrap}
+.sideCard strong{display:block;margin:0 0 6px 0}
+.small{color:#475569;font-size:13px}
+.hide{display:none}
+
+.howto{font-size:clamp(14px,0.45vw+13px,18px);line-height:1.6}
+.howto strong{display:block;font-size:clamp(15px,0.5vw+14px,20px);margin-bottom:6px}
+.howto ol{margin:10px 0 0 1.25em;padding:0 clamp(4px,0.6vw,14px)} .howto li{margin:clamp(6px,0.6vw,14px) 0}
+
+@media (max-width: 1080px){ .app{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -86,24 +83,35 @@
 <header id="topBar">
   <h1>Diamond IQ - Situational Baseball</h1>
   <select id="sitSelect" aria-label="Select situation"></select>
-  <span id="outsBadge" class="pill" title="Outs in this situation">Outs: 0</span>
+  <span id="outsBadge" class="pill">Outs: 0</span>
+
+  <button id="checkBtn" class="primary">Check Positions</button>
   <button id="playHitBtn">Play Hit</button>
   <button id="resetBtn" class="warn">Reset Situation</button>
+
   <button id="exportSituationsBtn" title="Download situations.json">Export Situations</button>
-  <input id="importSituationsInput" type="file" accept="application/json" style="display:none">
+  <input id="importSituationsInput" type="file" accept="application/json" class="hide">
   <button id="importSituationsBtn" title="Load situations.json from your computer">Import Situations</button>
+
   <div class="score" id="score">Score: 0/9 • Try 0/3</div>
+  <button id="unlockBtn" title="Unlock calibration tools">🔒 Unlock Calibration</button>
 </header>
 
 <main class="app">
   <section class="fieldCard">
     <div id="wrap">
-      <!-- Use your 3000x2487 px image file at repo root -->
-      <img id="fieldImg" src="baseballfield.png" alt="Baseball Field" />
+      <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
       <div id="targetsLayer" class="overlay"></div>
       <div id="tokens" class="overlay"></div>
       <div id="runnersLayer" class="overlay"></div>
       <canvas id="ballCanvas" class="overlay"></canvas>
+      <!-- Crosshair -->
+      <div id="xh" class="overlay hide" style="z-index:99; pointer-events:none">
+        <svg width="100%" height="100%">
+          <line id="xhH" x1="0" y1="0" x2="100%" y2="0" stroke="#f43f5e" stroke-width="1"></line>
+          <line id="xhV" x1="0" y1="0" x2="0" y2="100%" stroke="#f43f5e" stroke-width="1"></line>
+        </svg>
+      </div>
     </div>
   </section>
 
@@ -112,495 +120,521 @@
       <strong>How to play</strong>
       <ol>
         <li>Select a situation.</li>
-        <li>Drag the 9 player chips to where they should move for that situation.</li>
-        <li>Click <em>Play Hit</em> to see the ball path and baserunners advance.</li>
-        <li>Click <em>Reset Situation</em> to try again (also unlocks Play Hit).</li>
+        <li>Drag the 9 colored player chips (Battery / Infield / Outfield) to their proper spots.</li>
+        <li>Click <em>Check Positions</em> — you have 3 tries. Each try reveals correctly placed targets; on try 3 all targets show and incorrect ones are labeled.</li>
+        <li>Click <em>Play Hit</em> to see the ball path & runner movement. <em>Reset Situation</em> to try again.</li>
       </ol>
     </div>
 
     <div class="sideCard">
       <strong>Situation Notes</strong>
-      <div id="sitText" style="color:#334155; margin-top:6px">Pick a situation.</div>
+      <div id="sitText" class="small">Pick a situation.</div>
+    </div>
+
+    <!-- Calibration (password-gated) -->
+    <div class="sideCard">
+      <strong>Calibration & Builder</strong>
+      <div class="group" id="lockRow">
+        <input id="pw" type="password" placeholder="Password" />
+        <button id="pwBtn">Unlock</button>
+        <span id="lockState" class="small" style="margin-left:auto; color:#334155">Locked</span>
+      </div>
+
+      <div class="group">
+        <button id="calibStartsBtn">Calibrate: Player Starts</button>
+        <button id="calibBasesBtn">Calibrate: Runner Bases</button>
+        <button id="calibTargetsBtn">Targets & Situation Builder</button>
+      </div>
+
+      <!-- Player Starts -->
+      <div id="calibStarts" class="small hide" style="margin-top:8px">
+        <div class="group">
+          <label>Pick chip:</label>
+          <select id="startChipSel">
+            <option>P</option><option>C</option><option>1B</option><option>2B</option><option>SS</option><option>3B</option><option>LF</option><option>CF</option><option>RF</option>
+          </select>
+          <button id="startResetOne">Reset Selected</button>
+          <button id="startResetAll">Reset All</button>
+        </div>
+        <div class="small">Tip: With crosshair on, click anywhere on the field to set the chip’s center.</div>
+      </div>
+
+      <!-- Bases -->
+      <div id="calibBases" class="small hide" style="margin-top:8px">
+        <div class="group">
+          <label>Base:</label>
+          <select id="baseSel">
+            <option>HP</option><option>1B</option><option>2B</option><option>3B</option>
+          </select>
+          <button id="baseReset">Reset Bases</button>
+        </div>
+        <div class="small">Click to set the base’s center (used for runner animation & labels).</div>
+      </div>
+
+      <!-- Targets & Situation Builder -->
+      <div id="builder" class="small hide" style="margin-top:8px">
+        <div class="group">
+          <label style="min-width:72px">Name</label>
+          <input id="sbName" placeholder="Situation title" style="flex:1">
+        </div>
+        <div class="group">
+          <label style="min-width:72px">Desc</label>
+          <input id="sbDesc" placeholder="Coaching notes" style="flex:1">
+        </div>
+        <div class="group">
+          <label style="min-width:72px">Runners</label>
+          <label><input type="checkbox" id="sbR1"> R1</label>
+          <label><input type="checkbox" id="sbR2"> R2</label>
+          <label><input type="checkbox" id="sbR3"> R3</label>
+        </div>
+        <div class="group">
+          <label style="min-width:72px">Outs</label>
+          <select id="sbOuts">
+            <option value="0">0 outs</option>
+            <option value="1">1 out</option>
+            <option value="2">2 outs</option>
+          </select>
+        </div>
+
+        <hr>
+
+        <div class="group">
+          <label style="min-width:72px">Hit</label>
+          <select id="hitTypeSel">
+            <option value="line">Line drive</option>
+            <option value="popup">Popup</option>
+            <option value="grounder">Grounder</option>
+          </select>
+          <span id="xyHit" class="small" style="margin-left:6px">x:— y:—</span>
+        </div>
+
+        <div class="group">
+          <label style="min-width:72px">Targets</label>
+          <select id="tgtChipSel">
+            <option>P</option><option>C</option><option>1B</option><option>2B</option><option>SS</option><option>3B</option><option>LF</option><option>CF</option><option>RF</option>
+          </select>
+          <button id="tgtClearChip">Clear</button>
+          <button id="tgtClearAll">Clear All</button>
+        </div>
+
+        <div id="tolRow" class="group">
+          <label style="min-width:72px">Tolerance</label>
+          <input id="tolSlider" type="range" min="20" max="140" value="65">
+          <span id="tolVal" class="small">65 px</span>
+        </div>
+
+        <div class="group">
+          <button id="sbAdd">Add Situation</button>
+          <button id="sbUpdate">Update Current</button>
+          <button id="sbSetActive">Set Active</button>
+          <button id="sbExport">Export Snippet</button>
+        </div>
+        <div id="sbStatus" class="small" style="color:#334155">—</div>
+
+        <div class="small" style="margin-top:6px">
+          Builder tips: enable this panel, then click the field to place target rings or the hit mark (crosshair shows).  
+          Selecting a chip will show its ring and tolerance. Only the selected chip’s tolerance control is visible.
+        </div>
+      </div>
     </div>
   </aside>
 </main>
-
 <script>
-/* ================== CONSTANTS & DEFAULTS ================== */
+/* ================== CONSTANTS ================== */
+const IMG_W=3000, IMG_H=2487;
+const DEFAULT_TOL=65;
 
-/* Native image size (your field is 3000 x 2487) */
-const IMG_W = 3000, IMG_H = 2487;
+/* ================== STATE & MAPS ================== */
+let SITUATIONS=[];            // loaded from situations.json
+let currentSituation=null;
+let attemptCount=0, MAX_TRIES=3;
 
-/* Base anchors (native px on the image) */
-const BASES = {
-  HP: {x: 1500, y: 2300},  // approximate; tweak if you’ve calibrated
-  '1B':{x: 2350, y: 1700},
-  '2B':{x: 1500, y: 1200},
-  '3B':{x:  650, y: 1700}
+let tokens=new Map();         // id -> {el,pos:{x,y}}
+let tokensLayer=null, runnersLayer=null, ballCanvas=null;
+let currentRunners=[];
+let rafId=null, runnerRafId=null;
+let playLocked=false;
+
+const scoreBox=document.getElementById('score');
+const sitSelect=document.getElementById('sitSelect');
+const sitText=document.getElementById('sitText');
+const outsBadge=document.getElementById('outsBadge');
+
+const STORAGE_STARTS_V2='BaseballIQ_StartsMap_v2';
+const STORAGE_TGT_V1='BaseballIQ_Targets_v1';
+const STORAGE_TOL_V1='BaseballIQ_Tols_v1';
+const STORAGE_HIT_V1='BaseballIQ_Hits_v1';
+
+let startsMap={};     // {key: {P:{x,y},...}}
+let targetsMap={};    // {key: {P:{x,y},...}}
+let tolerancesMap={}; // {key: {P: px, ...}}
+let hitsMap={};       // {key: {type, target:{x,y}}}
+
+const BASES = { HP:{x:1500,y:2300}, '1B':{x:2350,y:1700}, '2B':{x:1500,y:1200}, '3B':{x:650,y:1700} };
+
+const DEFAULT_STARTS={
+  'P':{x:1500,y:1550}, 'C':{x:1500,y:1850},
+  '1B':{x:2350,y:1650}, '2B':{x:1800,y:1200}, 'SS':{x:1200,y:1200}, '3B':{x:650,y:1650},
+  'LF':{x:600,y:900}, 'CF':{x:1500,y:700}, 'RF':{x:2400,y:900}
 };
 
-/* Default starting chip positions (native px) */
-const DEFAULT_STARTS = {
-  'P':  {x:1500, y:1550},
-  'C':  {x:1500, y:1850},
-  '1B': {x:2350, y:1650},
-  '2B': {x:1800, y:1200},
-  'SS': {x:1200, y:1200},
-  '3B': {x: 650, y:1650},
-  'LF': {x: 600, y: 900},
-  'CF': {x:1500, y: 700},
-  'RF': {x:2400, y: 900}
-};
+const Fcopy=o=>JSON.parse(JSON.stringify(o));
+function cssDims(){ const r=document.getElementById('wrap').getBoundingClientRect(); return {w:r.width,h:r.height}; }
+function unitToCss(native){ const {w,h}=cssDims(); return {left:native.x*(w/IMG_W), top:native.y*(h/IMG_H)}; }
+function cssToNative(x,y){ const {w,h}=cssDims(); return {x:x*(IMG_W/w), y:y*(IMG_H/h)}; }
 
-/* Storage keys (per-situation player starts) */
-const STORAGE_STARTS_V2 = 'BaseballIQ_StartsMap_v2';
+function ensureStartsKey(key){ if(!startsMap[key]) startsMap[key]=Fcopy(DEFAULT_STARTS); }
+function getStartsForCurrent(){ ensureStartsKey(currentSituation.key); return startsMap[currentSituation.key]; }
+function loadStarts(){ try{ const raw=localStorage.getItem(STORAGE_STARTS_V2); if(raw) startsMap=JSON.parse(raw)||{}; }catch(e){} }
+function saveStarts(){ try{ localStorage.setItem(STORAGE_STARTS_V2, JSON.stringify(startsMap)); }catch(e){} }
 
-/* ================== STATE ================== */
-let SITUATIONS = [];                    // loaded from situations.json
-let currentSituation = null;
-let attemptCount = 0;
-let MAX_TRIES = 3;
+function loadTargets(){ try{ targetsMap=JSON.parse(localStorage.getItem(STORAGE_TGT_V1)||'{}'); }catch(e){targetsMap={};} }
+function saveTargets(){ try{ localStorage.setItem(STORAGE_TGT_V1, JSON.stringify(targetsMap)); }catch(e){} }
+function loadTols(){ try{ tolerancesMap=JSON.parse(localStorage.getItem(STORAGE_TOL_V1)||'{}'); }catch(e){tolerancesMap={};} }
+function saveTols(){ try{ localStorage.setItem(STORAGE_TOL_V1, JSON.stringify(tolerancesMap)); }catch(e){} }
+function loadHits(){ try{ hitsMap=JSON.parse(localStorage.getItem(STORAGE_HIT_V1)||'{}'); }catch(e){hitsMap={};} }
+function saveHits(){ try{ localStorage.setItem(STORAGE_HIT_V1, JSON.stringify(hitsMap)); }catch(e){} }
 
-let tokensLayer = null, runnersLayer = null, ballCanvas = null;
-let tokens = new Map();                 // id -> {el, pos:{x,y}}
-let currentRunners = [];                // ['1B','2B', 'HP' (BR), ...]
-let rafId = null, runnerRafId = null;
-let playLocked = false;
-
-let startsMap = {}; // { [key]: {P:{x,y}, ...} }
-
-/* ================== DOM HOOKS ================== */
-const sitSelect  = document.getElementById('sitSelect');
-const scoreBox   = document.getElementById('score');
-const outsBadge  = document.getElementById('outsBadge');
-const playHitBtn = document.getElementById('playHitBtn');
-const resetBtn   = document.getElementById('resetBtn');
-
-/* ================== UTIL ================== */
-const Fcopy = (o)=> JSON.parse(JSON.stringify(o));
-
-function cssDims(){
-  const wrap = document.getElementById('wrap');
-  const r = wrap.getBoundingClientRect();
-  return {w:r.width, h:r.height};
-}
-function unitToCss(native){
-  const {w,h} = cssDims();
-  return {
-    left: native.x * (w/IMG_W),
-    top:  native.y * (h/IMG_H)
-  };
-}
-function cssToNative(cssX, cssY){
-  const {w,h} = cssDims();
-  return { x: cssX * (IMG_W/w), y: cssY * (IMG_H/h) };
-}
-function sizeOverlays(){
-  const wrap = document.getElementById('wrap');
-  const cv = document.getElementById('ballCanvas');
-  if (!wrap || !cv) return;
-  const r = wrap.getBoundingClientRect();
-  cv.width  = Math.max(1, Math.round(r.width));
-  cv.height = Math.max(1, Math.round(r.height));
-}
-
-/* ================== STARTS (per situation) ================== */
-function ensureStartsKey(key){
-  if (!startsMap[key]) startsMap[key] = Fcopy(DEFAULT_STARTS);
-}
-function getStartsForCurrent(){
-  ensureStartsKey(currentSituation.key);
-  return startsMap[currentSituation.key];
-}
-function loadStarts(){
-  try{
-    const raw = localStorage.getItem(STORAGE_STARTS_V2);
-    if (raw){ startsMap = JSON.parse(raw)||{}; }
-  }catch(e){ startsMap = {}; }
-}
-function saveStarts(){
-  try{ localStorage.setItem(STORAGE_STARTS_V2, JSON.stringify(startsMap)); }catch(e){}
-}
-
-/* ================== TOKENS (players) ================== */
-function placeToken(id){
-  const rec = tokens.get(id); if (!rec) return;
-  const css = unitToCss(rec.pos);
-  rec.el.style.left = css.left + 'px';
-  rec.el.style.top  = css.top  + 'px';
-}
-function makeDraggable(el, id){
-  let dragging=false, start={x:0,y:0};
-  el.addEventListener('pointerdown', (e)=>{
-    e.preventDefault(); dragging=true; el.setPointerCapture(e.pointerId);
-  });
-  el.addEventListener('pointermove', (e)=>{
-    if(!dragging) return;
-    const wrap = document.getElementById('wrap');
-    const r = wrap.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const y = e.clientY - r.top;
-    const native = cssToNative(x,y);
-    tokens.get(id).pos = native;
-    placeToken(id);
-  });
-  const end=()=>{ dragging=false; };
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
+function sizeOverlays(){ const wrap=document.getElementById('wrap'); const cv=document.getElementById('ballCanvas'); if(!wrap||!cv)return; const r=wrap.getBoundingClientRect(); cv.width=Math.max(1,Math.round(r.width)); cv.height=Math.max(1,Math.round(r.height)); }
+function waitForFieldImage(){ const img=document.getElementById('fieldImg'); if(!img) return Promise.resolve(); if(img.complete&&img.naturalWidth>0) return Promise.resolve(); return new Promise(res=>{ img.addEventListener('load',res,{once:true}); img.addEventListener('error',res,{once:true}); }); }
+</script>
+<script>
+/* ========== Tokens (players) ========== */
+function placeToken(id){ const rec=tokens.get(id); if(!rec) return; const css=unitToCss(rec.pos); rec.el.style.left=css.left+'px'; rec.el.style.top=css.top+'px'; }
+function makeDraggable(el,id){
+  let dragging=false;
+  el.addEventListener('pointerdown',e=>{ e.preventDefault(); dragging=true; el.setPointerCapture(e.pointerId); });
+  el.addEventListener('pointermove',e=>{ if(!dragging) return; const r=document.getElementById('wrap').getBoundingClientRect(); const native=cssToNative(e.clientX-r.left,e.clientY-r.top); tokens.get(id).pos=native; placeToken(id); });
+  const end=()=>dragging=false; el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
 }
 function buildTokens(){
-  tokensLayer = document.getElementById('tokens');
+  tokensLayer=document.getElementById('tokens');
   tokensLayer.innerHTML=''; tokens.clear();
-  const S = getStartsForCurrent();
-  ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
-    const el=document.createElement('div');
-    el.className='chip'; el.textContent=id;
-    tokensLayer.appendChild(el);
-    tokens.set(id,{el,pos:Fcopy(S[id])});
-    placeToken(id);
-    makeDraggable(el,id);
+  const S=getStartsForCurrent();
+  const groups = {Battery:['P','C'], Infield:['1B','2B','SS','3B'], Outfield:['LF','CF','RF']};
+  Object.entries(groups).forEach(([cls,ids])=>{
+    ids.forEach(id=>{
+      const el=document.createElement('div'); el.className='chip '+cls; el.textContent=id; tokensLayer.appendChild(el);
+      tokens.set(id,{el,pos:Fcopy(S[id])}); placeToken(id); makeDraggable(el,id);
+    });
   });
 }
 
-/* ================== RUNNERS ================== */
+/* ========== Targets (draw & check) ========== */
+function getTol(key,id){ const map=tolerancesMap[key]||{}; return map[id] ?? DEFAULT_TOL; }
+function ensureTolsKey(key){ if(!tolerancesMap[key]) tolerancesMap[key]={}; }
+function ensureTargetsKey(key){ if(!targetsMap[key]) targetsMap[key]={}; }
+
+function buildTargets(showAll=false, revealIncorrectLabels=false){
+  const layer=document.getElementById('targetsLayer'); layer.innerHTML='';
+  const key=currentSituation.key; const tgs=targetsMap[key]||{};
+  Object.entries(tgs).forEach(([id,pt])=>{
+    const d=document.createElement('div'); d.className='tgt'; const css=unitToCss(pt);
+    d.style.left=css.left+'px'; d.style.top=css.top+'px';
+    const lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=id; d.appendChild(lbl);
+    if(showAll) d.classList.add('show');
+    if(revealIncorrectLabels) d.classList.add('show-label');
+    d.dataset.id=id;
+    layer.appendChild(d);
+  });
+}
+
+function distance(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
+function checkPositions(){
+  attemptCount = Math.min(MAX_TRIES, attemptCount+1);
+  const key=currentSituation.key; const tgs=targetsMap[key]||{};
+  let correct=0;
+  // mark rings visible or not
+  const layer=document.getElementById('targetsLayer');
+  layer.querySelectorAll('.tgt').forEach(el=>el.remove()); // rebuild fresh
+  const showAll = attemptCount>=MAX_TRIES;
+  const revealIncorrectLabels = showAll;
+
+  Object.entries(tgs).forEach(([id,pt])=>{
+    const tol=getTol(key,id);
+    const pos=tokens.get(id)?.pos || DEFAULT_STARTS[id];
+    const ok = distance(pos,pt) <= tol;
+    if(ok) correct++;
+    const d=document.createElement('div'); d.className='tgt show'; const css=unitToCss(pt);
+    d.style.left=css.left+'px'; d.style.top=css.top+'px';
+    d.classList.add(ok?'good':'bad');
+    const lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=id;
+    if(showAll || ok) d.classList.add('show');
+    if(revealIncorrectLabels && !ok) d.classList.add('show-label');
+    d.appendChild(lbl); d.dataset.id=id; layer.appendChild(d);
+  });
+
+  scoreBox.textContent=`Score: ${correct}/9 • Try ${attemptCount}/${MAX_TRIES}`;
+}
+
+/* ========== Runners ========== */
 function drawRunners(override){
-  runnersLayer = document.getElementById('runnersLayer');
-  runnersLayer.innerHTML='';
+  runnersLayer=document.getElementById('runnersLayer'); runnersLayer.innerHTML='';
   const active = override ?? (currentRunners.length? currentRunners : (currentSituation.runners||[]));
   active.forEach(b=>{
-    const pt = BASES[b]; if (!pt) return;
-    const css = unitToCss(pt);
-    const badge = document.createElement('div');
-    badge.className='runner';
-    badge.dataset.base = b;
-    badge.style.left = css.left+'px';
-    badge.style.top  = css.top +'px';
-    badge.textContent = (b==='HP'?'BR': b==='1B'?'R1': b==='2B'?'R2': b==='3B'?'R3': b);
+    const pt=BASES[b]; if(!pt) return; const css=unitToCss(pt);
+    const badge=document.createElement('div'); badge.className='runner'; badge.dataset.base=b;
+    badge.style.left=css.left+'px'; badge.style.top=css.top+'px';
+    badge.textContent=(b==='HP'?'BR': b==='1B'?'R1': b==='2B'?'R2': b==='3B'?'R3': b);
     runnersLayer.appendChild(badge);
   });
 }
 
-/* ================== PLAY HIT (ball + runners) ================== */
-function clearBallCanvas(){
-  const ctx=ballCanvas.getContext('2d'); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-}
-function lerp(a,b,t){ return a+(b-a)*t; }
-function quadBezier(p0,p1,p2,t){
-  return {
-    x: (1-t)*(1-t)*p0.x + 2*(1-t)*t*p1.x + t*t*p2.x,
-    y: (1-t)*(1-t)*p0.y + 2*(1-t)*t*p1.y + t*t*p2.y
-  };
-}
+/* ========== Ball & Runner Animation ========== */
+function clearBallCanvas(){ const ctx=ballCanvas.getContext('2d'); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height); }
+function lerp(a,b,t){return a+(b-a)*t;}
+function quadBezier(p0,p1,p2,t){ return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2.x, y:(1-t)*(1-t)*p0.y+2*(1-t)*t*p1.y+t*t*p2.y}; }
+function drawBallDot(ctx,x,y){ ctx.beginPath(); ctx.fillStyle='#fff'; ctx.arc(x,y,6,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=1; ctx.stroke(); }
 function getLaunchPoint(){ return BASES.HP; }
-function drawBallDot(ctx,x,y){
-  ctx.beginPath();
-  ctx.fillStyle = '#ffffff';  // WHITE ball
-  ctx.arc(x,y,6,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=1; ctx.stroke();
-}
-function playHitAnimation(fromNative, toNative, type){
+
+function playHitAnimation(fromNative,toNative,type){
   cancelAnimationFrame(rafId);
-  const ctx = ballCanvas.getContext('2d');
-  ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-
-  const fromCss = unitToCss(fromNative);
-  const toCss   = unitToCss(toNative);
-  const start={x:fromCss.left, y:fromCss.top};
-  const end  ={x:toCss.left  , y:toCss.top};
-
-  const duration = (type==='popup') ? 2200 : (type==='grounder'? 1800 : 1600);
-  const t0 = performance.now();
-
-  const mid={ x:(start.x+end.x)/2, y:(start.y+end.y)/2 };
-  const rise = -Math.hypot(end.x-start.x, end.y-start.y)*0.25;
-  const ctrl={ x:mid.x, y:mid.y+rise };
-
-  const strokeForType=()=>{
-    ctx.lineWidth=4; ctx.lineCap='round';
-    if(type==='line'){ ctx.setLineDash([]); ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ff8a00'; }
-    if(type==='popup'){ ctx.setLineDash([]); ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--popup').trim() ||'#06b6d4'; }
-    if(type==='grounder'){ ctx.setLineDash([8,8]); ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--ground').trim()||'#374151'; }
-  };
-
-  const draw=(now)=>{
-    const t = Math.min(1,(now - t0)/duration);
-    ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-    strokeForType();
-
-    ctx.beginPath();
-    if(type==='popup'){
-      const steps=48;
-      let first=true;
-      for(let i=0;i<=Math.floor(steps*t);i++){
-        const tt=i/steps;
-        const p=quadBezier(start,ctrl,end,tt);
-        if(first){ ctx.moveTo(p.x,p.y); first=false; } else ctx.lineTo(p.x,p.y);
-      }
-      ctx.stroke();
-      const pb = quadBezier(start,ctrl,end,t);
-      drawBallDot(ctx,pb.x,pb.y);
-    }else{
-      const px = lerp(start.x,end.x,t), py=lerp(start.y,end.y,t);
-      ctx.moveTo(start.x,start.y); ctx.lineTo(px,py); ctx.stroke();
-      drawBallDot(ctx,px,py);
-    }
-
-    if(t<1){ rafId=requestAnimationFrame(draw); }
-    else{
-      setTimeout(()=>{ // clear trail but leave ball at landing spot
-        ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-        drawBallDot(ctx,end.x,end.y);
-      },80);
-    }
-  };
-  rafId = requestAnimationFrame(draw);
+  const ctx=ballCanvas.getContext('2d'); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
+  const s=unitToCss(fromNative), e=unitToCss(toNative);
+  const duration=(type==='popup')?2200:(type==='grounder'?1800:1600), t0=performance.now();
+  const mid={x:(s.x+s.y)/2? (s.x+e.x)/2 : (s.x+e.x)/2, y:(s.y+e.y)/2}; const rise=-Math.hypot(e.x-s.x,e.y-s.y)*0.25; const ctrl={x:mid.x,y:mid.y+rise};
+  const stroke=()=>{ ctx.lineWidth=4; ctx.lineCap='round'; if(type==='line'){ctx.setLineDash([]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ff8a00';}
+    if(type==='popup'){ctx.setLineDash([]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--popup').trim()||'#06b6d4';}
+    if(type==='grounder'){ctx.setLineDash([8,8]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--ground').trim()||'#374151';}};
+  const draw=(now)=>{ const t=Math.min(1,(now-t0)/duration); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height); stroke(); ctx.beginPath();
+    if(type==='popup'){ let first=true; const steps=48; for(let i=0;i<=Math.floor(steps*t);i++){const tt=i/steps; const p=quadBezier(s,ctrl,e,tt); if(first){ctx.moveTo(p.x,p.y); first=false;} else ctx.lineTo(p.x,p.y);} ctx.stroke(); const pb=quadBezier(s,ctrl,e,t); drawBallDot(ctx,pb.x,pb.y);}
+    else{ const px=lerp(s.x,e.x,t), py=lerp(s.y,e.y,t); ctx.moveTo(s.x,s.y); ctx.lineTo(px,py); ctx.stroke(); drawBallDot(ctx,px,py);}
+    if(t<1){ rafId=requestAnimationFrame(draw);} else { setTimeout(()=>{ ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height); drawBallDot(ctx,e.x,e.y); },80);} };
+  rafId=requestAnimationFrame(draw);
 }
 
-/* ---- Runner profiles (type + depth) ---- */
-function distFromHP(native){ const hp=BASES.HP; return Math.hypot(native.x-hp.x, native.y-hp.y); }
-function depthTier(native){
-  const d = distFromHP(native);
-  if (d < 520) return 'shallow';
-  if (d < 900) return 'medium';
-  return 'deep';
-}
-function nextBase(base){
-  if (base==='HP') return '1B';
-  if (base==='1B') return '2B';
-  if (base==='2B') return '3B';
-  if (base==='3B') return 'HP';
-  return base;
-}
-const RUNNER_PROFILES = {
-  line:{ shallow:{R1:1,R2:1,R3:1}, medium:{R1:1,R2:1,R3:1}, deep:{R1:2,R2:2,R3:1} },
-  popup:{ shallow:{R1:0,R2:0,R3:0}, medium:{R1:0,R2:0,R3:1}, deep:{R1:1,R2:1,R3:1} },
-  grounder:{ shallow:{R1:1,R2:1,R3:1}, medium:{R1:1,R2:1,R3:1}, deep:{R1:2,R2:1,R3:1} }
-};
-function planRunnerAdvancesForCurrent(hit){
-  const type=hit?.type||'line';
-  const depth=depthTier(hit?.target||BASES['2B']);
-  const prof=(RUNNER_PROFILES[type]||RUNNER_PROFILES.line)[depth];
-  const idForBase=(b)=> (b==='1B'?'R1': b==='2B'?'R2': b==='3B'?'R3':'R?');
-  const plan={};
-  (currentRunners||[]).forEach(b=>{
-    const id=idForBase(b); plan[b] = prof[id]??0;
-  });
-  // Always add batter-runner: HP -> 1B
-  plan['HP'] = 1;
-  return plan;
-}
-function animateRunnersAdvancePlan(plan, durationMs){
-  // snapshot movers
-  const movers = (currentRunners||[])
-    .filter(b=>(plan[b]||0)>0)
-    .map(b=>{
-      const steps=plan[b];
-      const from=BASES[b], mid=nextBase(b), to=steps>=2? nextBase(mid): mid;
-      const fromCss=unitToCss(from), midCss=unitToCss(BASES[mid]), toCss=unitToCss(BASES[to]);
-      return {base:b, steps, fromCss, midCss, toCss, mid, to};
-    });
-  if (!movers.length) return;
+/* Runner movement profiles */
+function distFromHP(n){ const hp=BASES.HP; return Math.hypot(n.x-hp.x,n.y-hp.y); }
+function depthTier(n){ const d=distFromHP(n); if(d<520) return 'shallow'; if(d<900) return 'medium'; return 'deep'; }
+function nextBase(b){ if(b==='HP')return'1B'; if(b==='1B')return'2B'; if(b==='2B')return'3B'; if(b==='3B')return'HP'; return b; }
+const RUNNER_PROFILES={ line:{shallow:{R1:1,R2:1,R3:1},medium:{R1:1,R2:1,R3:1},deep:{R1:2,R2:2,R3:1}}, popup:{shallow:{R1:0,R2:0,R3:0},medium:{R1:0,R2:0,R3:1},deep:{R1:1,R2:1,R3:1}}, grounder:{shallow:{R1:1,R2:1,R3:1},medium:{R1:1,R2:1,R3:1},deep:{R1:2,R2:1,R3:1}} };
+function planRunnerAdvancesForCurrent(hit){ const type=hit?.type||'line'; const depth=depthTier(hit?.target||BASES['2B']); const prof=(RUNNER_PROFILES[type]||RUNNER_PROFILES.line)[depth]; const idFor=(b)=>b==='1B'?'R1':b==='2B'?'R2':b==='3B'?'R3':'R?'; const plan={};
+  (currentRunners||[]).forEach(b=>{ plan[b]=prof[idFor(b)]??0;}); plan['HP']=1; return plan; }
 
+function animateRunnersAdvancePlan(plan,durationMs){
+  const movers=(currentRunners||[]).filter(b=>(plan[b]||0)>0).map(b=>{ const steps=plan[b]; const from=BASES[b], mid=nextBase(b), to=steps>=2?nextBase(mid):mid; const f=unitToCss(from), m=unitToCss(BASES[mid]), t=unitToCss(BASES[to]); return {base:b,steps,fromCss:f,midCss:m,toCss:t}; });
+  if(!movers.length) return;
   const t0=performance.now(), total=Math.max(1,durationMs);
-  const step=(now)=>{
-    const t=Math.min(1,(now-t0)/total);
-    movers.forEach(m=>{
-      const el = document.querySelector(`.runner[data-base="${m.base}"]`); if(!el) return;
-      let x,y;
-      if (m.steps===1){
-        x = lerp(m.fromCss.left, m.midCss.left, t);
-        y = lerp(m.fromCss.top , m.midCss.top , t);
-      }else{
-        if (t<=0.5){
-          const tt=t*2;
-          x = lerp(m.fromCss.left, m.midCss.left, tt);
-          y = lerp(m.fromCss.top , m.midCss.top , tt);
-        }else{
-          const tt=(t-0.5)*2;
-          x = lerp(m.midCss.left, m.toCss.left, tt);
-          y = lerp(m.midCss.top , m.toCss.top , tt);
-        }
-      }
-      el.style.left=x+'px'; el.style.top=y+'px';
-    });
-    if (t<1){ runnerRafId=requestAnimationFrame(step); }
-    else{
-      currentRunners = (currentRunners||[]).map(b=>{
-        const s=plan[b]||0; if (s===0) return b;
-        if (s===1) return nextBase(b);
-        return nextBase(nextBase(b));
-      }).filter(b=>b!=='HP'); // scored removed
-      drawRunners();
-      runnerRafId = null;
-    }
-  };
+  const step=(now)=>{ const t=Math.min(1,(now-t0)/total); movers.forEach(m=>{ const el=document.querySelector(`.runner[data-base="${m.base}"]`); if(!el) return; let x,y; if(m.steps===1){ x=lerp(m.fromCss.left,m.midCss.left,t); y=lerp(m.fromCss.top,m.midCss.top,t);} else { if(t<=0.5){const tt=t*2; x=lerp(m.fromCss.left,m.midCss.left,tt); y=lerp(m.fromCss.top,m.midCss.top,tt);} else {const tt=(t-0.5)*2; x=lerp(m.midCss.left,m.toCss.left,tt); y=lerp(m.midCss.top,m.toCss.top,tt);} } el.style.left=x+'px'; el.style.top=y+'px'; });
+    if(t<1){ runnerRafId=requestAnimationFrame(step);} else { currentRunners=(currentRunners||[]).map(b=>{const s=plan[b]||0; if(s===0)return b; if(s===1)return nextBase(b); return nextBase(nextBase(b));}).filter(b=>b!=='HP'); drawRunners(); runnerRafId=null; } };
   runnerRafId=requestAnimationFrame(step);
 }
+</script>
+<script>
+/* ========== Password gate ========== */
+const unlockBtn=document.getElementById('unlockBtn');
+const pw=document.getElementById('pw'); const pwBtn=document.getElementById('pwBtn'); const lockState=document.getElementById('lockState');
+const calibStartsBtn=document.getElementById('calibStartsBtn'); const calibBasesBtn=document.getElementById('calibBasesBtn'); const calibTargetsBtn=document.getElementById('calibTargetsBtn');
+const calibStarts=document.getElementById('calibStarts'); const calibBases=document.getElementById('calibBases'); const builder=document.getElementById('builder');
+let unlocked=false;
+function isCalibUnlocked(){ return unlocked; }
+pwBtn.addEventListener('click', ()=>{ if((pw.value||'').trim().length){ unlocked=true; lockState.textContent='Unlocked'; } else { unlocked=false; lockState.textContent='Locked'; hideAllCalib(); } });
+unlockBtn.addEventListener('click', ()=>{ unlocked=!unlocked; lockState.textContent=unlocked?'Unlocked':'Locked'; if(!unlocked) hideAllCalib(); });
 
-/* ================== UI: Play/Reset Locking ================== */
-function lockPlayHit(){
-  playLocked = true;
-  playHitBtn.disabled = true; playHitBtn.title='Reset or change situation to play again';
-}
-function unlockPlayHit(){
-  playLocked = false;
-  playHitBtn.disabled = false; playHitBtn.title='Play Hit';
+function hideAllCalib(){ calibStarts.classList.add('hide'); calibBases.classList.add('hide'); builder.classList.add('hide'); crosshairHide(); }
+calibStartsBtn.addEventListener('click', ()=>{ if(!isCalibUnlocked()) return; togglePanel(calibStarts); crosshairShowCenter(); });
+calibBasesBtn.addEventListener('click',  ()=>{ if(!isCalibUnlocked()) return; togglePanel(calibBases); crosshairShowCenter(); });
+calibTargetsBtn.addEventListener('click',()=>{ if(!isCalibUnlocked()) return; togglePanel(builder); crosshairShowCenter(); syncHitUI(); showSelectedToleranceUI(); });
+
+function togglePanel(el){ const anyOpen=!el.classList.contains('hide'); hideAllCalib(); if(!anyOpen){ el.classList.remove('hide'); crosshairShowCenter(); } }
+
+/* ========== Crosshair ========== */
+const xh=document.getElementById('xh'), xhH=document.getElementById('xhH'), xhV=document.getElementById('xhV');
+function crosshairShowAt(x,y){ xh.classList.remove('hide'); xhH.setAttribute('y1',y); xhH.setAttribute('y2',y); xhV.setAttribute('x1',x); xhV.setAttribute('x2',x); }
+function crosshairShowCenter(){ const r=document.getElementById('wrap').getBoundingClientRect(); crosshairShowAt(r.width/2,r.height/2); }
+function crosshairHide(){ xh.classList.add('hide'); }
+
+/* ========== Player Starts calibration ========== */
+const startChipSel=document.getElementById('startChipSel');
+document.getElementById('startResetOne').addEventListener('click', ()=>{
+  ensureStartsKey(currentSituation.key); const m=getStartsForCurrent(); const id=startChipSel.value;
+  m[id]=Fcopy(DEFAULT_STARTS[id]); saveStarts(); tokens.get(id).pos=Fcopy(m[id]); placeToken(id);
+});
+document.getElementById('startResetAll').addEventListener('click', ()=>{
+  startsMap[currentSituation.key]=Fcopy(DEFAULT_STARTS); saveStarts(); resetSituation();
+});
+document.getElementById('wrap').addEventListener('click', (e)=>{
+  if (builder.classList.contains('hide') && calibBases.classList.contains('hide') && calibStarts.classList.contains('hide')) return; // no calib active
+  const r=document.getElementById('wrap').getBoundingClientRect(); const css={x:e.clientX-r.left,y:e.clientY-r.top}; crosshairShowAt(css.x,css.y);
+  const native=cssToNative(css.x,css.y);
+  // Starts?
+  if(!calibStarts.classList.contains('hide')){
+    ensureStartsKey(currentSituation.key); const m=getStartsForCurrent(); const id=startChipSel.value; m[id]=native; saveStarts(); tokens.get(id).pos=Fcopy(m[id]); placeToken(id);
+  }
+  // Bases?
+  if(!calibBases.classList.contains('hide')){
+    const id=baseSel.value; BASES[id]=native; drawRunners(); // immediate effect
+  }
+  // Targets/Hit?
+  if(!builder.classList.contains('hide')){
+    const chip=tgtChipSel.value; ensureTargetsKey(currentSituation.key); const key=currentSituation.key;
+    targetsMap[key][chip]=native; saveTargets(); buildTargets(true);
+    // Also set hit target if holding Alt/Ctrl (handy)
+    if (e.altKey || e.ctrlKey){ ensureHitForKey(key); hitsMap[key].target=native; saveHits(); syncHitUI(); }
+  }
+});
+
+/* ========== Bases calibration ========== */
+const baseSel=document.getElementById('baseSel'); document.getElementById('baseReset').addEventListener('click', ()=>{ BASES.HP={x:1500,y:2300}; BASES['1B']={x:2350,y:1700}; BASES['2B']={x:1500,y:1200}; BASES['3B']={x:650,y:1700}; drawRunners(); });
+
+/* ========== Targets & Situation Builder ========== */
+const sbName=document.getElementById('sbName'), sbDesc=document.getElementById('sbDesc');
+const sbR1=document.getElementById('sbR1'), sbR2=document.getElementById('sbR2'), sbR3=document.getElementById('sbR3');
+const sbOuts=document.getElementById('sbOuts');
+const hitTypeSel=document.getElementById('hitTypeSel'), xyHit=document.getElementById('xyHit');
+const tgtChipSel=document.getElementById('tgtChipSel'), tgtClearChip=document.getElementById('tgtClearChip'), tgtClearAll=document.getElementById('tgtClearAll');
+const tolSlider=document.getElementById('tolSlider'), tolVal=document.getElementById('tolVal');
+const sbAdd=document.getElementById('sbAdd'), sbUpdate=document.getElementById('sbUpdate'), sbSetActive=document.getElementById('sbSetActive'), sbExport=document.getElementById('sbExport');
+const sbStatus=document.getElementById('sbStatus');
+
+tgtClearChip.addEventListener('click', ()=>{ const key=currentSituation.key; ensureTargetsKey(key); delete targetsMap[key][tgtChipSel.value]; saveTargets(); buildTargets(true); });
+tgtClearAll.addEventListener('click', ()=>{ const key=currentSituation.key; targetsMap[key]={}; saveTargets(); buildTargets(true); });
+
+function ensureHitForKey(key){ if(!hitsMap[key]) hitsMap[key]={type:'line', target:{x:IMG_W*0.55,y:IMG_H*0.65}}; }
+hitTypeSel.addEventListener('change', ()=>{ ensureHitForKey(currentSituation.key); hitsMap[currentSituation.key].type=hitTypeSel.value; saveHits(); });
+function syncHitUI(){
+  const key=currentSituation.key; ensureHitForKey(key);
+  const h=hitsMap[key]; hitTypeSel.value=h.type||'line'; xyHit.textContent=`x:${Math.round(h.target.x)} y:${Math.round(h.target.y)}`;
 }
 
-/* ================== ACTIONS ================== */
+function showSelectedToleranceUI(){
+  const key=currentSituation.key; ensureTolsKey(key);
+  const id=tgtChipSel.value; const val=getTol(key,id);
+  tolSlider.value=val; tolVal.textContent=val+' px';
+}
+tolSlider.addEventListener('input', ()=>{ tolVal.textContent=tolSlider.value+' px'; });
+tolSlider.addEventListener('change', ()=>{ const key=currentSituation.key; ensureTolsKey(key); tolerancesMap[key][tgtChipSel.value]=Number(tolSlider.value); saveTols(); });
+
+function builderRunners(){ const arr=[]; if(sbR1.checked)arr.push('1B'); if(sbR2.checked)arr.push('2B'); if(sbR3.checked)arr.push('3B'); return arr; }
+function setBuilderRunners(list){ sbR1.checked=list?.includes('1B'); sbR2.checked=list?.includes('2B'); sbR3.checked=list?.includes('3B'); }
+
+function nextSituationKey(){ let idx=1; const keys=new Set(SITUATIONS.map(s=>s.key)); while(keys.has(`S${idx}`)) idx++; return `S${idx}`; }
+function currentTargetsObject(){ return Fcopy(targetsMap[currentSituation.key]||{}); }
+function currentTolerancesObject(){ return Fcopy(tolerancesMap[currentSituation.key]||{}); }
+
+function buildSituationFromUI(){
+  const key = nextSituationKey();
+  const title=(sbName.value||'Untitled').trim();
+  const desc=(sbDesc.value||'').trim();
+  const outs=Number(sbOuts.value||0);
+  const runners=builderRunners();
+  const targets=currentTargetsObject();
+  const tolerances=currentTolerancesObject();
+  const hit=Fcopy(hitsMap[currentSituation.key] || {type:'line', target:{x:IMG_W*0.55,y:IMG_H*0.65}});
+  return { key, title, outs, runners, desc, targets, tolerances, hit };
+}
+
+sbAdd.addEventListener('click', ()=>{
+  const obj=buildSituationFromUI();
+  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('Add at least one target ring.'); return; }
+  SITUATIONS.push(obj);
+  targetsMap[obj.key]=Fcopy(obj.targets); tolerancesMap[obj.key]=Fcopy(obj.tolerances); hitsMap[obj.key]=Fcopy(obj.hit);
+  ensureStartsKey(obj.key); startsMap[obj.key]=Fcopy(DEFAULT_STARTS); saveStarts(); saveTargets(); saveTols(); saveHits();
+  populateSelect(obj.key); setSituation(obj.key); sbStatus.textContent=`Added ${obj.key}`;
+});
+
+sbUpdate.addEventListener('click', ()=>{
+  const s=currentSituation; if(!s) return;
+  s.title=(sbName.value||s.title).trim(); s.desc=(sbDesc.value||s.desc).trim(); s.outs=Number(sbOuts.value||s.outs||0); s.runners=builderRunners();
+  const key=s.key; s.targets=Fcopy(targetsMap[key]||{}); s.tolerances=Fcopy(tolerancesMap[key]||{}); s.hit=Fcopy(hitsMap[key]||s.hit||{type:'line',target:{x:IMG_W*0.55,y:IMG_H*0.65}});
+  const i=SITUATIONS.findIndex(x=>x.key===key); if(i>=0) SITUATIONS[i]=s;
+  populateSelect(key); setSituation(key); sbStatus.textContent=`Updated ${s.key}`;
+});
+
+sbSetActive.addEventListener('click', ()=>{
+  const obj=buildSituationFromUI();
+  const i=SITUATIONS.findIndex(s=>s.key===obj.key);
+  if(i>=0) SITUATIONS[i]=obj; else SITUATIONS.push(obj);
+  targetsMap[obj.key]=Fcopy(obj.targets); tolerancesMap[obj.key]=Fcopy(obj.tolerances); hitsMap[obj.key]=Fcopy(obj.hit);
+  ensureStartsKey(obj.key); if(!startsMap[obj.key]) startsMap[obj.key]=Fcopy(DEFAULT_STARTS); saveStarts(); saveTargets(); saveTols(); saveHits();
+  populateSelect(obj.key); setSituation(obj.key); sbStatus.textContent=`Set active ${obj.key}`;
+});
+
+sbExport.addEventListener('click', ()=>{
+  const s=currentSituation; if(!s) return;
+  const obj={ key:s.key, title:s.title, outs:Number(s.outs||0), runners:(s.runners||[]), desc:s.desc||'', targets:Fcopy(targetsMap[s.key]||{}), tolerances:Fcopy(tolerancesMap[s.key]||{}), hit:Fcopy(hitsMap[s.key]||{}) };
+  const pretty=JSON.stringify(obj,null,2);
+  const blob=new Blob([pretty],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${s.key}-${(s.title||'situation').replace(/\s+/g,'_')}.json`; a.click(); URL.revokeObjectURL(a.href);
+});
+
+/* Change tolerance UI when chip selection changes */
+tgtChipSel.addEventListener('change', ()=>{ showSelectedToleranceUI(); buildTargets(true,true); });
+
+/* ========== Export/Import situations.json (header buttons) ========== */
+document.getElementById('exportSituationsBtn').addEventListener('click', ()=>{
+  const blob=new Blob([JSON.stringify(SITUATIONS,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='situations.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+document.getElementById('importSituationsBtn').addEventListener('click', ()=> document.getElementById('importSituationsInput').click());
+document.getElementById('importSituationsInput').addEventListener('change', e=>{
+  const f=e.target.files?.[0]; if(!f) return; const reader=new FileReader();
+  reader.onload=()=>{ try{ const arr=JSON.parse(reader.result); if(!Array.isArray(arr)) throw new Error('Top-level array expected'); SITUATIONS=arr; populateSelect(); setSituation(sitSelect.value||arr[0]?.key); alert('Imported. Export to save situations.json into your repo.'); }catch(err){ alert('Invalid situations.json: '+err.message);} };
+  reader.readAsText(f); e.target.value='';
+});
+</script>
+<script>
+/* ========== Actions & UI lock ========== */
+function lockPlayHit(){ playLocked=true; const b=document.getElementById('playHitBtn'); b.disabled=true; b.title='Reset or change situation to play again'; }
+function unlockPlayHit(){ playLocked=false; const b=document.getElementById('playHitBtn'); b.disabled=false; b.title='Play Hit'; }
+
 function resetSituation(){
-  try{ cancelAnimationFrame(rafId); }catch(e){}
-  try{ cancelAnimationFrame(runnerRafId); }catch(e){}
-  rafId = runnerRafId = null;
+  try{ cancelAnimationFrame(rafId); }catch(e){} try{ cancelAnimationFrame(runnerRafId); }catch(e){} rafId=runnerRafId=null;
   clearBallCanvas();
-
-  // players back to per-situation starts
-  const S=getStartsForCurrent();
-  tokens.forEach((_,id)=>{ tokens.get(id).pos = Fcopy(S[id]); placeToken(id); });
-
-  // runners back to situation defaults
-  currentRunners = (currentSituation.runners||[]).slice();
-  drawRunners();
-
-  // score/tries text
-  attemptCount=0;
-  scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-
-  unlockPlayHit();
+  const S=getStartsForCurrent(); tokens.forEach((_,id)=>{ tokens.get(id).pos=Fcopy(S[id]); placeToken(id); });
+  currentRunners=(currentSituation.runners||[]).slice(); drawRunners();
+  attemptCount=0; scoreBox.textContent=`Score: 0/9 • Try 0/${MAX_TRIES}`;
+  buildTargets(false); unlockPlayHit();
 }
+
 function playCurrentHit(){
-  if (playLocked) return;
-  lockPlayHit();
-
-  const hit = currentSituation?.hit || {type:'line', target:{x:IMG_W*0.55, y:IMG_H*0.65}};
-  const from = getLaunchPoint();
-
-  // add batter-runner if missing & draw before animation
-  if (!currentRunners.includes('HP')) currentRunners = ['HP', ...currentRunners];
-  drawRunners();
-
-  const duration = (hit.type==='popup') ? 2200 : (hit.type==='grounder' ? 1800 : 1600);
-  const plan = planRunnerAdvancesForCurrent(hit);
-  animateRunnersAdvancePlan(plan, duration);
+  if(playLocked) return; lockPlayHit();
+  const hit = hitsMap[currentSituation.key] || {type:'line', target:{x:IMG_W*0.55,y:IMG_H*0.65}};
+  const from = BASES.HP;
+  if (!currentRunners.includes('HP')) currentRunners=['HP',...currentRunners]; drawRunners();
+  const duration=(hit.type==='popup')?2200:(hit.type==='grounder'?1800:1600);
+  const plan=planRunnerAdvancesForCurrent(hit); animateRunnersAdvancePlan(plan,duration);
   playHitAnimation(from, hit.target, hit.type);
 }
 
-/* ================== SITUATION LOADING & SWITCH ================== */
+function checkBtnClick(){ checkPositions(); }
+
+/* ========== Situation loading & switch ========== */
 async function loadSituationsFromJson(){
   try{
-    const res = await fetch('./situations.json', {cache:'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const arr = await res.json();
-    if(!Array.isArray(arr)) throw new Error('situations.json must be an array');
-    SITUATIONS = arr;
+    const res=await fetch('./situations.json',{cache:'no-store'}); if(!res.ok) throw new Error('HTTP '+res.status);
+    const arr=await res.json(); if(!Array.isArray(arr)) throw new Error('Array expected'); SITUATIONS=arr;
   }catch(err){
-    console.warn('[Situations] load failed:', err);
-    if (!SITUATIONS.length){
-      SITUATIONS = [{
-        key:'S1', title:'Sample (fallback)', outs:0, runners:[],
-        desc:'Fallback inline situation. Create or import situations.json.',
-        targets:{}, tolerances:{}, hit:{type:'line', target:{x:IMG_W*0.55, y:IMG_H*0.65}}
-      }];
-    }
+    console.warn('[Situations] load failed:',err);
+    if(!SITUATIONS.length){ SITUATIONS=[{key:'S1',title:'Sample (fallback)',outs:0,runners:[],desc:'Fallback. Create situations.json.',targets:{},tolerances:{},hit:{type:'line',target:{x:IMG_W*0.55,y:IMG_H*0.65}}}]; }
   }
 }
 function populateSelect(selectedKey){
-  sitSelect.innerHTML='';
-  SITUATIONS.forEach(s=>{
-    const o=document.createElement('option');
-    o.value=s.key; o.textContent=s.title||s.key;
-    sitSelect.appendChild(o);
-  });
-  const key = selectedKey || (currentSituation && currentSituation.key) || (SITUATIONS[0] && SITUATIONS[0].key);
-  if (key) sitSelect.value = key;
+  sitSelect.innerHTML=''; SITUATIONS.forEach(s=>{ const o=document.createElement('option'); o.value=s.key; o.textContent=s.title||s.key; sitSelect.appendChild(o); });
+  const key=selectedKey || (currentSituation&&currentSituation.key) || (SITUATIONS[0]&&SITUATIONS[0].key); if(key) sitSelect.value=key;
 }
-function setSituation(key, {fromUser=false} = {}){
-  const next = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
-  if (!next) return;
-
-  currentSituation = next;
-  ensureStartsKey(next.key);
-
-  attemptCount=0;
-  currentRunners = (next.runners||[]).slice();
-
-  if (sitSelect && sitSelect.value !== next.key) sitSelect.value = next.key;
-  if (outsBadge) outsBadge.textContent = `Outs: ${Number.isFinite(next.outs)?Number(next.outs):0}`;
-  const sitText = document.getElementById('sitText'); if (sitText) sitText.textContent = next.desc || next.title || '';
-  if (scoreBox) scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-
-  clearBallCanvas();
-  buildTokens();
-  drawRunners();
-
-  unlockPlayHit();
+function setSituation(key){
+  const next=SITUATIONS.find(s=>s.key===key)||SITUATIONS[0]; if(!next) return;
+  currentSituation=next; ensureStartsKey(next.key);
+  attemptCount=0; currentRunners=(next.runners||[]).slice();
+  if(sitSelect.value!==next.key) sitSelect.value=next.key;
+  outsBadge.textContent=`Outs: ${Number.isFinite(next.outs)?Number(next.outs):0}`;
+  sitText.textContent=next.desc||next.title||''; scoreBox.textContent=`Score: 0/9 • Try 0/${MAX_TRIES}`;
+  clearBallCanvas(); buildTargets(false); buildTokens(); drawRunners(); unlockPlayHit(); syncHitUI(); showSelectedToleranceUI();
 }
 
-/* ================== BOOT ================== */
-function waitForFieldImage(){
-  const img = document.getElementById('fieldImg');
-  if (!img) return Promise.resolve();
-  if (img.complete && img.naturalWidth>0) return Promise.resolve();
-  return new Promise(res=>{
-    img.addEventListener('load',res,{once:true});
-    img.addEventListener('error',res,{once:true});
-  });
-}
-
+/* ========== Boot ========== */
 async function boot(){
-  ballCanvas = document.getElementById('ballCanvas');
-  runnersLayer = document.getElementById('runnersLayer');
-  tokensLayer = document.getElementById('tokens');
+  ballCanvas=document.getElementById('ballCanvas'); runnersLayer=document.getElementById('runnersLayer'); tokensLayer=document.getElementById('tokens');
+  await loadSituationsFromJson(); populateSelect(); await waitForFieldImage(); sizeOverlays();
+  loadStarts(); loadTargets(); loadTols(); loadHits();
+  setSituation(sitSelect.value || (SITUATIONS[0]&&SITUATIONS[0].key));
 
-  await loadSituationsFromJson();
-  populateSelect();
-
-  await waitForFieldImage();
-  sizeOverlays();
-
-  loadStarts();
-
-  // initial situation
-  const key = (sitSelect && sitSelect.value) || (SITUATIONS[0] && SITUATIONS[0].key);
-  setSituation(key);
-
-  // wire UI
-  sitSelect.addEventListener('change', e=> setSituation(e.target.value, {fromUser:true}));
-  playHitBtn.addEventListener('click', playCurrentHit);
-  resetBtn.addEventListener('click', resetSituation);
-
-  // Export/Import
-  document.getElementById('exportSituationsBtn').addEventListener('click', ()=>{
-    try{
-      const blob=new Blob([JSON.stringify(SITUATIONS,null,2)],{type:'application/json'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-      a.download='situations.json'; a.click(); URL.revokeObjectURL(a.href);
-    }catch(e){ alert('Export failed: '+(e?.message||e)); }
-  });
-  document.getElementById('importSituationsBtn').addEventListener('click', ()=>{
-    document.getElementById('importSituationsInput').click();
-  });
-  document.getElementById('importSituationsInput').addEventListener('change', e=>{
-    const f=e.target.files?.[0]; if(!f) return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      try{
-        const arr=JSON.parse(reader.result);
-        if(!Array.isArray(arr)) throw new Error('Expected top-level array');
-        SITUATIONS=arr;
-        populateSelect();
-        setSituation(sitSelect.value || (arr[0]&&arr[0].key));
-        alert('Situations loaded. Use Export to download and commit to GitHub.');
-      }catch(err){ alert('Invalid situations.json: '+err.message); }
-    };
-    reader.readAsText(f); e.target.value='';
-  });
-
+  document.getElementById('playHitBtn').addEventListener('click', playCurrentHit);
+  document.getElementById('resetBtn').addEventListener('click', resetSituation);
+  document.getElementById('checkBtn').addEventListener('click', checkBtnClick);
+  sitSelect.addEventListener('change', e=> setSituation(e.target.value));
   window.addEventListener('resize', sizeOverlays);
 }
-
 window.addEventListener('DOMContentLoaded', boot);
 </script>
-
 </body>
 </html>
