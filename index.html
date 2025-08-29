@@ -1648,7 +1648,12 @@ async function loadSituationsFromJson(){
     if (!Array.isArray(arr)) throw new Error('situations.json must be an array');
 
     // Replace the global SITUATIONS (keep your same shape)
-    window.SITUATIONS = arr;
+        // Mutate the existing array so all code using the `const SITUATIONS` binding sees the new items
+    if (Array.isArray(window.SITUATIONS)) {
+      window.SITUATIONS.splice(0, window.SITUATIONS.length, ...arr);
+    } else {
+      window.SITUATIONS = arr;
+    }
     console.info('[Situations] Loaded from situations.json:', arr.length);
   }catch(err){
     console.warn('[Situations] Using inline SITUATIONS (could not load situations.json):', err?.message || err);
