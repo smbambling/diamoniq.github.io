@@ -5,77 +5,132 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Diamond IQ - Situational Baseball</title>
 <style>
-:root{
-  --bg:#f5f7fb; --card:#ffffff; --ink:#0f172a; --muted:#6b7280;
-  --accent:#ff8a00;  /* line-drive */
-  --popup:#06b6d4;   /* popup */
-  --ground:#374151;  /* grounder (dashed) */
-  --pill:#e7eefc;
-  --good:#10b981; --bad:#ef4444;
-}
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-header#topBar{
-  position:sticky; top:0; z-index:1000; display:flex; flex-wrap:wrap; gap:8px; align-items:center;
-  padding:12px 16px; background:#fff; border-bottom:1px solid #e5e7eb;
-}
-header h1{margin:0 12px 0 0; font-size:18px}
-select, button, input[type="password"]{
-  border:1px solid #d1d5db; background:#fff; color:#111827; border-radius:8px; padding:8px 10px; font-weight:600;
-}
-button{cursor:pointer} button.primary{background:#2563eb;color:#fff;border-color:#1d4ed8} button.warn{background:#fee2e2;color:#991b1b;border-color:#fecaca}
-.pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--pill);color:#1f2937;font-weight:700;border:1px solid #c7d2fe}
-.score{margin-left:auto;font-weight:700}
+  :root{
+    --bg:#f6f7fb;
+    --card:#fff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --line:#e5e7eb;
 
-.app{display:grid;grid-template-columns:1fr 380px;gap:16px;padding:16px;max-width:1500px;margin:0 auto}
-.fieldCard,.sideCard{background:var(--card);border:1px solid #e5e7eb;border-radius:12px;padding:12px}
-.sideCol{display:flex;flex-direction:column;gap:12px}
+    /* Buttons like the original */
+    --btn-green:#16a34a;
+    --btn-green-border:#15803d;
+    --btn-orange:#f97316;
+    --btn-orange-border:#ea580c;
+    --btn-slate:#334155;
 
-/* Field & overlays */
-#wrap{position:relative;width:100%}
-#fieldImg{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
-.overlay{position:absolute;inset:0;pointer-events:none}
-#targetsLayer{z-index:20} #tokens{z-index:30} #runnersLayer{z-index:40} #ballCanvas{z-index:50;width:100%;height:100%}
+    /* Chip colors like the screenshot */
+    --chip-battery:#f59e0b;  /* P, C = orange */
+    --chip-infield:#3b82f6;  /* 1B,2B,SS,3B = blue */
+    --chip-outfield:#ef4444; /* LF,CF,RF = red */
 
-/* Chips (players) */
-#tokens .chip{
-  position:absolute; transform:translate(-50%,-50%); width:36px;height:36px;border-radius:50%;
-  color:#fff;border:2px solid #fff; display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:12px; box-shadow:0 2px 6px rgba(0,0,0,.25); pointer-events:auto; user-select:none; touch-action:none
-}
-.chip.Battery{background:#111827}
-.chip.Infield{background:#0d9488}  /* teal-ish */
-.chip.Outfield{background:#9333ea} /* purple */
-.chip:active{transform:translate(-50%,-50%) scale(1.04)}
+    /* Target rings */
+    --tgt:#94a3b8;       /* default dashed */
+    --tgt-good:#10b981;  /* green */
+    --tgt-bad:#ef4444;   /* red */
 
-/* Targets */
-#targetsLayer .tgt{position:absolute; transform:translate(-50%,-50%); border-radius:50%; border:2px dashed #64748b; width:56px;height:56px; display:none}
-#targetsLayer .tgt.show{display:block}
-#targetsLayer .tgt.good{border-color:var(--good)}
-#targetsLayer .tgt.bad {border-color:var(--bad)}
-#targetsLayer .tgt .lbl{
-  position:absolute; top:-20px; left:50%; transform:translateX(-50%); background:#ffffffea; border:1px solid #e5e7eb; padding:2px 6px; border-radius:6px;
-  font-size:11px; color:#111827; display:none; white-space:nowrap
-}
-#targetsLayer .tgt.show-label .lbl{display:block}
+    /* Hit paths (unchanged) */
+    --hit-line:#ff8a00;
+    --hit-popup:#06b6d4;
+    --hit-ground:#374151;
+  }
 
-/* Runners */
-#runnersLayer .runner{
-  position:absolute; transform:translate(-50%,-50%); width:26px;height:26px;border-radius:50%;
-  background:#10b981;color:#fff;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.2)
-}
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;
+  }
 
-/* Calib / builder UI */
-.group{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.cardRow{display:flex; gap:8px; flex-wrap:wrap}
-.sideCard strong{display:block;margin:0 0 6px 0}
-.small{color:#475569;font-size:13px}
-.hide{display:none}
+  /* Top bar */
+  header#topBar{
+    position:sticky; top:0; z-index:1000;
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center;
+    padding:10px 14px; background:#fff; border-bottom:1px solid var(--line);
+  }
+  header h1{margin:0 10px 0 0; font-size:16px; font-weight:800}
 
-.howto{font-size:clamp(14px,0.45vw+13px,18px);line-height:1.6}
-.howto strong{display:block;font-size:clamp(15px,0.5vw+14px,20px);margin-bottom:6px}
-.howto ol{margin:10px 0 0 1.25em;padding:0 clamp(4px,0.6vw,14px)} .howto li{margin:clamp(6px,0.6vw,14px) 0}
+  select,button,input[type="password"]{
+    appearance:none; border:1px solid var(--line);
+    background:#fff; color:var(--ink);
+    border-radius:8px; padding:8px 10px; font-weight:700;
+  }
+  button{cursor:pointer}
+  .btn-green{background:var(--btn-green); border-color:var(--btn-green-border); color:#fff}
+  .btn-orange{background:var(--btn-orange); border-color:var(--btn-orange-border); color:#fff}
+  .btn-slate{background:#fff; border-color:var(--line); color:var(--btn-slate)}
+  .score{margin-left:auto; font-weight:800}
 
-@media (max-width: 1080px){ .app{grid-template-columns:1fr} }
+  /* “Calibration Unlocked” badge */
+  .badge{
+    display:inline-block; padding:6px 10px; border-radius:999px; font-weight:800;
+    border:1px solid var(--line); background:#eef2ff; color:#1e293b;
+  }
+  .badge.green{ background:#dcfce7; color:#065f46; border-color:#bbf7d0; }
+  .badge.gray{ background:#f1f5f9; color:#475569; border-color:#e2e8f0; }
+
+  /* Cards & grid */
+  .app{display:grid; grid-template-columns:1fr 360px; gap:14px; padding:14px; max-width:1300px; margin:0 auto}
+  .fieldCard,.sideCard{
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+  }
+  .sideCol{display:flex; flex-direction:column; gap:12px}
+
+  /* Field + overlays */
+  #wrap{position:relative; width:100%}
+  #fieldImg{display:block; width:100%; height:auto; border-radius:10px; background:#fff}
+  .overlay{position:absolute; inset:0; pointer-events:none}
+  #targetsLayer{z-index:20} #tokens{z-index:30} #runnersLayer{z-index:40} #ballCanvas{z-index:50; width:100%; height:100%}
+
+  /* Chips (32px circles) */
+  #tokens .chip{
+    position:absolute; transform:translate(-50%,-50%);
+    width:32px; height:32px; border-radius:50%;
+    color:#fff; border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:11px; letter-spacing:.2px;
+    box-shadow:0 1px 4px rgba(0,0,0,.22); pointer-events:auto; user-select:none; touch-action:none;
+  }
+  .chip.Battery{ background:var(--chip-battery) }
+  .chip.Infield{ background:var(--chip-infield) }
+  .chip.Outfield{ background:var(--chip-outfield) }
+  .chip:active{ transform:translate(-50%,-50%) scale(1.045); }
+
+  /* Runners */
+  #runnersLayer .runner{
+    position:absolute; transform:translate(-50%,-50%);
+    width:24px; height:24px; border-radius:50%;
+    background:#10b981; color:#fff; border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:11px; box-shadow:0 1px 4px rgba(0,0,0,.18);
+  }
+
+  /* Targets */
+  #targetsLayer .tgt{
+    position:absolute; transform:translate(-50%,-50%);
+    width:54px; height:54px; border-radius:50%;
+    border:2px dashed var(--tgt); display:none;
+  }
+  #targetsLayer .tgt.show{display:block}
+  #targetsLayer .tgt.good{border-color:var(--tgt-good)}
+  #targetsLayer .tgt.bad{border-color:var(--tgt-bad)}
+  #targetsLayer .tgt .lbl{
+    position:absolute; top:-18px; left:50%; transform:translateX(-50%);
+    background:#ffffffee; color:#111827; border:1px solid var(--line);
+    padding:2px 6px; border-radius:6px; font-size:10.5px; display:none; white-space:nowrap;
+  }
+  #targetsLayer .tgt.show-label .lbl{display:block}
+
+  /* How-to panel like original */
+  .howto{font-size:14px; color:#374151}
+  .howto strong{display:block; font-size:15px; margin:0 0 6px}
+  .howto ol{margin:6px 0 0 1.15em} .howto li{margin:6px 0}
+
+  .group{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  .small{color:var(--muted); font-size:12.5px}
+  .hide{display:none !important}
+
+  @media (max-width:1080px){ .app{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -85,9 +140,9 @@ button{cursor:pointer} button.primary{background:#2563eb;color:#fff;border-color
   <select id="sitSelect" aria-label="Select situation"></select>
   <span id="outsBadge" class="pill">Outs: 0</span>
 
-  <button id="checkBtn" class="primary">Check Positions</button>
-  <button id="playHitBtn">Play Hit</button>
-  <button id="resetBtn" class="warn">Reset Situation</button>
+  <button id="resetBtn" class="btn-orange">Reset Situation</button>
+  <button id="playHitBtn" class="btn-slate">Play Hit</button>
+  <button id="checkBtn" class="btn-green">Check Positions</button>
 
   <button id="exportSituationsBtn" title="Download situations.json">Export Situations</button>
   <input id="importSituationsInput" type="file" accept="application/json" class="hide">
@@ -321,25 +376,23 @@ function buildTokens(){
   tokensLayer.innerHTML = '';
   tokens.clear();
 
-  // Per-position colors (tweak to your liking)
-  const COLORS = {
-    'P':'#111827', 'C':'#111827',         // battery: near-black
-    '1B':'#ef4444', '2B':'#06b6d4', 'SS':'#22c55e', '3B':'#f97316', // infield: red/cyan/green/orange
-    'LF':'#f59e0b', 'CF':'#3b82f6', 'RF':'#a855f7'  // outfield: amber/blue/purple
+  const groups = {
+    Battery:['P','C'],
+    Infield:['1B','2B','SS','3B'],
+    Outfield:['LF','CF','RF']
   };
 
   const S = getStartsForCurrent();
-  ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
-    const el = document.createElement('div');
-    el.className = 'chip';
-    el.textContent = id;
-    el.style.background = COLORS[id] || '#0f172a'; // fallback
-    el.style.border = '2px solid #fff';
-    tokensLayer.appendChild(el);
-
-    tokens.set(id, { el, pos: Fcopy(S[id]) });
-    placeToken(id);
-    makeDraggable(el, id);
+  Object.entries(groups).forEach(([cls, list])=>{
+    list.forEach(id=>{
+      const el = document.createElement('div');
+      el.className = 'chip ' + cls;
+      el.textContent = id;
+      tokensLayer.appendChild(el);
+      tokens.set(id, { el, pos: Fcopy(S[id]) });
+      placeToken(id);
+      makeDraggable(el, id);
+    });
   });
 }
 
