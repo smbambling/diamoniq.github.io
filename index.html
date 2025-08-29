@@ -1548,25 +1548,32 @@ function populateSelectAndLabels(){
   }
 }
 
-// --- Situations JSON loader (non-destructive) ---
+// Situations JSON loader (mutates the existing const SITUATIONS array)
 async function loadSituationsFromJson(){
   try{
     const res = await fetch('./situations.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP '+res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
     const arr = await res.json();
     if (!Array.isArray(arr)) throw new Error('situations.json must be an array');
 
-    // Replace the global SITUATIONS (keep your same shape)
-        // Mutate the existing array so all code using the `const SITUATIONS` binding sees the new items
+    // Optional: light validation
+    const sane = arr.every(s => s && typeof s.key === 'string');
+    if (!sane) console.warn('[Situations] Some items lack a "key".');
+
+    // Mutate the existing array so code that uses the const binding sees the update
     if (Array.isArray(window.SITUATIONS)) {
       window.SITUATIONS.splice(0, window.SITUATIONS.length, ...arr);
     } else {
+      // Fallback if SITUATIONS wasn't initialized yet
       window.SITUATIONS = arr;
     }
+
     console.info('[Situations] Loaded from situations.json:', arr.length);
-  }catch(err){
+    return arr.length > 0;           // success flag
+  } catch (err){
     console.warn('[Situations] Using inline SITUATIONS (could not load situations.json):', err?.message || err);
-    // Do nothing; your inline SITUATIONS remains in place
+    return false;                    // signal failure to caller
   }
 }
 
