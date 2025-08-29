@@ -282,6 +282,15 @@ const Fcopy=o=>JSON.parse(JSON.stringify(o));
 function cssDims(){ const r=document.getElementById('wrap').getBoundingClientRect(); return {w:r.width,h:r.height}; }
 function unitToCss(native){ const {w,h}=cssDims(); return {left:native.x*(w/IMG_W), top:native.y*(h/IMG_H)}; }
 function cssToNative(x,y){ const {w,h}=cssDims(); return {x:x*(IMG_W/w), y:y*(IMG_H/h)}; }
+// If a point looks normalized (<=1), convert to native image pixels
+function toNative(pt){
+  if (!pt || typeof pt.x !== 'number' || typeof pt.y !== 'number') return pt;
+  if (pt.x <= 1 && pt.y <= 1) {
+    return { x: pt.x * IMG_W, y: pt.y * IMG_H };
+  }
+  return pt;
+}
+
 
 function ensureStartsKey(key){ if(!startsMap[key]) startsMap[key]=Fcopy(DEFAULT_STARTS); }
 function getStartsForCurrent(){ ensureStartsKey(currentSituation.key); return startsMap[currentSituation.key]; }
@@ -308,15 +317,29 @@ function makeDraggable(el,id){
   const end=()=>dragging=false; el.addEventListener('pointerup',end); el.addEventListener('pointercancel',end);
 }
 function buildTokens(){
-  tokensLayer=document.getElementById('tokens');
-  tokensLayer.innerHTML=''; tokens.clear();
-  const S=getStartsForCurrent();
-  const groups = {Battery:['P','C'], Infield:['1B','2B','SS','3B'], Outfield:['LF','CF','RF']};
-  Object.entries(groups).forEach(([cls,ids])=>{
-    ids.forEach(id=>{
-      const el=document.createElement('div'); el.className='chip '+cls; el.textContent=id; tokensLayer.appendChild(el);
-      tokens.set(id,{el,pos:Fcopy(S[id])}); placeToken(id); makeDraggable(el,id);
-    });
+  tokensLayer = document.getElementById('tokens');
+  tokensLayer.innerHTML = '';
+  tokens.clear();
+
+  // Per-position colors (tweak to your liking)
+  const COLORS = {
+    'P':'#111827', 'C':'#111827',         // battery: near-black
+    '1B':'#ef4444', '2B':'#06b6d4', 'SS':'#22c55e', '3B':'#f97316', // infield: red/cyan/green/orange
+    'LF':'#f59e0b', 'CF':'#3b82f6', 'RF':'#a855f7'  // outfield: amber/blue/purple
+  };
+
+  const S = getStartsForCurrent();
+  ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
+    const el = document.createElement('div');
+    el.className = 'chip';
+    el.textContent = id;
+    el.style.background = COLORS[id] || '#0f172a'; // fallback
+    el.style.border = '2px solid #fff';
+    tokensLayer.appendChild(el);
+
+    tokens.set(id, { el, pos: Fcopy(S[id]) });
+    placeToken(id);
+    makeDraggable(el, id);
   });
 }
 
@@ -326,46 +349,74 @@ function ensureTolsKey(key){ if(!tolerancesMap[key]) tolerancesMap[key]={}; }
 function ensureTargetsKey(key){ if(!targetsMap[key]) targetsMap[key]={}; }
 
 function buildTargets(showAll=false, revealIncorrectLabels=false){
-  const layer=document.getElementById('targetsLayer'); layer.innerHTML='';
-  const key=currentSituation.key; const tgs=targetsMap[key]||{};
-  Object.entries(tgs).forEach(([id,pt])=>{
-    const d=document.createElement('div'); d.className='tgt'; const css=unitToCss(pt);
-    d.style.left=css.left+'px'; d.style.top=css.top+'px';
-    const lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=id; d.appendChild(lbl);
-    if(showAll) d.classList.add('show');
-    if(revealIncorrectLabels) d.classList.add('show-label');
-    d.dataset.id=id;
+  const layer = document.getElementById('targetsLayer');
+  layer.innerHTML = '';
+
+  const key = currentSituation.key;
+  const tgs = targetsMap[key] || {};
+
+  Object.entries(tgs).forEach(([id, pt])=>{
+    const n = toNative(pt);                     // ← normalize if needed
+    const css = unitToCss(n);
+
+    const d = document.createElement('div');
+    d.className = 'tgt';
+    d.style.left = css.left + 'px';
+    d.style.top  = css.top  + 'px';
+    if (showAll) d.classList.add('show');
+
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = id;
+    d.appendChild(lbl);
+
+    if (revealIncorrectLabels) d.classList.add('show-label');
+
+    d.dataset.id = id;
     layer.appendChild(d);
   });
 }
 
+
 function distance(a,b){ const dx=a.x-b.x, dy=a.y-b.y; return Math.hypot(dx,dy); }
 function checkPositions(){
-  attemptCount = Math.min(MAX_TRIES, attemptCount+1);
-  const key=currentSituation.key; const tgs=targetsMap[key]||{};
-  let correct=0;
-  // mark rings visible or not
-  const layer=document.getElementById('targetsLayer');
-  layer.querySelectorAll('.tgt').forEach(el=>el.remove()); // rebuild fresh
-  const showAll = attemptCount>=MAX_TRIES;
-  const revealIncorrectLabels = showAll;
+  attemptCount = Math.min(MAX_TRIES, attemptCount + 1);
 
-  Object.entries(tgs).forEach(([id,pt])=>{
-    const tol=getTol(key,id);
-    const pos=tokens.get(id)?.pos || DEFAULT_STARTS[id];
-    const ok = distance(pos,pt) <= tol;
-    if(ok) correct++;
-    const d=document.createElement('div'); d.className='tgt show'; const css=unitToCss(pt);
-    d.style.left=css.left+'px'; d.style.top=css.top+'px';
-    d.classList.add(ok?'good':'bad');
-    const lbl=document.createElement('div'); lbl.className='lbl'; lbl.textContent=id;
-    if(showAll || ok) d.classList.add('show');
-    if(revealIncorrectLabels && !ok) d.classList.add('show-label');
-    d.appendChild(lbl); d.dataset.id=id; layer.appendChild(d);
+  const key = currentSituation.key;
+  const tgs = targetsMap[key] || {};
+  let correct = 0;
+
+  const layer = document.getElementById('targetsLayer');
+  layer.innerHTML = '';
+
+  const showAll = attemptCount >= MAX_TRIES;
+
+  Object.entries(tgs).forEach(([id, pt])=>{
+    const tol = getTol(key, id);
+    const nativeTarget = toNative(pt);                   // ← normalize if needed
+    const chipPos = tokens.get(id)?.pos || DEFAULT_STARTS[id];
+    const ok = (distance(chipPos, nativeTarget) <= tol);
+    if (ok) correct++;
+
+    const css = unitToCss(nativeTarget);
+    const d = document.createElement('div');
+    d.className = 'tgt show ' + (ok ? 'good' : 'bad');
+    d.style.left = css.left + 'px';
+    d.style.top  = css.top  + 'px';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'lbl';
+    lbl.textContent = id;
+    if (showAll || ok) d.classList.add('show');
+    if (showAll && !ok) d.classList.add('show-label');
+    d.appendChild(lbl);
+
+    layer.appendChild(d);
   });
 
-  scoreBox.textContent=`Score: ${correct}/9 • Try ${attemptCount}/${MAX_TRIES}`;
+  scoreBox.textContent = `Score: ${correct}/9 • Try ${attemptCount}/${MAX_TRIES}`;
 }
+
 
 /* ========== Runners ========== */
 function drawRunners(override){
@@ -387,21 +438,86 @@ function quadBezier(p0,p1,p2,t){ return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p
 function drawBallDot(ctx,x,y){ ctx.beginPath(); ctx.fillStyle='#fff'; ctx.arc(x,y,6,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=1; ctx.stroke(); }
 function getLaunchPoint(){ return BASES.HP; }
 
-function playHitAnimation(fromNative,toNative,type){
+function playHitAnimation(fromNative, toNativePt, type){
   cancelAnimationFrame(rafId);
-  const ctx=ballCanvas.getContext('2d'); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-  const s=unitToCss(fromNative), e=unitToCss(toNative);
-  const duration=(type==='popup')?2200:(type==='grounder'?1800:1600), t0=performance.now();
-  const mid={x:(s.x+s.y)/2? (s.x+e.x)/2 : (s.x+e.x)/2, y:(s.y+e.y)/2}; const rise=-Math.hypot(e.x-s.x,e.y-s.y)*0.25; const ctrl={x:mid.x,y:mid.y+rise};
-  const stroke=()=>{ ctx.lineWidth=4; ctx.lineCap='round'; if(type==='line'){ctx.setLineDash([]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#ff8a00';}
-    if(type==='popup'){ctx.setLineDash([]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--popup').trim()||'#06b6d4';}
-    if(type==='grounder'){ctx.setLineDash([8,8]);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--ground').trim()||'#374151';}};
-  const draw=(now)=>{ const t=Math.min(1,(now-t0)/duration); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height); stroke(); ctx.beginPath();
-    if(type==='popup'){ let first=true; const steps=48; for(let i=0;i<=Math.floor(steps*t);i++){const tt=i/steps; const p=quadBezier(s,ctrl,e,tt); if(first){ctx.moveTo(p.x,p.y); first=false;} else ctx.lineTo(p.x,p.y);} ctx.stroke(); const pb=quadBezier(s,ctrl,e,t); drawBallDot(ctx,pb.x,pb.y);}
-    else{ const px=lerp(s.x,e.x,t), py=lerp(s.y,e.y,t); ctx.moveTo(s.x,s.y); ctx.lineTo(px,py); ctx.stroke(); drawBallDot(ctx,px,py);}
-    if(t<1){ rafId=requestAnimationFrame(draw);} else { setTimeout(()=>{ ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height); drawBallDot(ctx,e.x,e.y); },80);} };
-  rafId=requestAnimationFrame(draw);
+
+  const ctx = ballCanvas.getContext('2d');
+  ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
+
+  // Convert to CSS pixels
+  const sCss = unitToCss(fromNative);
+  const eCss = unitToCss(toNative(toNativePt)); // ← normalize 0–1 if needed
+
+  const start = { x: sCss.left, y: sCss.top  };
+  const end   = { x: eCss.left, y: eCss.top  };
+
+  const duration = (type==='popup') ? 2200 : (type==='grounder' ? 1800 : 1600);
+  const t0 = performance.now();
+
+  // Control point for popup arc (simple bezier bow)
+  const mid = { x: (start.x + end.x)/2, y: (start.y + end.y)/2 };
+  const rise = -Math.hypot(end.x - start.x, end.y - start.y) * 0.25;
+  const ctrl = { x: mid.x, y: mid.y + rise };
+
+  function strokeForType(){
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    if (type === 'line'){ ctx.setLineDash([]);     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#ff8a00'; }
+    if (type === 'popup'){ ctx.setLineDash([]);     ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--popup').trim()  || '#06b6d4'; }
+    if (type === 'grounder'){ ctx.setLineDash([8,8]); ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ground').trim() || '#374151'; }
+  }
+
+  function drawBallDot(x, y){
+    ctx.beginPath();
+    ctx.fillStyle = '#ffffff';           // WHITE ball ✔️
+    ctx.arc(x, y, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.25)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  function draw(now){
+    const t = Math.min(1, (now - t0) / duration);
+    ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
+    strokeForType();
+
+    ctx.beginPath();
+    if (type === 'popup'){
+      const steps = 48;
+      let first = true;
+      for (let i=0; i<=Math.floor(steps*t); i++){
+        const tt = i/steps;
+        const p = quadBezier(start, ctrl, end, tt);
+        if (first){ ctx.moveTo(p.x, p.y); first=false; }
+        else { ctx.lineTo(p.x, p.y); }
+      }
+      ctx.stroke();
+      const pb = quadBezier(start, ctrl, end, t);
+      drawBallDot(pb.x, pb.y);
+    } else {
+      const px = lerp(start.x, end.x, t);
+      const py = lerp(start.y, end.y, t);
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(px, py);
+      ctx.stroke();
+      drawBallDot(px, py);
+    }
+
+    if (t < 1){
+      rafId = requestAnimationFrame(draw);
+    } else {
+      // Clear the path, keep the ball at the end
+      setTimeout(()=>{
+        ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
+        drawBallDot(end.x, end.y);
+      }, 80);
+    }
+  }
+
+  rafId = requestAnimationFrame(draw);
 }
+
 
 /* Runner movement profiles */
 function distFromHP(n){ const hp=BASES.HP; return Math.hypot(n.x-hp.x,n.y-hp.y); }
@@ -586,14 +702,24 @@ function resetSituation(){
 }
 
 function playCurrentHit(){
-  if(playLocked) return; lockPlayHit();
-  const hit = hitsMap[currentSituation.key] || {type:'line', target:{x:IMG_W*0.55,y:IMG_H*0.65}};
+  if (playLocked) return;
+  lockPlayHit();
+
+  const raw = hitsMap[currentSituation.key] || { type:'line', target:{ x: IMG_W*0.55, y: IMG_H*0.65 } };
+  const hit = { type: raw.type || 'line', target: toNative(raw.target) }; // ← normalize if needed
   const from = BASES.HP;
-  if (!currentRunners.includes('HP')) currentRunners=['HP',...currentRunners]; drawRunners();
-  const duration=(hit.type==='popup')?2200:(hit.type==='grounder'?1800:1600);
-  const plan=planRunnerAdvancesForCurrent(hit); animateRunnersAdvancePlan(plan,duration);
+
+  // Ensure BR shows before animation
+  if (!currentRunners.includes('HP')) currentRunners = ['HP', ...currentRunners];
+  drawRunners();
+
+  const duration = (hit.type==='popup') ? 2200 : (hit.type==='grounder' ? 1800 : 1600);
+  const plan = planRunnerAdvancesForCurrent(hit);
+  animateRunnersAdvancePlan(plan, duration);
+
   playHitAnimation(from, hit.target, hit.type);
 }
+
 
 function checkBtnClick(){ checkPositions(); }
 
