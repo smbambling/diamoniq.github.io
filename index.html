@@ -156,9 +156,9 @@
       <button id="randomBtn">Random</button>
       <select id="sitSelect" aria-label="Select situation"></select>
       <span id="outsBadge" class="pill" title="Outs in this situation">Outs: 0</span>
-      <button id="playHitBtn">Start Situation</button>
+      <button id="playHitBtn">Start Situation</button>      
       <button id="resetBtn" class="warn">Reset Situation</button>
-      <button id="checkBtn" class="primary">Check Positions</button>
+      <button id="checkBtn" class="primary">Check Positions</button>      
       <div class="score" id="score">Score: 0/9 • Try 0/3</div>
       <button id="unlockBtn" title="Unlock Coach Tools">🔒 Unlock Coach Tools</button>
     </header>
@@ -416,7 +416,123 @@ const BASES_DEFAULT={
   }
 };
 let BASES = JSON.parse(JSON.stringify(BASES_DEFAULT));
-const SITUATIONS = [];
+
+/* Example situations (now with default 'hit') */
+const SITUATIONS=[
+  {
+    key: 'S1',
+  title: "Single to LF (no runners)",
+  outs: 1,
+  runners: [],
+  desc: "Base hit single to first base, no runners on",
+  targets: {
+  "LF": {
+    "x": 821,
+    "y": 854
+  },
+  "SS": {
+    "x": 1095,
+    "y": 1031
+  },
+  "2B": {
+    "x": 1514,
+    "y": 1171
+  },
+  "1B": {
+    "x": 1873,
+    "y": 1556
+  },
+  "3B": {
+    "x": 1097,
+    "y": 1559
+  },
+  "P": {
+    "x": 1642,
+    "y": 1424
+  },
+  "C": {
+    "x": 2004,
+    "y": 1777
+  },
+  "CF": {
+    "x": 709,
+    "y": 608
+  },
+  "RF": {
+    "x": 1963,
+    "y": 1017
+  }
+},
+  tolerances: {
+  "P": 65,
+  "C": 115,
+  "1B": 65,
+  "2B": 65,
+  "SS": 65,
+  "3B": 65,
+  "LF": 65,
+  "CF": 119,
+  "RF": 92
+},
+  hit: {
+  "type": "line",
+  "target": {
+    "x": 833,
+    "y": 874
+  }
+  }
+  },
+  {
+    key:'S2',
+    title:'Popup to shallow CF (R1)',
+    outs: 0,
+    runners:['1B'],
+    desc:'Base hit popup to shallow center field',
+    targets:{
+      'CF':F(0.500,0.470),
+      'LF':F(0.390,0.510),
+      'RF':F(0.610,0.510),
+      '2B':F(0.520,0.520),
+      'SS':F(0.465,0.530),
+      '1B':F(0.770,0.640),
+      '3B':F(0.230,0.640),
+      'P': F(0.530,0.740),
+      'C': F(0.520,0.860)
+    },
+    tolerances:{
+      'P':70,'C':70,'1B':70,'2B':70,'SS':70,'3B':70,'LF':70,'CF':70,'RF':70
+    },
+    hit:{
+      type:'popup',
+      target:F(0.500,0.470)
+    }
+  },
+  {
+    key:'S3',
+    title:'Chopper to 3B (R1, R2)',
+    outs: 0,
+    runners:['1B','2B'],
+    desc:'Base hit hard chopper towards third base.',
+    targets:{
+      '3B':F(0.285,0.610),
+      'SS':F(0.250,0.640),
+      '2B':F(0.500,0.415),
+      '1B':F(0.770,0.640),
+      'P': F(0.430,0.760),
+      'C': F(0.520,0.880),
+      'LF':F(0.260,0.560),
+      'CF':F(0.420,0.520),
+      'RF':F(0.680,0.560)
+    },
+    tolerances:{
+      'P':75,'C':75,'1B':70,'2B':70,'SS':70,'3B':70,'LF':70,'CF':70,'RF':70
+    },
+    hit:{
+      type:'grounder',
+      target:F(0.285,0.610)
+    }
+  }
+];
 
 /* ================== DOM ================== */
 const appRoot=document.getElementById('appRoot');
@@ -1548,107 +1664,30 @@ function populateSelectAndLabels(){
   }
 }
 
-// Situations JSON loader (mutates the existing const SITUATIONS array)
-async function loadSituationsFromJson(){
-  try{
-    const res = await fetch('./situations.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    const arr = await res.json();
-    if (!Array.isArray(arr)) throw new Error('situations.json must be an array');
-
-    // Optional: light validation
-    const sane = arr.every(s => s && typeof s.key === 'string');
-    if (!sane) console.warn('[Situations] Some items lack a "key".');
-
-    // Mutate the existing array so code that uses the const binding sees the update
-    if (Array.isArray(window.SITUATIONS)) {
-      window.SITUATIONS.splice(0, window.SITUATIONS.length, ...arr);
-    } else {
-      // Fallback if SITUATIONS wasn't initialized yet
-      window.SITUATIONS = arr;
-    }
-
-    console.info('[Situations] Loaded from situations.json:', arr.length);
-    return arr.length > 0;           // success flag
-  } catch (err){
-    console.warn('[Situations] Using inline SITUATIONS (could not load situations.json):', err?.message || err);
-    return false;                    // signal failure to caller
-  }
-}
-
 /* INIT */
-/* INIT */
-async function init(){
-  // 1) Try to load ./situations.json (mutates the existing const SITUATIONS array)
-  const loadedFromFile = await loadSituationsFromJson();
+function init(){
+  sizeOverlays();
+  loadStarts();
+  loadTargets();
+  loadTols();
+  loadBases();
+  loadHits();
+  populateSelectAndLabels();
+  buildTokens();
+  setSituation(SITUATIONS[0].key);
+  showCalibUI(isCalibUnlocked());
 
-  // 2) Ensure SITUATIONS is always an array
-  if (!Array.isArray(window.SITUATIONS)) window.SITUATIONS = [];
+  // Hide all controls by default
+  startsControls?.classList.remove('show');
+  chipPickerStarts?.classList.remove('show');
+  targetsControls?.classList.remove('show');
+  chipPickerTargets?.classList.remove('show');
+  runnersControls?.classList.remove('show');
+  hitControls?.classList.remove('show');
+  tolPanel.style.display='none';
 
-  // 3) Wait for the field image so overlay sizing is correct
-  if (typeof waitForFieldImage === 'function') {
-    try { await waitForFieldImage(); } catch {}
-  }
-
-  // 4) Size overlays (canvas, layers)
-  if (typeof sizeOverlays === 'function') sizeOverlays();
-
-  // 5) Load persisted calibration/state (no-ops if you don't use them)
-  if (typeof loadStarts  === 'function') loadStarts();
-  if (typeof loadTargets === 'function') loadTargets();
-  if (typeof loadTols    === 'function') loadTols();
-  if (typeof loadBases   === 'function') loadBases();
-  if (typeof loadHits    === 'function') loadHits();
-
-  // 6) Rebuild the situation dropdown/labels using your app helper (if present)
-  if (typeof populateSelectAndLabels === 'function') {
-    populateSelectAndLabels();
-  } else if (typeof populateSelect === 'function') {
-    populateSelect();
-  } else {
-    // minimal fallback populate
-    const sel = document.getElementById('sitSelect');
-    if (sel) {
-      sel.innerHTML = '';
-      SITUATIONS.forEach(s => {
-        const o = document.createElement('option');
-        o.value = s.key;
-        o.textContent = s.title || s.key;
-        sel.appendChild(o);
-      });
-    }
-  }
-
-  // 7) Build player chips layer
-  if (typeof buildTokens === 'function') buildTokens();
-
-  // 8) Choose initial situation key (handles empty JSON gracefully)
-  const firstKey = (SITUATIONS[0] && SITUATIONS[0].key) || null;
-
-  if (firstKey && typeof setSituation === 'function') {
-    setSituation(firstKey);
-  } else {
-    // No situations available: make the UI safe and informative
-    const sel = document.getElementById('sitSelect');
-    if (sel) sel.innerHTML = '';
-    const sitText = document.getElementById('sitText');
-    if (sitText) sitText.textContent = loadedFromFile
-      ? 'No situations found in situations.json.'
-      : 'No situations available. Add situations.json or inline situations.';
-  }
-
-  // 9) Calibration UI badge/panels (if your app exposes these helpers)
-  if (typeof showCalibUI === 'function' && typeof isCalibUnlocked === 'function') {
-    showCalibUI(isCalibUnlocked());
-  }
-
-  // 10) Reset score & clear any previous ball path
-  if (typeof scoreBox !== 'undefined' && scoreBox) {
-    const MAX_TRIES = (typeof window.MAX_TRIES === 'number') ? window.MAX_TRIES : 3;
-    scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-  }
-  if (typeof clearBallCanvas === 'function') clearBallCanvas();
+  scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
+  clearBallCanvas();
 }
 
 // Initialize even if the image errors
