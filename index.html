@@ -1,1704 +1,1791 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Diamond IQ - Situational Baseball</title>
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Diamond IQ — Chips + Targets + Coach Tools (JSON situations)</title>
 <style>
-  :root{
-    --muted:#47607a;
-    --chip-bat:#f59e0b; --chip-if:#3b82f6; --chip-of:#ef4444;
-    --panel:#eef4ff; --panel-br:#d6e3ff;
-    --ring-ok:#16a34a; --ring-no:#ef4444;
-    --bg-soft:#f7fbff; --br-soft:#cfe2ff;
-    --track:#d6e3ff; --thumb:#2563eb;
-    --accent:#ff8a00;
-    --popup:#06b6d4;
-    --ground:#374151;
+  /* --- Base UI --- */
+  body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f7fb;color:#1f2937}
+  header{display:flex;align-items:center;gap:10px;padding:12px;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
+  header h1{margin:0 8px 0 0;font-size:16px;font-weight:800}
+  select,button,input[type="number"],input[type="range"]{padding:6px 10px;font-weight:700;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
+  button{cursor:pointer}
+  .btn-green{background:#16a34a;color:#fff;border-color:#15803d}
+  .btn-orange{background:#f97316;color:#fff;border-color:#ea580c}
+  .btn-slate{background:#fff;color:#334155;border:1px solid #cbd5e1}
+  .btn-small{ padding:4px 8px; font-size:12px; line-height:1.2; }
+
+  #startBtn:disabled {
+    background:#f1f5f9;
+    color:#94a3b8;
+    border-color:#cbd5e1;
+    cursor:not-allowed;
   }
-  html,body{height:100%}
-  body{
-    background:#fff; color:#0b1321; margin:0;
-    font:500 15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    display:flex; align-items:flex-start; justify-content:center; padding:0 12px 12px;
+
+  #resetBtn:disabled {
+    background:#f1f5f9;
+    color:#94a3b8;
+    border-color:#cbd5e1;
+    cursor:not-allowed;
   }
 
-  .app{
-    width:100%; max-width:1600px; display:grid; gap:12px;
-    grid-template-columns:1.25fr 1fr;
+  /* Grey-out Check Positions button when disabled */
+  #checkBtn:disabled {
+    background:#e5e7eb !important;
+    color:#94a3b8 !important;
+    border-color:#cbd5e1 !important;
+    cursor:not-allowed;
   }
-  .app.wide-side{ grid-template-columns:1fr 1.25fr; }
-  @media (max-width:1060px){ .app, .app.wide-side{ grid-template-columns:1fr } }
 
-  header{
-    grid-column:1/-1; background:var(--panel); border:1px solid var(--panel-br);
-    border-radius:12px; padding:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;
-    position:sticky; top:0; z-index:100; backdrop-filter:saturate(1.05) blur(3px);
+  /* HUD badges */
+  .hud{display:flex;gap:10px;margin-left:auto;align-items:center}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 10px;border-radius:999px;font-weight:900;font-size:13px;
+    border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
+    background:#f8fafc;color:#0b1321;
   }
-  header h1{font-size:18px; margin:0 10px 0 0}
-  select,button,input,textarea{ border-radius:10px; border:1px solid #c7d6f3; background:#fff; padding:8px 10px; font-weight:700; }
-  button{ cursor:pointer }
-  button.primary{ background:#16a34a; color:#fff; border-color:#0d7a36 }
-  button.warn{ background:#f59e0b; color:#231800; border-color:#be7c0a }
-  .pill{ padding:6px 10px; border-radius:999px; border:1px solid #c7d6f3; background:#fff; font-weight:700; cursor:pointer }
-  .pill.active{ background:#0ea5e9; color:#fff; border-color:#0c8bc4 }
-  .score{ margin-left:auto; font-weight:800 }
+  .badge-score{background:#ecfeff;border-color:#a5f3fc}
+  .badge-tries{background:#eef2ff;border-color:#c7d2fe}
+  .badge .dot{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+  .dot-score{background:#06b6d4}
+  .dot-tries{background:#6366f1}
 
-  .board{ background:#fff; border:1px solid #d7e0ef; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:center; position:relative; }
-  .fieldWrap{ position:relative; width: clamp(320px, 95vw, 1400px); }
-  .fieldWrap img{ display:block; width:100%; height:auto; border-radius:10px; border:1px solid #d7e0ef; }
+  .app{display:grid;grid-template-columns:1fr 340px;gap:14px;padding:14px;max-width:min(1600px,96vw);margin:0 auto}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
+  .sideCol{display:flex;flex-direction:column;gap:12px}
 
-  .overlay{ position:absolute; left:0; top:0; pointer-events:none; }
-  #tokens{ pointer-events:auto; }
+  /* Field + overlays */
+  #wrap{position:relative}
+  #fieldImg{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
+  .overlay{position:absolute;inset:0;pointer-events:none}
+  #targetsLayer{pointer-events:none;z-index:2;} /* visual-only container (kept for layering) */
+  #ballLayer{pointer-events:none;z-index:3;}
 
+  /* Chips (direct children of #wrap) */
+  :root { --chip-size: 36px; --chip-font: 14px; }
   .chip{
-    position:absolute; width:36px; height:36px; transform:translate(-50%,-50%);
-    display:grid; place-items:center; border-radius:999px; color:#fff; font-weight:900; font-size:12px;
-    box-shadow:0 6px 14px rgba(0,0,0,.25); border:2px solid rgba(0,0,0,.25);
-    user-select:none; touch-action:none; cursor:grab;
+    position:absolute; transform:translate(-50%,-50%);
+    width:var(--chip-size); height:var(--chip-size);
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:var(--chip-font); color:#fff; cursor:grab;
+    box-shadow:0 1px 3px rgba(0,0,0,.35);
+    user-select:none; touch-action:none; pointer-events:auto;
+    z-index:1;
   }
-  .chip:active{ cursor:grabbing; transform:translate(-50%,-50%) scale(1.06) }
-  .Battery{ background:var(--chip-bat) }
-  .Infield{ background:#3b82f6 }
-  .Outfield{ background:#ef4444 }
+  .chip:active{transform:translate(-50%,-50%) scale(1.045)}
+  .chip.Battery{background:#f59e0b}
+  .chip.Infield{background:#2563eb}
+  .chip.Outfield{background:#dc2626}
+  .chip.locked{cursor:not-allowed;opacity:.7}
 
-  /* Target rings */
+  /* Targets (direct children of #wrap) */
   .tgt{
-    position:absolute; transform:translate(-50%,-50%); border-radius:999px;
+    position:absolute;transform:translate(-50%,-50%);
     border:3px solid rgba(255,255,255,.98);
-    box-shadow:0 0 0 3px rgba(0,0,0,.28), 0 0 0 10px rgba(255,255,255,.18);
-    background: rgba(0,0,0,0.05);
-    display:none;
+    border-radius:999px;display:none;
+    box-shadow:0 0 0 3px rgba(0,0,0,.28),0 0 0 10px rgba(255,255,255,.18);
+    background:rgba(0,0,0,0.05);
+    touch-action:none; z-index:2;
   }
-  .tgt.good{ background: rgba(22,163,74,.25); box-shadow:0 0 0 3px rgba(16,94,50,.35), 0 0 0 10px rgba(22,163,74,.22); }
-  .tgt.bad{  background: rgba(239,68,68,.25); box-shadow:0 0 0 3px rgba(140,27,27,.35), 0 0 0 10px rgba(239,68,68,.22); }
+  .tgt.draggable{cursor:grab;pointer-events:auto;}
+  .tgt.good{background:rgba(22,163,74,.25)}
+  .tgt.bad{background:rgba(239,68,68,.25)}
   .tgt .tgt-label{
-    position:absolute; left:50%; transform:translateX(-50%);
-    top: calc(100% + 6px);
-    padding:2px 7px; border-radius:6px; font-weight:900; font-size:12px;
-    color:#0b1321; background:rgba(255,255,255,.95); border:1px solid rgba(0,0,0,.2); white-space:nowrap; display:none;
+    position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    padding:2px 7px;border-radius:6px;font-weight:900;font-size:12px;
+    color:#0b1321;background:rgba(255,255,255,.95);border:1px solid rgba(0,0,0,.2);
+    white-space:nowrap;display:none
   }
-  .tgt.show-label .tgt-label{ display:block; }
+  .tgt.show-label .tgt-label{display:block}
+  .tgt.locked{cursor:not-allowed}
 
-  .side{ background:#fff; border:1px solid #d7e0ef; border-radius:12px; padding:12px }
-  .card{ background:#f7faff; border:1px solid #dce8ff; border-radius:10px; padding:10px; margin-bottom:10px }
-  .small{ font-size:13px; color:#47607a }
-
-  .calibSection{ margin-top:8px }
-  .calibTitle{ font-weight:800; margin-bottom:6px }
-  .calibBar{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px; background:#f7fbff; border:1px dashed #cfe2ff; border-radius:10px; }
-  .coords{ font:600 13px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color:#334155; padding:4px 8px; border-radius:6px; background:#eaf4ff; border:1px solid #cfe2ff }
-
-  /* helpers */
-  .calibControls{ display:none; }
-  .calibControls.show{ display:flex; }
-  .chipGroups{ display:none; }
-  .chipGroups.show{ display:grid; gap:6px; width:100% }
-
-  .chipRow{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-  .chipRow label{ font-weight:800; color:#334155; min-width:70px }
-
-  .crosshair{
-    position:absolute; width:44px; height:44px; transform:translate(-50%,-50%);
-    pointer-events:none; display:none; z-index:20;
-    background:
-      linear-gradient(#ff2d55,#ff2d55) center/2px 44px no-repeat,
-      linear-gradient(#ff2d55,#ff2d55) center/44px 2px no-repeat,
-      radial-gradient(circle at center, #ff2d55 0 2px, transparent 3px);
-    filter: drop-shadow(0 0 2px rgba(0,0,0,.35));
+  /* Ball path + ball */
+  #ballLayer svg{ width:100%; height:100%; display:block; }
+  .ball{
+    position:absolute; transform:translate(-50%,-50%);
+    width:14px; height:14px; border-radius:50%;
+    background:#fff;
+    /* Solid black outline + a soft drop shadow */
+    box-shadow:0 0 0 2px #000, 0 1px 3px rgba(0,0,0,.35);
+    z-index:3; pointer-events:auto; cursor:grab; /* enable dragging in coach mode */
   }
+  .ball.locked{ pointer-events:none; cursor:default; opacity:.95; }
 
-  .tolPanel{
-    display:none;
-    background:var(--bg-soft); border:1px solid var(--br-soft); border-radius:10px; padding:10px; margin-top:8px;
-  }
-  .tolHead{ display:flex; justify-content:space-between; align-items:center; font-weight:800; gap:8px }
-  .tolHeadRight{ display:flex; gap:6px; align-items:center }
-  .tolRow{ display:flex; gap:10px; align-items:center; margin-top:10px; }
-  .tolRow input[type="range"]{ width:100% }
-  .tolRow input[type="number"]{ width:88px; text-align:center }
-  .tip{ color:#466; margin-top:6px; }
-
-  input[type="range"]{
-    -webkit-appearance:none; appearance:none; height:10px; border-radius:6px;
-    background: linear-gradient(90deg, #93c5fd 0%, #3b82f6 100%);
-    outline:none; border:1px solid #b6cffd;
-  }
-  input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; appearance:none; width:22px; height:22px;
-    border-radius:50%; background:var(--thumb); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.25);
-  }
-  input[type="range"]::-moz-range-thumb{
-    width:22px; height:22px; border-radius:50%; background:var(--thumb); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.25);
-  }
-  .valBubble{
-    font:800 12px/1 ui-monospace; padding:4px 8px; border-radius:8px; color:#0b1321;
-    background:#fff; border:1px solid #cfe2ff; min-width:60px; text-align:center;
+  /* Runner (animated batter) + static base runners as black diamonds */
+  .runner,
+  .baseRunner{
+    position:absolute;
+    transform:translate(-50%,-50%) rotate(45deg); /* diamond */
+    width:14px; height:14px;           /* scaled in JS */
+    background:#0b0b0b;                /* black fill */
+    box-shadow:
+      0 0 0 2px #ffffff,               /* white outline */
+      0 1px 2px rgba(0,0,0,.30);       /* soft drop */
+    border-radius:4px;                  /* slight rounding like bases */
+    z-index:3; pointer-events:none;
   }
 
-  .runner{
-    position:absolute; transform:translate(-50%,-50%) rotate(45deg);
-    width:22px; height:22px; border-radius:4px;
-    background:#111; border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.4);
-    display:grid; place-items:center; color:#fff; font:900 11px/1 system-ui;
+  /* Label inside the diamond: counter-rotate to stay upright */
+  .runner .rlabel,
+  .baseRunner .rlabel{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    transform:rotate(-45deg);
+    color:#fff; font-weight:900; font-size:13px; /* bumped default font */
+    text-shadow:0 1px 1px rgba(0,0,0,.35);
+    user-select:none;
   }
-  .runner .txt{ transform:rotate(-45deg); }
 
-  .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:200; }
-  .modalCard{ background:#fff; border-radius:12px; border:1px solid #d7e0ef; padding:18px; width:min(90vw,420px); box-shadow:0 20px 60px rgba(0,0,0,.3); }
-  .modalCard h3{ margin:0 0 8px; font-size:18px }
+  /* square black for moving existing runners */
+  .movingRunner{
+    width:14px; height:14px;
+    background:#111;
+    border-radius:2px; /* tiny rounding */
+    box-shadow:0 0 0 2px #fff;  /* thin white outline for contrast */
+  }
+
+  /* Coach hit target marker (direct child of #wrap) */
+  .hitTarget{
+    position:absolute; transform:translate(-50%,-50%);
+    width:18px; height:18px; border-radius:50%;
+    background:#f97316; box-shadow:0 0 0 2px #7c2d12 inset, 0 0 0 2px #ffffff;
+    cursor:grab; touch-action:none; pointer-events:auto;
+    z-index:4;
+  }
+  .hitTarget:active{ transform:translate(-50%,-50%) scale(1.05); }
+
+  /* Password modal */
+  #pwModal{
+    position:fixed; inset:0; background:rgba(0,0,0,.35);
+    display:none; align-items:center; justify-content:center; z-index:1000;
+  }
+  #pwModal .box{
+    background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-width:280px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+
+  /* Coach Tools subsections */
+  .coachGrid{display:grid;gap:8px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .subsec{border:1px dashed #e5e7eb;border-radius:10px;padding:8px;margin-top:6px}
+  .subsec > .title{font-weight:800;color:#334155;margin-bottom:6px;font-size:13px}
+  .hint{font-size:12px;color:#64748b;font-weight:700}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace}
+  .hidden{display:none!important}
 </style>
 </head>
 <body>
-  <div class="app" id="appRoot">
-    <header id="topBar">
-      <h1>Diamond IQ - Situational Baseball</h1>
-      <button id="randomBtn">Random</button>
-      <select id="sitSelect" aria-label="Select situation"></select>
-      <span id="outsBadge" class="pill" title="Outs in this situation">Outs: 0</span>
-      <button id="playHitBtn">Start Situation</button>      
-      <button id="resetBtn" class="warn">Reset Situation</button>
-      <button id="checkBtn" class="primary">Check Positions</button>      
-      <div class="score" id="score">Score: 0/9 • Try 0/3</div>
-      <button id="unlockBtn" title="Unlock Coach Tools">🔒 Unlock Coach Tools</button>
-    </header>
 
-    <div class="board">
-      <div class="fieldWrap" id="wrap">
-        <img id="fieldImg" src="https://github.com/smbambling/diamoniq.github.io/blob/main/baseballfield.png?raw=true" width="3000" height="2487" alt="Baseball Field">
-        <div id="targets" class="overlay"></div>
-        <div id="tokens"  class="overlay" aria-label="players"></div>
-        <div id="runners" class="overlay"></div>
-        <!-- Ball animation canvas -->
-        <canvas id="ballCanvas" class="overlay"></canvas>
-        <div id="crosshair" class="crosshair"></div>
-      </div>
+<header>
+  <h1>Diamond IQ</h1>
+  <select id="sitSelect" aria-label="Situation"></select>
+  <span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span>
+  <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
+    Outs: <b><span id="outsVal">0</span></b>
+  </span>
+  <button id="startBtn" class="btn-green">Start Situation</button>
+  <button id="resetBtn" class="btn-orange">Reset</button>
+  <button id="checkBtn" class="btn-green" disabled>Check Positions</button>
+
+  <div id="hud" class="hud">
+    <span id="scoreBadge" class="badge badge-score"><span class="dot dot-score"></span>Score: <b><span id="scoreVal">0</span>/9</b></span>
+    <span id="triesBadge" class="badge badge-tries"><span class="dot dot-tries"></span>Tries remaining: <b><span id="triesVal">0</span></b></span>
+  </div>
+
+  <button id="coachBtn" class="btn-slate">Coach Tools</button>
+</header>
+
+<main class="app">
+  <section class="card">
+    <div id="wrap">
+      <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
+      <!-- visual-only layers kept for z-ordering -->
+      <div id="targetsLayer" class="overlay"></div>
+      <div id="ballLayer" class="overlay"></div>
+      <!-- chips, rings, and hit marker are appended directly to #wrap -->
+    </div>
+  </section>
+
+  <aside class="sideCol">
+    <div class="card">
+      <strong>How to play</strong>
+      <ol style="margin:6px 0 0 1.2em">
+        <li>Select a situation.</li>
+        <li>Press <em>Start Situation</em> (3 tries).</li>
+        <li>Drag the 9 chips into position.</li>
+        <li>Press <em>Check Positions</em> (uses 1 try).</li>
+      </ol>
+      <div id="curSitDesc"  style="margin-top:6px;color:#475569;font-weight:600"></div>
     </div>
 
-    <aside class="side">
-      <div class="card">
-        <strong>Situation</strong>
-        <div id="sitText" class="small">Pick a situation.</div>
-      </div>
-
-      <div class="card small">
-        <strong>How to play</strong>
-        <ol style="margin:6px 0 0 18px">
-          <li>Drag chips to the correct positions.</li>
-          <li>Click <em>Check Positions</em> (you have 3 tries).</li>
-          <li>Correct chips reveal their ring each try; on try 3, all rings show and incorrect ones are labeled.</li>
-          <li>Use <em>Start Situation</em> to animate the ball for the situation.</li>
-        </ol>
-      </div>
-
-      <!-- Calibration & Builder -->
-      <div class="card" id="targetsBuilderCard" style="display:none">
-        <strong>Calibration & Builder</strong>
-
-        <!-- Player Starts -->
-        <div class="calibSection">
-          <div class="calibTitle">Player Starts</div>
-          <div class="calibBar">
-            <button id="toggleCalibStarts" class="pill">Enable</button>
-            <div id="startsControls" class="calibControls" style="gap:6px; align-items:center; flex-wrap:wrap">
-              <span id="xyStarts" class="coords">x:— y:—</span>
-              <button id="resetStartSelected" class="pill">Reset Selected</button>
-              <button id="clearStarts" class="pill">Reset All Starts</button>
-              <button id="exportStarts" class="pill">Export</button>
-              <label class="pill" style="cursor:pointer">Import
-                <input id="importStarts" type="file" accept="application/json" style="display:none">
-              </label>
-            </div>
-          </div>
-          <div id="chipPickerStarts" class="chipGroups">
-            <div class="chipRow"><label>Battery</label>
-              <button data-id="P" class="pill">P</button><button data-id="C" class="pill">C</button>
-            </div>
-            <div class="chipRow"><label>Infield</label>
-              <button data-id="1B" class="pill">1B</button><button data-id="2B" class="pill">2B</button>
-              <button data-id="SS" class="pill">SS</button><button data-id="3B" class="pill">3B</button>
-            </div>
-            <div class="chipRow"><label>Outfield</label>
-              <button data-id="LF" class="pill">LF</button><button data-id="CF" class="pill">CF</button>
-              <button data-id="RF" class="pill">RF</button>
-            </div>
-          </div>
+    <!-- Coach Tools (hidden until unlocked) -->
+    <div id="coachCard" class="card hidden">
+      <div class="coachGrid">
+        <div class="row">
+          <strong>Coach Tools</strong>
+          <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
+          <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
         </div>
 
-        <!-- Targets (per situation) -->
-        <div class="calibSection">
-          <div class="calibTitle">Targets (per situation)</div>
-          <div class="calibBar">
-            <button id="toggleCalibTargets" class="pill">Enable Calibration</button>
-            <div id="targetsControls" class="calibControls" style="gap:6px; align-items:center; flex-wrap:wrap">
-              <span>Editing:</span><span id="curSitLabel" class="coords">—</span>
-              <span id="xyTargets" class="coords">x:— y:—</span>
-              <button id="resetTargetSelected" class="pill">Reset Selected</button>
-              <button id="resetTargetsSituation" class="pill">Reset All for Situation</button>
-              <button id="exportTargets" class="pill">Export</button>
-              <label class="pill" style="cursor:pointer">Import
-                <input id="importTargets" type="file" accept="application/json" style="display:none">
-              </label>
-              <button id="clearTargets" class="pill">Use Default Targets</button>
-            </div>
+        <!-- Situation Builder -->
+        <div class="subsec">
+          <div class="title">Situation Builder</div>
+
+          <div class="row">
+            <label class="hint">Title:</label>
+            <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
+          </div>
+          <div class="row">
+            <label class="hint">Description:</label>
+            <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
           </div>
 
-          <div id="chipPickerTargets" class="chipGroups">
-            <div class="chipRow"><label>Battery</label>
-              <button data-id="P" class="pill">P</button><button data-id="C" class="pill">C</button>
-            </div>
-            <div class="chipRow"><label>Infield</label>
-              <button data-id="1B" class="pill">1B</button><button data-id="2B" class="pill">2B</button>
-              <button data-id="SS" class="pill">SS</button><button data-id="3B" class="pill">3B</button>
-            </div>
-            <div class="chipRow"><label>Outfield</label>
-              <button data-id="LF" class="pill">LF</button><button data-id="CF" class="pill">CF</button>
-              <button data-id="RF" class="pill">RF</button>
-            </div>
-          </div>
-
-          <div id="tolPanel" class="tolPanel">
-            <div class="tolHead">
-              <span>Custom Tolerance — <strong id="tolChipName">P</strong></span>
-              <div class="tolHeadRight">
-                <span id="tolBubble" class="valBubble">65 px</span>
-                <input id="tolNumber" type="number" min="10" max="400" step="1" value="65" title="radius (px, native image)">
-                <button id="resetTolSelected" class="pill">Reset Selected</button>
-                <button id="resetTolsSituation" class="pill">Reset All for Situation</button>
-              </div>
-            </div>
-            <div class="tolRow">
-              <input id="tolRange" type="range" min="10" max="400" step="1" value="65" />
-            </div>
-            <div class="tip small">Radius uses original-image pixels (3000×2487). Rings scale with the displayed field.</div>
-          </div>
-        </div>
-
-        <!-- Runner Bases Calibration -->
-        <div class="calibSection">
-          <div class="calibTitle">Runner Bases Calibration</div>
-          <div class="calibBar">
-            <button id="toggleCalibRunners" class="pill">Enable Calibration</button>
-            <div id="runnersControls" class="calibControls" style="gap:6px; align-items:center; flex-wrap:wrap">
-              <span>Select base:</span>
-              <button data-base="1B" class="pill" id="pick1B">1B</button>
-              <button data-base="2B" class="pill" id="pick2B">2B</button>
-              <button data-base="3B" class="pill" id="pick3B">3B</button>
-              <button data-base="HP" class="pill" id="pickHP">HP</button>
-              <span id="xyRunners" class="coords">x:— y:—</span>
-              <button id="resetBaseSelected" class="pill">Reset Selected</button>
-              <button id="resetBases" class="pill">Reset All Bases</button>
-              <button id="exportBases" class="pill">Export</button>
-              <label class="pill" style="cursor:pointer">Import
-                <input id="importBases" type="file" accept="application/json" style="display:none">
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- NEW: Ball Hit Calibration -->
-        <div class="calibSection">
-          <div class="calibTitle">Ball Hit (per situation)</div>
-          <div class="calibBar">
-            <button id="toggleCalibHit" class="pill">Enable Calibration</button>
-            <div id="hitControls" class="calibControls" style="gap:6px; align-items:center; flex-wrap:wrap">
-              <label>Type</label>
-              <select id="hitTypeSel">
-                <option value="line">Line Drive</option>
-                <option value="popup">Popup</option>
-                <option value="grounder">Grounder</option>
-              </select>
-              <span id="xyHit" class="coords">x:— y:—</span>
-              <button id="hitTest" class="pill">Test Animation</button>
-              <button id="resetHit" class="pill">Reset for Situation</button>
-              <button id="exportHits" class="pill">Export</button>
-              <label class="pill" style="cursor:pointer">Import
-                <input id="importHits" type="file" accept="application/json" style="display:none">
-              </label>
-            </div>
-          </div>
-          <div class="small" style="margin-top:6px">Click on the field to set the <em>target</em>. Launch is taken from calibrated Home Plate.</div>
-        </div>
-
-        <!-- Situation builder -->
-        <div class="calibSection">
-          <div class="calibTitle">Create / Preview Situation</div>
-          <div class="calibBar" style="background:#fff;border-style:solid">
-            <label style="min-width:72px">Name</label>
-            <input id="sbName" type="text" placeholder="e.g., Bunt to 3B (R1, R2)" style="flex:1" />
-            <label style="min-width:72px">Runners</label>
-            <label><input type="checkbox" id="sbR1"> 1B</label>
-            <label><input type="checkbox" id="sbR2"> 2B</label>
-            <label><input type="checkbox" id="sbR3"> 3B</label>
-          </div>
-          <div class="calibBar" style="background:#fff;border-style:solid">
-            <label style="min-width:72px">Outs</label>
-            <select id="sbOuts">
+          <div class="row">
+            <label class="hint">Outs:</label>
+            <select id="outsSelScenario">
               <option value="0">0 outs</option>
               <option value="1">1 out</option>
               <option value="2">2 outs</option>
             </select>
           </div>
-          <div class="calibBar" style="background:#fff;border-style:solid">
-            <textarea id="sbDesc" rows="2" placeholder="What each player does, cuts/covers, backups, etc." style="width:100%"></textarea>
+
+          <!-- Single refresh button -->
+          <div class="row">
+            <button id="newScenarioBtn"  class="btn-slate">➕ New Scenario</button>
+            <button id="saveScenarioBtn" class="btn-slate">🔄 Refresh Situation</button>
+            <span id="scenarioMsg" class="hint" style="margin-left:auto"></span>
           </div>
-          <div class="calibBar">
-            <button id="sbLoadCurrent" class="pill">Load Current</button>
-            <button id="sbUpdateCurrent" class="pill">Update Current</button>
-            <button id="sbAdd" class="primary">Add to App</button>
-            <button id="sbExport" class="pill">Export Snippet</button>
-            <button id="sbSetActive" class="pill">Set Active</button>
-            <span id="sbStatus" class="coords">—</span>
+        </div>
+
+        <!-- Runners on Base -->
+        <div class="subsec">
+          <div class="title">Runners on Base</div>
+          <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
+          <div class="row" id="runnersRow">
+            <label class="hint">Select base runners:</label>
+            <label><input id="run1B" type="checkbox"> 1B</label>
+            <label><input id="run2B" type="checkbox"> 2B</label>
+            <label><input id="run3B" type="checkbox"> 3B</label>
           </div>
-          <textarea id="sbOut" rows="6" style="width:100%; display:none" readonly></textarea>
+        </div>
+
+        <!-- Targets & Tolerance -->
+        <div class="subsec">
+          <div class="title">Targets & Tolerance</div>
+          <div class="row">
+            <label class="hint">Target:</label>
+            <select id="tolTargetSel"></select>
+            <label class="hint">Tolerance:</label>
+            <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
+            <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
+          </div>
+        </div>
+
+        <!-- Ball Hit (single) -->
+        <div class="subsec">
+          <div class="title">Ball Hit</div>
+          <div class="hint">Drag the <b>orange</b> marker to set the ball’s landing spot and set batter advance for this situation.</div>
+            <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
+          <div class="row">
+            <label class="hint">Hit type:</label>
+            <select id="hitTypeSel">
+              <option value="line">Line drive</option>
+              <option value="popup">Pop up</option>
+              <option value="grounder">Grounder</option>
+            </select>
+            <select id="advanceSel" title="Batter bases to advance (1–3)">
+              <option value="1">1 (Single)</option>
+              <option value="2">2 (Double)</option>
+              <option value="3">3 (Triple)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Export -->
+        <div class="subsec">
+          <div class="title">Export</div>
+          <div class="row">
+            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
+            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
+            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
+          </div>
         </div>
       </div>
-    </aside>
-  </div>
+    </div>
+  </aside>
+</main>
 
-  <!-- Password Modal -->
-  <div class="modal" id="pwModal" aria-modal="true" role="dialog">
-    <div class="modalCard">
-      <h3>Unlock Coach Tools</h3>
-      <p class="small" style="margin-top:0">Enter the coach password to enable calibration & builder.</p>
-      <div style="display:flex; gap:8px; align-items:center; margin-top:8px">
-        <input id="pwInput" type="password" placeholder="Password" autocomplete="current-password" style="flex:1" />
-        <button id="pwOk" class="primary">Unlock</button>
-      </div>
-      <div id="pwMsg" class="small" style="color:#b91c1c; margin-top:8px; min-height:18px"></div>
+<!-- Password modal -->
+<div id="pwModal">
+  <div class="box">
+    <div style="font-weight:800;margin-bottom:8px">Enter Coach Password</div>
+    <input id="pwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
+    <div id="pwMsg" style="color:#ef4444;margin-top:6px;min-height:1.2em"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:10px">
+      <button id="pwOk" class="btn-green">Unlock</button>
+      <button id="pwCancel" class="btn-slate">Cancel</button>
     </div>
   </div>
+</div>
 
 <script>
-/* ================== CONSTANTS & DEFAULTS ================== */
+/* =======================
+   Constants & pure helpers
+   ======================= */
 const IMG_W=3000, IMG_H=2487;
 const DEFAULT_TOL=65;
-const STORAGE_STARTS='BaseballIQ_Starts_v1';
-const STORAGE_TARGETS='BaseballIQ_Targets_v1';
-const STORAGE_TOLS='BaseballIQ_Tolerances_v1';
-const STORAGE_BASES='BaseballIQ_Bases_v1';
-const STORAGE_HITS='BaseballIQ_Hits_v1';
-const SESSION_CALIB_UNLOCK='BaseballIQ_CalibUnlocked_v1';
-const CALIB_PASSWORD='coach123';
-const MAX_TRIES=3;
-const F=(xf,yf)=>({x:xf*IMG_W,y:yf*IMG_H});
-
-/* Default player starts */
-const DEFAULT_STARTS={
-  P:{x:1500,y:1629.6224094831061},
-  C:{x:1502.1398002853066,y:2138.7478025965647},
-  '1B':{x:1934.3794579172609,y:1469.1837351826466},
-  '2B':{x:1799.5720399429388,y:1182.5333037658254},
-  SS:{x:1243.2239657631953,y:1161.141480525764},
-  '3B':{x:1074.1797432239657,y:1462.7661882106281},
-  LF:{x:751.0699001426533,y:778.2278445286671},
-  CF:{x:1487.1611982881598,y:508.69087170389486},
-  RF:{x:2313.1241084165476,y:827.4290379808081}
+const POS_IDS=['P','C','1B','2B','SS','3B','LF','CF','RF'];
+const HOME_NATIVE = { x:1500, y:2147 };
+const BASES_NATIVE = {
+  home:{x:1501,y:2032}, first:{x:1903,y:1577}, second:{x:1465,y:1192}, third:{x:1101,y:1630}
 };
 
-/* Base anchors defaults */
-const BASES_DEFAULT={
-  "1B": {
-    "x": 1903,
-    "y": 1577
-  },
-  "2B": {
-    "x": 1465,
-    "y": 1192
-  },
-  "3B": {
-    "x": 1101,
-    "y": 1630
-  },
-  "HP": {
-    "x": 1501,
-    "y": 2032
-  }
-};
-let BASES = JSON.parse(JSON.stringify(BASES_DEFAULT));
+const Fcopy = o => JSON.parse(JSON.stringify(o));
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const clampInt=(v,min,max)=>{v=Math.floor(Number(v)); if(Number.isNaN(v)) v=min; return clamp(v,min,max);};
+const lerp=(a,b,t)=>a+(b-a)*t;
+function quadBezier(p0,p1,p2,t){return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2.x,y:(1-t)*(1-t)*p0.y+2*(1-t)*t*p1.y+t*t*p2.y};}
 
-/* Example situations (now with default 'hit') */
-const SITUATIONS=[
-  {
-    key: 'S1',
-  title: "Single to LF (no runners)",
-  outs: 1,
-  runners: [],
-  desc: "Base hit single to first base, no runners on",
-  targets: {
-  "LF": {
-    "x": 821,
-    "y": 854
-  },
-  "SS": {
-    "x": 1095,
-    "y": 1031
-  },
-  "2B": {
-    "x": 1514,
-    "y": 1171
-  },
-  "1B": {
-    "x": 1873,
-    "y": 1556
-  },
-  "3B": {
-    "x": 1097,
-    "y": 1559
-  },
-  "P": {
-    "x": 1642,
-    "y": 1424
-  },
-  "C": {
-    "x": 2004,
-    "y": 1777
-  },
-  "CF": {
-    "x": 709,
-    "y": 608
-  },
-  "RF": {
-    "x": 1963,
-    "y": 1017
-  }
-},
-  tolerances: {
-  "P": 65,
-  "C": 115,
-  "1B": 65,
-  "2B": 65,
-  "SS": 65,
-  "3B": 65,
-  "LF": 65,
-  "CF": 119,
-  "RF": 92
-},
-  hit: {
-  "type": "line",
-  "target": {
-    "x": 833,
-    "y": 874
-  }
-  }
-  },
-  {
-    key:'S2',
-    title:'Popup to shallow CF (R1)',
-    outs: 0,
-    runners:['1B'],
-    desc:'Base hit popup to shallow center field',
-    targets:{
-      'CF':F(0.500,0.470),
-      'LF':F(0.390,0.510),
-      'RF':F(0.610,0.510),
-      '2B':F(0.520,0.520),
-      'SS':F(0.465,0.530),
-      '1B':F(0.770,0.640),
-      '3B':F(0.230,0.640),
-      'P': F(0.530,0.740),
-      'C': F(0.520,0.860)
-    },
-    tolerances:{
-      'P':70,'C':70,'1B':70,'2B':70,'SS':70,'3B':70,'LF':70,'CF':70,'RF':70
-    },
-    hit:{
-      type:'popup',
-      target:F(0.500,0.470)
-    }
-  },
-  {
-    key:'S3',
-    title:'Chopper to 3B (R1, R2)',
-    outs: 0,
-    runners:['1B','2B'],
-    desc:'Base hit hard chopper towards third base.',
-    targets:{
-      '3B':F(0.285,0.610),
-      'SS':F(0.250,0.640),
-      '2B':F(0.500,0.415),
-      '1B':F(0.770,0.640),
-      'P': F(0.430,0.760),
-      'C': F(0.520,0.880),
-      'LF':F(0.260,0.560),
-      'CF':F(0.420,0.520),
-      'RF':F(0.680,0.560)
-    },
-    tolerances:{
-      'P':75,'C':75,'1B':70,'2B':70,'SS':70,'3B':70,'LF':70,'CF':70,'RF':70
-    },
-    hit:{
-      type:'grounder',
-      target:F(0.285,0.610)
-    }
-  }
-];
+/* =======================
+   App state (mutable)
+   ======================= */
+let SITUATIONS = [];
+const SITUATIONS_FALLBACK = [];
+let currentSituation = null;
 
-/* ================== DOM ================== */
-const appRoot=document.getElementById('appRoot');
-const wrap=document.getElementById('wrap');
+let startsMap = {};
+let hitsMap   = {};
+
+let gameActive = false;
+let remainingTries = 0;
+const MAX_TRIES = 3;
+
+let coachUnlocked = false;
+
+let runnerEl = null;
+let runnerAnimId = null;
+let runnerLastBase = 'home';
+
+let imgRect={width:1,height:1,left:0,top:0};
+let CHIP_PX = 36;
+
+let ballSvg=null, ballPath=null, ballEl=null, hitMarker=null;
+let animReq=null;
+
+let liveRunners = { first:false, second:false, third:false };
+let _animSuppressedBases = new Set();
+
+/* =======================
+   DOM refs
+   ======================= */
 const img=document.getElementById('fieldImg');
-const tokensLayer=document.getElementById('tokens');
-const targetsLayer=document.getElementById('targets');
-const runnersLayer=document.getElementById('runners');
-const ballCanvas=document.getElementById('ballCanvas');
-const crosshair=document.getElementById('crosshair');
+const wrap=document.getElementById('wrap');
+const targetsLayer=document.getElementById('targetsLayer');
+const ballLayer=document.getElementById('ballLayer');
 
 const sitSelect=document.getElementById('sitSelect');
-const sitText=document.getElementById('sitText');
-const scoreBox=document.getElementById('score');
-const unlockBtn=document.getElementById('unlockBtn');
-const playHitBtn=document.getElementById('playHitBtn');
-
-const targetsBuilderCard=document.getElementById('targetsBuilderCard');
-
-/* Starts */
-const toggleCalibStarts=document.getElementById('toggleCalibStarts');
-const startsControls=document.getElementById('startsControls');
-const chipPickerStarts=document.getElementById('chipPickerStarts');
-const xyStarts=document.getElementById('xyStarts');
-const exportStartsBtn=document.getElementById('exportStarts');
-const importStartsInput=document.getElementById('importStarts');
-const clearStartsBtn=document.getElementById('clearStarts');
-const resetStartSelectedBtn=document.getElementById('resetStartSelected');
-
-/* Targets */
-const toggleCalibTargets=document.getElementById('toggleCalibTargets');
-const targetsControls=document.getElementById('targetsControls');
-const chipPickerTargets=document.getElementById('chipPickerTargets');
-const xyTargets=document.getElementById('xyTargets');
-const exportTargetsBtn=document.getElementById('exportTargets');
-const importTargetsInput=document.getElementById('importTargets');
-const clearTargetsBtn=document.getElementById('clearTargets');
+const startBtn=document.getElementById('startBtn');
+const resetBtn=document.getElementById('resetBtn');
+const checkBtn=document.getElementById('checkBtn');
+const scoreVal=document.getElementById('scoreVal');
+const triesVal=document.getElementById('triesVal');
 const curSitLabel=document.getElementById('curSitLabel');
-const resetTargetSelectedBtn=document.getElementById('resetTargetSelected');
-const resetTargetsSituationBtn=document.getElementById('resetTargetsSituation');
+const curSitDesc = document.getElementById('curSitDesc');
 
-/* Tolerance panel */
-const tolPanel=document.getElementById('tolPanel');
-const tolChipName=document.getElementById('tolChipName');
-const tolNumber=document.getElementById('tolNumber');
+const coachBtn=document.getElementById('coachBtn');
+const coachCard=document.getElementById('coachCard');
+const coachStatus=document.getElementById('coachStatus');
+
+const tolTargetSel=document.getElementById('tolTargetSel');
+const tolNum=document.getElementById('tolNum');
 const tolRange=document.getElementById('tolRange');
-const tolBubble=document.getElementById('tolBubble');
-const resetTolSelectedBtn=document.getElementById('resetTolSelected');
-const resetTolsSituationBtn=document.getElementById('resetTolsSituation');
 
-/* Runner bases */
-const toggleCalibRunners=document.getElementById('toggleCalibRunners');
-const runnersControls=document.getElementById('runnersControls');
-const exportBasesBtn=document.getElementById('exportBases');
-const importBasesInput=document.getElementById('importBases');
-const resetBasesBtn=document.getElementById('resetBases');
-const resetBaseSelectedBtn=document.getElementById('resetBaseSelected');
-const xyRunners=document.getElementById('xyRunners');
-const baseButtons=[...document.querySelectorAll('[data-base]')];
-
-/* Ball Hit calibration */
-const toggleCalibHit=document.getElementById('toggleCalibHit');
-const hitControls=document.getElementById('hitControls');
 const hitTypeSel=document.getElementById('hitTypeSel');
-const xyHit=document.getElementById('xyHit');
-const hitTestBtn=document.getElementById('hitTest');
-const resetHitBtn=document.getElementById('resetHit');
-const exportHitsBtn=document.getElementById('exportHits');
-const importHitsInput=document.getElementById('importHits');
+const testHitBtn=document.getElementById('testHitBtn');
+const advanceSel=document.getElementById('advanceSel');
 
-/* Builder */
-const sbName=document.getElementById('sbName');
-const sbDesc=document.getElementById('sbDesc');
-const sbR1=document.getElementById('sbR1');
-const sbR2=document.getElementById('sbR2');
-const sbR3=document.getElementById('sbR3');
-const sbAddBtn=document.getElementById('sbAdd');
-const sbExportBtn=document.getElementById('sbExport');
-const sbSetActiveBtn=document.getElementById('sbSetActive');
-const sbStatus=document.getElementById('sbStatus');
-const sbOut=document.getElementById('sbOut');
-const sbLoadCurrent=document.getElementById('sbLoadCurrent');
-const sbUpdateCurrent=document.getElementById('sbUpdateCurrent');
+const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
+const downloadAllBtn=document.getElementById('downloadAllBtn');
+const copyAllBtn=document.getElementById('copyAllBtn');
 
-/* Password modal */
 const pwModal=document.getElementById('pwModal');
 const pwInput=document.getElementById('pwInput');
 const pwOk=document.getElementById('pwOk');
+const pwCancel=document.getElementById('pwCancel');
 const pwMsg=document.getElementById('pwMsg');
 
-/* ================== STATE ================== */
-let imgRect={left:0,top:0,width:0,height:0};
-let currentSituation=SITUATIONS[0];
-let starts={};
-let targetsMap={};
-let tolerancesMap={};
-let hitsMap={}; // { [key]: { type, target:{x,y} } }
-let calibrationStartsOn=false;
-let calibrationTargetsOn=false;
-let calibrationRunnersOn=false;
-let calibrationHitOn=false;
-let selectedStartId='P';
-let selectedTargetId='P';
-let selectedBaseId='1B';
-let attemptCount=0;
-let currentRunners = [];     // live runners for the current situation
-let runnerRafId = null;      // RAF id for runner animation
-let playLocked = false;
-const tokens=new Map();
+const newTitleInput   = document.getElementById('newTitleInput');
+const newDescInput    = document.getElementById('newDescInput');
+const newScenarioBtn  = document.getElementById('newScenarioBtn');
+const seedTargetsBtn  = document.getElementById('seedTargetsBtn');
+const saveScenarioBtn = document.getElementById('saveScenarioBtn');
+const scenarioMsg     = document.getElementById('scenarioMsg');
 
-/* ================== UTILS ================== */
-const Fcopy=(o)=>JSON.parse(JSON.stringify(o));
+const outsValHud      = document.getElementById('outsVal');
+const outsSelScenario = document.getElementById('outsSelScenario');
+const runnersValHud   = document.getElementById('runnersVal');
+
+const run1B = document.getElementById('run1B');
+const run2B = document.getElementById('run2B');
+const run3B = document.getElementById('run3B');
+
+/* =======================
+   Geometry & scaling (deduped)
+   ======================= */
+function unitToCss(native){ return { left:native.x*(imgRect.width/IMG_W), top:native.y*(imgRect.height/IMG_H) }; }
+function cssToUnit(left,top){ return { x:left*(IMG_W/imgRect.width), y:top*(IMG_H/imgRect.height) }; }
+function nativeToCssPoint(pt){ const css=unitToCss(pt); return { x:css.left, y:css.top }; }
+
+function updateChipScale(){
+  const base = Math.min(imgRect.width, imgRect.height);
+  const size = clamp(Math.round(base * 0.056), 10, 36);
+  CHIP_PX = size;
+  const fz = clamp(Math.round(size * 0.42), 8, 14);
+  wrap.style.setProperty('--chip-size', size + 'px');
+  wrap.style.setProperty('--chip-font', fz + 'px');
+}
+
+function tolToCssDiameter(tol, allowTiny=false){
+  const s = Math.min(imgRect.width / IMG_W, imgRect.height / IMG_H);
+  const dCss = 2 * tol * s;
+  if (allowTiny) return Math.max(6, Math.round(dCss));
+  const minByChip = CHIP_PX * 1.8;
+  return Math.round(Math.max(dCss, minByChip));
+}
+
+/* =======================
+   ✨ Resize & Layout (single source of truth)
+   ======================= */
 function sizeOverlays(){
-  const r=img.getBoundingClientRect();
-  const w = r.width  || wrap.clientWidth  || 1;
-  const h = r.height || wrap.clientHeight  || 1;
-  imgRect={left:r.left,top:r.top,width:w,height:h};
-  [tokensLayer,targetsLayer,runnersLayer,ballCanvas].forEach(el=>{ el.style.width=w+'px'; el.style.height=h+'px'; });
-  ballCanvas.width = Math.max(1, Math.round(w));
-  ballCanvas.height= Math.max(1, Math.round(h));
-}
-const unitToCss=(pt)=>({ left:(pt.x/IMG_W)*imgRect.width, top:(pt.y/IMG_H)*imgRect.height });
-const cssToUnit=(l,t)=>({ x:(l/imgRect.width)*IMG_W, y:(t/imgRect.height)*IMG_H });
+  if (!wrap) return;
 
-function getClickNative(e){
-  const rect=wrap.getBoundingClientRect();
-  let cx=e.clientX-rect.left, cy=e.clientY-rect.top;
-  cx=Math.max(0,Math.min(cx,rect.width));
-  cy=Math.max(0,Math.min(cy,rect.height));
-  const native=cssToUnit(cx,cy);
-  native.x=Math.round(native.x); native.y=Math.round(native.y);
-  return { native, css:{x:cx,y:cy} };
-}
-function crosshairShowAt(x,y){ crosshair.style.left=x+'px'; crosshair.style.top=y+'px'; crosshair.style.display='block'; }
-function crosshairHide(){ crosshair.style.display='none'; }
+  // 1) Snapshot new container rect
+  const r = wrap.getBoundingClientRect();
+  imgRect = { width:r.width, height:r.height, left:r.left, top:r.top };
 
-/* Tolerance helpers */
-function getTolFor(key,id){
-  const m = tolerancesMap[key] || {};
-  return Number(m[id]) || DEFAULT_TOL;
-}
-function tolToCssDiameter(tol){
-  const sx = imgRect.width / IMG_W;
-  const sy = imgRect.height / IMG_H;
-  const pxRadius = tol * (sx + sy) / 2;
-  return Math.max(28, 2 * pxRadius);
+  // 2) Scale chip size + fonts and scale markers (ball/runner/hit marker)
+  updateChipScale();
+
+  // 3) Re-position all chips from native coords
+  POS_IDS.forEach(id => placeToken(id));
+
+  // 4) Reposition + resize target rings from model
+  if (currentSituation && currentSituation.targets){
+    getAllRings().forEach(el => {
+      const id  = el.dataset.id;
+      const tgt = currentSituation.targets[id];
+      if (!tgt) return;
+      const css = unitToCss(tgt);
+      el.style.left = css.left + 'px';
+      el.style.top  = css.top  + 'px';
+      const dpx = tolToCssDiameter(Number(tgt.tol) || DEFAULT_TOL, /*allowTiny*/ coachUnlocked);
+      el.style.width  = dpx + 'px';
+      el.style.height = dpx + 'px';
+    });
+  }
+
+  // 5) Ball graphics: reset and rebuild SVG to match new viewBox
+  if (animReq){ cancelAnimationFrame(animReq); animReq = null; }
+  if (ballSvg) ballSvg.innerHTML = '';
+  buildBallGraphics(); // also calls syncBallToHit()
+
+  // 6) Reposition coach hit marker (if visible)
+  if (hitMarker && currentSituation && currentSituation.hit){
+    const css = unitToCss(currentSituation.hit);
+    hitMarker.style.left = css.left + 'px';
+    hitMarker.style.top  = css.top  + 'px';
+  }
+
+  // 7) Repaint static base-runner dots and snap animated runner to base
+  renderBaseRunners();
+  if (runnerEl && runnerEl.style.display !== 'none'){
+    placeRunnerAtBase(runnerLastBase);
+  }
+
+  scaleMarkers();
 }
 
-/* ================== LOAD / SAVE ================== */
-function defaultTargetsMap(){
-  const map={}; SITUATIONS.forEach(s=>{ map[s.key]=Fcopy(s.targets||{}); }); return map;
-}
-function defaultTolerancesMap(){
-  const map={}; SITUATIONS.forEach(s=>{
-    const base=s.tolerances||{}; const obj={};
-    ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=> obj[id]=Number(base[id]||DEFAULT_TOL));
-    map[s.key]=obj;
-  }); return map;
-}
-function defaultHitsMap(){
-  const map={}; SITUATIONS.forEach(s=>{
-    map[s.key]=Fcopy(s.hit || { type:'line', target:F(0.55,0.65) });
-  }); return map;
-}
-function loadStarts(){ starts=Fcopy(DEFAULT_STARTS); try{ const raw=localStorage.getItem(STORAGE_STARTS); if(raw) Object.assign(starts, JSON.parse(raw)); }catch(e){} }
-function saveStarts(){ localStorage.setItem(STORAGE_STARTS, JSON.stringify(starts)); }
-function loadTargets(){
-  targetsMap=defaultTargetsMap();
-  try{ const raw=localStorage.getItem(STORAGE_TARGETS); if(raw){ const saved=JSON.parse(raw); Object.keys(saved).forEach(k=> targetsMap[k]=Object.assign(targetsMap[k]||{}, saved[k])); } }catch(e){}
-}
-function saveTargets(){ localStorage.setItem(STORAGE_TARGETS, JSON.stringify(targetsMap)); }
-function loadTols(){
-  tolerancesMap=defaultTolerancesMap();
-  try{ const raw=localStorage.getItem(STORAGE_TOLS); if(raw){ const saved=JSON.parse(raw); Object.keys(saved).forEach(k=>{ if(!tolerancesMap[k]) tolerancesMap[k]={}; Object.assign(tolerancesMap[k], saved[k]); }); } }catch(e){}
-}
-function saveTols(){ localStorage.setItem(STORAGE_TOLS, JSON.stringify(tolerancesMap)); }
-function loadBases(){ BASES = Fcopy(BASES_DEFAULT); try{ const raw=localStorage.getItem(STORAGE_BASES); if(raw) Object.assign(BASES, JSON.parse(raw)); }catch(e){} }
-function saveBases(){ localStorage.setItem(STORAGE_BASES, JSON.stringify(BASES)); }
-function loadHits(){
-  hitsMap=defaultHitsMap();
-  try{ const raw=localStorage.getItem(STORAGE_HITS); if(raw){ const saved=JSON.parse(raw); Object.keys(saved).forEach(k=>{ hitsMap[k]=Object.assign(hitsMap[k]||{}, saved[k]); }); } }catch(e){}
-}
-function saveHits(){ localStorage.setItem(STORAGE_HITS, JSON.stringify(hitsMap)); }
-
-/* ================== TOKENS / TARGETS / RUNNERS ================== */
-function buildTokens(){
-  tokensLayer.innerHTML=''; tokens.clear();
-  ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=>{
-    const el=document.createElement('div');
-    el.className=`chip ${(['P','C'].includes(id)?'Battery':(['1B','2B','SS','3B'].includes(id)?'Infield':'Outfield'))}`;
-    el.textContent=id;
-    tokensLayer.appendChild(el);
-    tokens.set(id,{el,pos:Fcopy(starts[id])});
-    placeToken(id);
-    makeDraggable(el,id);
+/* schedule layout on next frame (avoid resize jank) */
+let _resizeRaf = null;
+function scheduleLayout(){
+  if (_resizeRaf) cancelAnimationFrame(_resizeRaf);
+  _resizeRaf = requestAnimationFrame(() => {
+    _resizeRaf = null;
+    sizeOverlays();
   });
 }
-function placeToken(id){
-  const s=tokens.get(id); const css=unitToCss(s.pos);
-  s.el.style.left=css.left+'px'; s.el.style.top=css.top+'px';
+
+/* observe #wrap — reacts to container changes, not just window resize */
+let _wrapResizeObserver = null;
+function observeWrap(){
+  if (!window.ResizeObserver || !wrap) return;
+  try{
+    if (_wrapResizeObserver) _wrapResizeObserver.disconnect();
+    _wrapResizeObserver = new ResizeObserver(() => scheduleLayout());
+    _wrapResizeObserver.observe(wrap);
+  }catch{}
 }
-function makeDraggable(el,id){
+
+/* global listeners */
+window.addEventListener('resize', scheduleLayout);
+window.addEventListener('orientationchange', scheduleLayout);
+
+/* =======================
+   🎯 Marker Scaling (single copy)
+   Scales: .ball, .runner, .baseRunner, .hitTarget + SVG stroke width
+   ======================= */
+// Increased starting sizes; still scale down/up responsively
+const BASE_MARKER_SIZES = {
+  ball:40,
+  runner:50,      // animated batter
+  baseRunner:50,  // static on-base runners
+  hit:40
+};
+
+function uiScale(){
+  return Math.min(imgRect.width / IMG_W, imgRect.height / IMG_H);
+}
+
+function getBallStrokeWidth(){
+  const s = uiScale();
+  return clamp(Math.round(3 * s * 1.1), 2, 6);
+}
+
+function scaleMarkers(){
+  const s = uiScale();
+  const sizePx = (base, min=8, max=28) => clamp(Math.round(base * s), min, max);
+
+  wrap.querySelectorAll('.runner .rlabel, .baseRunner .rlabel').forEach(el=>{
+    const s = uiScale();
+    el.style.fontSize = clamp(Math.round(13 * s * 1.05), 11, 18) + 'px';
+  });
+
+  // Ball
+  if (ballEl){
+    const d = sizePx(BASE_MARKER_SIZES.ball, 8, 26);
+    ballEl.style.width  = d + 'px';
+    ballEl.style.height = d + 'px';
+    const outline = clamp(Math.round(2 * s), 1, 3);
+    const drop    = clamp(Math.round(3 * s), 1, 4);
+    ballEl.style.boxShadow = `0 0 0 ${outline}px #000, 0 1px ${drop}px rgba(0,0,0,.35)`;
+  }
+
+  // Animated batter
+  if (runnerEl){
+    const d = sizePx(BASE_MARKER_SIZES.runner, 8, 24);
+    runnerEl.style.width  = d + 'px';
+    runnerEl.style.height = d + 'px';
+  }
+
+  // Static + moving base runners
+  if (wrap){
+    wrap.querySelectorAll('.baseRunner, .movingRunner').forEach(el=>{
+      const d = sizePx(BASE_MARKER_SIZES.baseRunner, 12, 48);
+      el.style.width  = d + 'px';
+      el.style.height = d + 'px';
+    });
+  }
+
+  // Orange hit marker
+  if (hitMarker){
+    const d = sizePx(BASE_MARKER_SIZES.hit, 10, 28);
+    hitMarker.style.width  = d + 'px';
+    hitMarker.style.height = d + 'px';
+  }
+}
+
+/* Optional: wrap animateHit to force scaling at animation start */
+const _origAnimateHit = typeof animateHit === 'function' ? animateHit : null;
+if (_origAnimateHit){
+  window.animateHit = function(style){
+    scaleMarkers();
+    _origAnimateHit(style);
+  };
+}
+
+/* =======================
+   Chips (tokens) — REQUIRED (restores placeToken etc.)
+   ======================= */
+
+/* Default starting spots (native image coords) */
+const DEFAULT_STARTS = {
+  P:{x:1500,y:1631},  C:{x:1503,y:2147},
+  '1B':{x:1917,y:1461}, '2B':{x:1824,y:1158}, SS:{x:1149,y:1158}, '3B':{x:1119,y:1450},
+  LF:{x:742,y:790},  CF:{x:1466,y:482}, RF:{x:2273,y:772}
+};
+
+/* Token registry: id -> { el, pos:{x,y} } */
+const tokens = new Map();
+
+/* Remove any existing chips */
+function clearChips(){
+  if (!wrap) return;
+  wrap.querySelectorAll('.chip').forEach(n=>n.remove());
+  tokens.clear();
+}
+
+/* Build 9 draggable chips and place them at the current situation starts */
+function buildTokens(){
+  clearChips();
+
+  const sKey = (currentSituation && currentSituation.key) || (SITUATIONS[0] && SITUATIONS[0].key);
+
+  POS_IDS.forEach(id=>{
+    const el=document.createElement('div');
+
+    const group = (['P','C'].includes(id) ? 'Battery'
+                 : (['1B','2B','SS','3B'].includes(id) ? 'Infield' : 'Outfield'));
+
+    el.className = `chip ${group}`;
+    el.textContent = id;
+    wrap.appendChild(el);
+
+    // pick a start from saved map (if any), else DEFAULT_STARTS
+    const start = sKey ? getStartFor(sKey,id) : DEFAULT_STARTS[id];
+
+    tokens.set(id, { el, pos: Fcopy(start) });
+    placeToken(id);
+    makeChipDraggable(el,id);
+  });
+}
+
+/* Position a single chip according to its native pos -> CSS px */
+function placeToken(id){
+  const rec = tokens.get(id);
+  if (!rec || !rec.pos || !rec.el) return;   // safe if buildTokens hasn't run yet
+  const css = unitToCss(rec.pos);
+  rec.el.style.left = css.left + 'px';
+  rec.el.style.top  = css.top  + 'px';
+}
+
+/* Can the user drag chips right now? */
+function canDrag(){
+  return coachUnlocked || (gameActive && remainingTries > 0);
+}
+
+/* Basic pointer-driven dragging (writes native coords back to tokens map) */
+function makeChipDraggable(el,id){
   let drag=null;
-  el.addEventListener('pointerdown',e=>{
-    if(calibrationStartsOn||calibrationTargetsOn||calibrationRunnersOn||calibrationHitOn) return;
+
+  el.addEventListener('pointerdown', e=>{
+    if (!canDrag()) return;
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
-    const css=unitToCss(tokens.get(id).pos);
-    drag={cx:e.clientX,cy:e.clientY,left:css.left,top:css.top};
+
+    const rec = tokens.get(id);
+    const css = unitToCss(rec.pos);
+
+    drag = { cx:e.clientX, cy:e.clientY, left:css.left, top:css.top };
+
+    const onMove = (e2)=>{
+      if (!drag) return;
+      const left = drag.left + (e2.clientX - drag.cx);
+      const top  = drag.top  + (e2.clientY - drag.cy);
+      el.style.left = left + 'px';
+      el.style.top  = top  + 'px';
+      // save as native coords so layout rescales cleanly
+      const native = cssToUnit(left, top);
+      tokens.get(id).pos = { x: native.x, y: native.y };
+    };
+
+    const onUp = ()=>{
+      window.removeEventListener('pointermove', onMove);
+      drag = null;
+    };
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp, { once:true });
+  });
+}
+
+/* =======================
+   Targets (rings)
+   ======================= */
+function getRingEl(id){ return wrap.querySelector(`.tgt[data-id="${id}"]`); }
+function getAllRings(){ return Array.from(wrap.querySelectorAll('.tgt')); }
+function buildTargets(){
+  getAllRings().forEach(n=>n.remove());
+  const t=currentSituation.targets||{};
+  Object.entries(t).forEach(([id,pt])=>{
+    const ring=document.createElement('div');
+    ring.className='tgt'; ring.dataset.id = id;
+    const css=unitToCss(pt);
+    ring.style.left=css.left+'px'; ring.style.top =css.top +'px';
+    const label=document.createElement('span');
+    label.className='tgt-label'; label.textContent=id;
+    ring.appendChild(label);
+    const tol = Number(pt.tol) || DEFAULT_TOL;
+    const dpx = tolToCssDiameter(tol, coachUnlocked);
+    ring.style.width  = dpx + 'px';
+    ring.style.height = dpx + 'px';
+    if (coachUnlocked){
+      ring.style.display='block';
+      ring.classList.add('show-label','draggable'); ring.classList.remove('locked');
+      makeTargetDraggable(ring,id);
+    } else {
+      ring.style.display='none';
+      ring.classList.remove('show-label','draggable'); ring.classList.add('locked');
+    }
+    wrap.appendChild(ring);
+  });
+}
+function makeTargetDraggable(el,id){
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{
+    if(!coachUnlocked) return;
+    e.preventDefault();
+    el.setPointerCapture(e.pointerId);
+    drag={cx:e.clientX,cy:e.clientY,left:parseFloat(el.style.left),top:parseFloat(el.style.top)};
     window.addEventListener('pointermove',onMove);
     window.addEventListener('pointerup',onUp,{once:true});
   });
   function onMove(e){
     if(!drag) return;
-    let left=drag.left+(e.clientX-drag.cx);
-    let top =drag.top +(e.clientY-drag.cy);
-    left=Math.max(0,Math.min(left,imgRect.width));
-    top =Math.max(0,Math.min(top ,imgRect.height));
+    const left=drag.left+(e.clientX-drag.cx);
+    const top =drag.top +(e.clientY-drag.cy);
     el.style.left=left+'px'; el.style.top=top+'px';
-    tokens.get(id).pos=cssToUnit(left,top);
+    const pt=cssToUnit(left,top);
+    setTargetFor(currentSituation.key,id,pt,currentSituation.targets?.[id]?.tol ?? DEFAULT_TOL);
   }
   function onUp(){ window.removeEventListener('pointermove',onMove); drag=null; }
 }
-function buildTargets(){
-  targetsLayer.innerHTML='';
-  const t=targetsMap[currentSituation.key]||{};
-  Object.entries(t).forEach(([id,pt])=>{
-    const ring=document.createElement('div');
-    ring.className='tgt';
-    const css=unitToCss(pt);
-    ring.style.left=css.left+'px'; ring.style.top=css.top+'px';
-    ring.dataset.for=id;
 
-    const tol = getTolFor(currentSituation.key,id);
-    const dpx = tolToCssDiameter(tol);
-    ring.style.width = dpx+'px';
-    ring.style.height= dpx+'px';
+/* =======================
+   Runners & Outs
+   ======================= */
+function normalizeRunnersOn(obj){ const src=obj||{}; return { first:!!src.first, second:!!src.second, third:!!src.third }; }
+function runnersStateToArray(r){ const out=[]; if(r.first)out.push('1B'); if(r.second)out.push('2B'); if(r.third)out.push('3B'); return out; }
+function getRunnersFromCheckboxes(){ return { first:!!(run1B&&run1B.checked), second:!!(run2B&&run2B.checked), third:!!(run3B&&run3B.checked) }; }
+function updateRunnersHudFromLive(){
+  if (!runnersValHud) return;
+  const arr = runnersStateToArray(normalizeRunnersOn(liveRunners));
+  runnersValHud.textContent = arr.length ? arr.join(',') : '—';
+}
+function setRunnersOn(next,{quiet=true}={}){
+  if (!currentSituation) return;
+  const newState = next ? normalizeRunnersOn(next) : normalizeRunnersOn(getRunnersFromCheckboxes());
+  currentSituation.runnersOn = { ...newState };
+  if (!gameActive) liveRunners = { ...newState };
+  if (run1B&&run2B&&run3B){ run1B.checked=!!newState.first; run2B.checked=!!newState.second; run3B.checked=!!newState.third; }
+  updateRunnersHudFromLive();
+  renderBaseRunners();
+  scaleMarkers();
+  if (!quiet && scenarioMsg){ scenarioMsg.textContent='Runners updated'; setTimeout(()=>scenarioMsg.textContent='',900); }
+}
+function setOuts(value,{quiet=true}={}){
+  if (!currentSituation) return;
+  const v = clampInt(value,0,2);
+  currentSituation.outs = v;
+  if (outsValHud) outsValHud.textContent = String(v);
+  if (outsSelScenario && outsSelScenario.value !== String(v)) outsSelScenario.value = String(v);
+  if (!quiet && scenarioMsg){ scenarioMsg.textContent='Outs updated'; setTimeout(()=>{scenarioMsg.textContent='';},900); }
+}
+/* draw/remove base runners  */
+function renderBaseRunners(state, exclude = new Set()){
+  // Merge explicit excludes + global suppression
+  const blocked = new Set([...exclude, ..._animSuppressedBases]);
 
-    const label=document.createElement('span');
-    label.className='tgt-label';
-    label.textContent=id;
-    ring.appendChild(label);
+  // Only remove static dots; keep animated movers alive
+  if (wrap) wrap.querySelectorAll('.baseRunner:not(.movingRunner)').forEach(n=>n.remove());
 
-    if (calibrationTargetsOn) {
-      ring.style.display='block';
-      ring.classList.add('show-label');
+  const r = state ? normalizeRunnersOn(state) : normalizeRunnersOn(liveRunners);
+
+  const add=(baseName)=>{
+    if (blocked.has(baseName)) return; // skip bases we’re animating
+    const pos=BASES_NATIVE[baseName]; if(!pos||!wrap) return;
+    const m=document.createElement('div');
+    m.className='baseRunner';
+    m.dataset.base = baseName;
+    const css=unitToCss(pos);
+    m.style.left=css.left+'px';
+    m.style.top =css.top +'px';
+    wrap.appendChild(m);
+  };
+
+  if (r.first)  add('first');
+  if (r.second) add('second');
+  if (r.third)  add('third');
+
+  if (typeof scaleMarkers === 'function') scaleMarkers();
+}
+function advanceRunnersState(state,bases){
+  bases = clampInt(bases,0,3);
+  const r = normalizeRunnersOn(state);
+  if (bases<=0) return {...r};
+  const occ=[]; if(r.first)occ.push(1); if(r.second)occ.push(2); if(r.third)occ.push(3);
+  occ.sort((a,b)=>b-a);
+  const dest={1:false,2:false,3:false};
+  for(const b of occ){ const nb=b+bases; if (nb<4) dest[nb]=true; }
+  return { first:!!dest[1], second:!!dest[2], third:!!dest[3] };
+}
+
+/* =======================
+   Ball & Hit
+   ======================= */
+function buildBallGraphics(){
+  ballLayer.innerHTML = '';
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${imgRect.width} ${imgRect.height}`);
+  ballSvg=svg; ballLayer.appendChild(svg);
+  if (!ballEl){
+    ballEl=document.createElement('div');
+    ballEl.className='ball'; ballEl.style.display='none';
+    wrap.appendChild(ballEl);
+    makeBallDraggable(ballEl);
+  }
+  syncBallToHit();
+}
+function ensureDefaultHit(){
+  if (!currentSituation) return;
+  if (!currentSituation.hit || isNaN(currentSituation.hit.x) || isNaN(currentSituation.hit.y)){
+    currentSituation.hit = { x:1500, y:900 };
+  }
+}
+function syncBallToHit(){
+  if (!ballEl || !currentSituation) return;
+  ensureDefaultHit();
+  const css=unitToCss(currentSituation.hit);
+  ballEl.style.left=css.left+'px'; ballEl.style.top=css.top+'px';
+  ballEl.style.display = (coachUnlocked || gameActive) ? 'block' : 'none';
+  ballEl.classList.toggle('locked', !coachUnlocked);
+}
+function makeBallDraggable(el){
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{
+    if (!coachUnlocked) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    drag={cx:e.clientX,cy:e.clientY,left:parseFloat(el.style.left)||0, top:parseFloat(el.style.top)||0};
+    window.addEventListener('pointermove',onMove);
+    window.addEventListener('pointerup',onUp,{once:true});
+  });
+  function onMove(e){
+    if(!drag) return;
+    const left=drag.left+(e.clientX-drag.cx), top=drag.top+(e.clientY-drag.cy);
+    el.style.left=left+'px'; el.style.top=top+'px';
+    const pt=cssToUnit(left,top);
+    if(currentSituation) currentSituation.hit={ x:Math.round(pt.x), y:Math.round(pt.y) };
+  }
+  function onUp(){ window.removeEventListener('pointermove',onMove); drag=null; }
+}
+function placeHitMarker(){
+  if (hitMarker){ hitMarker.remove(); hitMarker=null; }
+  if (!coachUnlocked) return;
+  ensureDefaultHit();
+  const css=unitToCss(currentSituation.hit);
+  hitMarker=document.createElement('div');
+  hitMarker.className='hitTarget'; hitMarker.style.left=css.left+'px'; hitMarker.style.top=css.top+'px';
+  wrap.appendChild(hitMarker); makeHitMarkerDraggable(hitMarker);
+}
+function makeHitMarkerDraggable(el){
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{
+    if (!coachUnlocked) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    drag={cx:e.clientX,cy:e.clientY,left:parseFloat(el.style.left),top:parseFloat(el.style.top)};
+    window.addEventListener('pointermove',onMove);
+    window.addEventListener('pointerup',onUp,{once:true});
+  });
+  function onMove(e){
+    if(!drag) return;
+    const left=drag.left+(e.clientX-drag.cx), top=drag.top+(e.clientY-drag.cy);
+    el.style.left=left+'px'; el.style.top=top+'px';
+    const pt=cssToUnit(left,top);
+    currentSituation.hit={ x:Math.round(pt.x), y:Math.round(pt.y) };
+    syncBallToHit();
+  }
+  function onUp(){ window.removeEventListener('pointermove',onMove); drag=null; }
+}
+function mapHitTypeToAdvance(hitType){
+  switch((hitType||'').toLowerCase()){
+    case 'grounder': return 1;
+    case 'line':     return 2;
+    case 'popup':    return 0;
+    default:         return 1;
+  }
+}
+function animateHit(style){
+  const sit=currentSituation; if(!sit) return;
+  ensureDefaultHit(); style = style || sit.hitType || 'line';
+  if (ballSvg) ballSvg.innerHTML='';
+  const startCss=nativeToCssPoint(HOME_NATIVE), endCss=nativeToCssPoint(sit.hit);
+  const svgNS='http://www.w3.org/2000/svg';
+  if (style==='line' || style==='grounder'){
+    ballPath=document.createElementNS(svgNS,'line');
+    Object.entries({x1:startCss.x,y1:startCss.y,x2:endCss.x,y2:endCss.y}).forEach(([k,v])=>ballPath.setAttribute(k,v));
+    ballPath.setAttribute('stroke','#0ea5e9');
+    ballPath.setAttribute('stroke-width', String(getBallStrokeWidth()));
+    if (style==='grounder') ballPath.setAttribute('stroke-dasharray','8 8');
+    ballSvg.appendChild(ballPath);
+  } else {
+    const midX=(startCss.x+endCss.x)/2, midY=(startCss.y+endCss.y)/2;
+    const curveUp = Math.max(90, Math.hypot(endCss.x - startCss.x, endCss.y - startCss.y) * 0.36); // higher arc
+    const ctrl={x:midX,y:midY-curveUp};
+    const d=`M ${startCss.x},${startCss.y} Q ${ctrl.x},${ctrl.y} ${endCss.x},${endCss.y}`;
+    ballPath=document.createElementNS(svgNS,'path');
+    ballPath.setAttribute('d',d); ballPath.setAttribute('fill','none');
+    ballPath.setAttribute('stroke','#0ea5e9');
+    ballPath.setAttribute('stroke-width', String(getBallStrokeWidth()));
+    ballSvg.appendChild(ballPath);
+  }
+  ballEl.style.left=`${startCss.x}px`; ballEl.style.top=`${startCss.y}px`; ballEl.style.display='block';
+  const dist=Math.hypot(endCss.x-startCss.x,endCss.y-startCss.y);
+  const duration = clamp(1200 + dist * 0.90, 1500, 3200); // slower + smoother
+  let t0=performance.now(); if (animReq) cancelAnimationFrame(animReq);
+  const p0={x:startCss.x,y:startCss.y}, p2={x:endCss.x,y:endCss.y};
+  const popupCtrl=(()=>{const midX=(startCss.x+endCss.x)/2, midY=(startCss.y+endCss.y)/2;
+    const curveUp = Math.max(90, Math.hypot(endCss.x - startCss.x, endCss.y - startCss.y) * 0.36); // higher arc
+    return {x:midX,y:midY-curveUp};})();
+  function step(now){
+    const t=clamp((now-t0)/duration,0,1);
+    const pos=(style==='popup')?quadBezier(p0,popupCtrl,p2,t):{x:lerp(p0.x,p2.x,t),y:lerp(p0.y,p2.y,t)};
+    ballEl.style.left=`${pos.x}px`; ballEl.style.top=`${pos.y}px`;
+    if (t<1) animReq=requestAnimationFrame(step);
+    else { if (ballSvg) ballSvg.innerHTML=''; animReq=null; if (ballEl) ballEl.style.display='block'; }
+  }
+  animReq=requestAnimationFrame(step);
+}
+function ensureRunner(){
+  if (!runnerEl){
+    runnerEl = document.createElement('div');
+    runnerEl.className = 'runner';
+    runnerEl.style.display = 'none';
+
+    // Add label element inside (counter-rotated via CSS)
+    const lab = document.createElement('span');
+    lab.className = 'rlabel';
+    lab.textContent = 'B'; // Batter when moving
+    runnerEl.appendChild(lab);
+
+    wrap.appendChild(runnerEl);
+  }
+}
+function placeRunnerAtBase(base){
+  ensureRunner();
+  runnerLastBase = base;
+
+  const pt = BASES_NATIVE[base] || BASES_NATIVE.home;
+  const css = unitToCss(pt);
+
+  runnerEl.style.left = css.left + 'px';
+  runnerEl.style.top  = css.top  + 'px';
+  runnerEl.style.display = 'block';
+
+  // Label B1/B2/B3 on base; hide on home
+  const lab = runnerEl.querySelector('.rlabel');
+  if (lab){
+    lab.textContent =
+      base === 'first'  ? 'B1' :
+      base === 'second' ? 'B2' :
+      base === 'third'  ? 'B3' : 'B';
+  }
+}
+function hideRunner(){ if (runnerEl) runnerEl.style.display='none'; runnerLastBase='home'; }
+function animateBatterAdvance(basesAdvanced, onDone){
+  ensureRunner();
+  if (runnerAnimId){ cancelAnimationFrame(runnerAnimId); runnerAnimId=null; }
+
+  // Normalize + clamp
+  basesAdvanced = clampInt(basesAdvanced, 0, 4);
+
+  // Path of bases (index is "bases moved")
+  const path=['home','first','second','third','home'];
+  const legs=path.slice(0, Math.min(4,basesAdvanced)+1);
+
+  // No advance: hide/snap on home and finish
+  if (basesAdvanced<=0){
+    placeRunnerAtBase('home');
+    runnerEl.style.display='none';
+    runnerLastBase='home';
+    if (typeof onDone === 'function') onDone('home');
+    return;
+  }
+
+  placeRunnerAtBase(legs[0]);
+  let legIdx=0;
+
+  const runLeg=()=>{
+    if (legIdx>=legs.length-1){
+      // Finished
+      const destBase = legs[legs.length-1];      // first/second/third/home
+      runnerLastBase = destBase;
+      if (typeof onDone === 'function') onDone(destBase);
+      return;
     }
-    targetsLayer.appendChild(ring);
+    const fromName=legs[legIdx], toName=legs[legIdx+1];
+    const fromCss=nativeToCssPoint(BASES_NATIVE[fromName]);
+    const toCss  =nativeToCssPoint(BASES_NATIVE[toName]);
+    const dist=Math.hypot(toCss.x-fromCss.x,toCss.y-fromCss.y);
+
+    // Slower, to match your GIF feel
+    const duration=clamp(700+dist*0.55, 800, 1600);
+
+    let t0=performance.now();
+    const step=(now)=>{
+      const t=clamp((now-t0)/duration,0,1);
+      const e=1-Math.pow(1-t,3);
+      runnerEl.style.left=lerp(fromCss.x,toCss.x,e)+'px';
+      runnerEl.style.top =lerp(fromCss.y,toCss.y,e)+'px';
+      runnerEl.style.display='block';
+      if (t<1) runnerAnimId=requestAnimationFrame(step);
+      else { runnerLastBase=toName; legIdx++; runLeg(); }
+    };
+    runnerAnimId=requestAnimationFrame(step);
+  };
+  runLeg();
+}
+
+const BASE_ORDER = ['first', 'second', 'third', 'home'];
+
+/**
+ * Animate a runner that starts on a base (first/second/third) forward `advance` bases.
+ * Returns a Promise that resolves when this runner's animation finishes.
+ */
+function animateExistingRunnerFrom(baseName, advance){
+  return new Promise(resolve=>{
+    // Nothing to do
+    const startIdx = BASE_ORDER.indexOf(baseName);
+    if (startIdx < 0 || advance <= 0) return resolve();
+
+    // Remove the static dot for this base so we don't double-draw
+    const toRemove = wrap.querySelector(`.baseRunner[data-base="${baseName}"]`);
+    if (toRemove) toRemove.remove();
+
+    // Create a moving element (reuse .baseRunner styling)
+    const mover = document.createElement('div');
+    mover.className = 'movingRunner';
+    mover.style.position = 'absolute';
+    mover.style.transform = 'translate(-50%,-50%)';
+    wrap.appendChild(mover);
+
+    // Let it scale like other markers
+    if (typeof scaleMarkers === 'function') scaleMarkers();
+
+    // Build its path across legs
+    const destIdx = Math.min(startIdx + advance, BASE_ORDER.length - 1); // up to "home"
+    const legs = BASE_ORDER.slice(startIdx, destIdx + 1); // e.g. ['first','second','third'] (or 'home')
+
+    // Place at starting base
+    const startCss = nativeToCssPoint(BASES_NATIVE[legs[0]]);
+    mover.style.left = startCss.x + 'px';
+    mover.style.top  = startCss.y + 'px';
+    mover.style.display = 'block';
+
+    let leg = 0, animId=null;
+
+    const runLeg = ()=>{
+      if (leg >= legs.length - 1){
+        // If finished on "home", remove; otherwise we’ll later redraw statically via renderBaseRunners
+        if (mover && mover.parentNode) mover.remove();
+        return resolve();
+      }
+      const fromName = legs[leg];
+      const toName   = legs[leg + 1];
+      const fromCss  = nativeToCssPoint(BASES_NATIVE[fromName]);
+      const toCss    = nativeToCssPoint(BASES_NATIVE[toName]);
+      const dist     = Math.hypot(toCss.x - fromCss.x, toCss.y - fromCss.y);
+
+      // Match your slower, smooth feel
+      const duration = clamp(700 + dist * 0.55, 800, 1600);
+
+      let t0 = performance.now();
+      const step = (now)=>{
+        const t = clamp((now - t0) / duration, 0, 1);
+        const e = 1 - Math.pow(1 - t, 3); // smooth ease-out
+        mover.style.left = lerp(fromCss.x, toCss.x, e) + 'px';
+        mover.style.top  = lerp(fromCss.y, toCss.y, e) + 'px';
+        if (t < 1) animId = requestAnimationFrame(step);
+        else { leg++; runLeg(); }
+      };
+      animId = requestAnimationFrame(step);
+    };
+
+    runLeg();
   });
 }
-function getBuilderRunners(){
-  const sel=[]; if(sbR1?.checked) sel.push('1B'); if(sbR2?.checked) sel.push('2B'); if(sbR3?.checked) sel.push('3B'); return sel;
-}
-function drawRunners(override){
-  runnersLayer.innerHTML='';
-  const active = override ?? (currentRunners.length ? currentRunners : (currentSituation.runners||[]));
-  active.forEach(b=>{
-    const pt=BASES[b]; if(!pt) return;
-    const css=unitToCss(pt);
-    const badge=document.createElement('div');
-    badge.className='runner';
-    badge.dataset.base = b;
-    badge.style.left=(css.left)+'px';
-    badge.style.top=(css.top)+'px';
-    const txt=document.createElement('div'); txt.className='txt';
-    let label =
-      (b==='HP') ? 'BR' :
-      (b==='1B') ? 'R1' :
-      (b==='2B') ? 'R2' :
-      (b==='3B') ? 'R3' : b;
-    txt.textContent=label;
-    badge.appendChild(txt);
-    runnersLayer.appendChild(badge);
-  });
-}
 
-/* ================== GAME FLOW ================== */
-function lockPlayHit(){
-  playLocked = true;
-  const btn = document.getElementById('playHitBtn');
-  if (btn){ btn.disabled = true; btn.title = 'Reset or change situation to play again'; }
-}
-function unlockPlayHit(){
-  playLocked = false;
-  const btn = document.getElementById('playHitBtn');
-  if (btn){ btn.disabled = false; btn.title = 'Start Situation'; }
-}
-function populateSelect(selectedKey){
-  sitSelect.innerHTML = '';
-  SITUATIONS.forEach(s=>{
-    const o=document.createElement('option');
-    o.value=s.key; o.textContent=s.title;
-    sitSelect.appendChild(o);
-  });
-  // Prefer an explicit key, then currentSituation, else first item
-  const key = selectedKey || (currentSituation && currentSituation.key) || (SITUATIONS[0] && SITUATIONS[0].key);
-  if (key) sitSelect.value = key;
-}
-function setSituation(key, {fromUser=false}={}){
-  // Resolve the situation
-  const next = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
-  if (!next) return;
+/**
+ * Animate all existing runners (first/second/third) forward `advance` bases in parallel.
+ * Calls onDone(finalState) when all have finished (finalState excludes batter).
+ */
+function animateExistingRunnersAdvance(advance, onDone){
+  const start = normalizeRunnersOn(liveRunners);
 
-  // Update state
-  currentSituation = JSON.parse(JSON.stringify(next)); // decouple
-  attemptCount = 0;
-  currentRunners = [...(currentSituation.runners || [])];
+  const movers = [];
+  if (start.first)  movers.push('first');
+  if (start.second) movers.push('second');
+  if (start.third)  movers.push('third');
 
-  // Sync UI primitives
-  // 1) dropdown
-  if (sitSelect.value !== currentSituation.key) {
-    sitSelect.value = currentSituation.key;
-  }
-  // 2) header info
-  if (typeof outsBadge !== 'undefined' && outsBadge) {
-    const outs = Number.isFinite(currentSituation.outs) ? currentSituation.outs : 0;
-    outsBadge.textContent = `Outs: ${outs}`;
-  }
-  if (typeof sitText !== 'undefined' && sitText) {
-    sitText.textContent = currentSituation.desc || currentSituation.title || '';
-  }
-  // 3) score + tries
-  if (typeof scoreBox !== 'undefined' && scoreBox) {
-    scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
+  if (movers.length === 0){
+    const finalState = advanceRunnersState(start, advance);
+    if (typeof onDone === 'function') onDone(finalState);
+    return;
   }
 
-  // 4) rebuild visuals
-  buildTargets();
-  drawRunners();           // uses currentSituation.runners by default
-  resetPlayers();          // puts chips back to starts
-  clearBallCanvas && clearBallCanvas();  // remove any prior hit path/ball
-  unlockPlayHit && unlockPlayHit();      // allow “Start Situation” again
+  // Suppress the starting bases for movers (no static dot while they run)
+  movers.forEach(b => _animSuppressedBases.add(b));
 
-  // 5) calibration label (if present)
-  if (typeof curSitLabel !== 'undefined' && curSitLabel) {
-    curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
-  }
+  // Initial paint while suppressed (so their start dots disappear immediately)
+  renderBaseRunners(start);
+
+  // Animate all movers
+  Promise.all(movers.map(b => animateExistingRunnerFrom(b, advance)))
+    .then(()=>{
+      // Compute final state and clear suppression
+      const finalState = advanceRunnersState(start, advance);
+      movers.forEach(b => _animSuppressedBases.delete(b));
+
+      // Repaint final positions (no ghosts)
+      renderBaseRunners(finalState);
+
+      if (typeof onDone === 'function') onDone(finalState);
+    });
 }
 
-function drawCalibrationBallAtNative(nativePt){
-  const ctx = ballCanvas.getContext('2d');
-  // Show only the calibration ball (no trails)
-  ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-  const css = unitToCss(nativePt);
-  ctx.beginPath();
-  ctx.fillStyle = '#ffffff';              // white ball
-  ctx.arc(css.left, css.top, 6, 0, Math.PI*2);
-  ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,.25)';
-  ctx.lineWidth=1;
-  ctx.stroke();
+/* =======================
+   Coach tools & visibility
+   ======================= */
+const CALIB_PASSWORD='coach';
+function applyCoachVisibility(){
+  coachCard.classList.toggle('hidden', !coachUnlocked);
+  getAllRings().forEach(el=> el.style.display = coachUnlocked ? 'block' : 'none');
+  if (coachUnlocked){ if (!hitMarker) placeHitMarker(); } else { if (hitMarker){ hitMarker.remove(); hitMarker=null; } }
+  syncBallToHit();
 }
-function checkPositions(){
-  attemptCount = Math.min(MAX_TRIES, attemptCount + 1);
-  const t = targetsMap[currentSituation.key] || {};
-  const forceShowAll = (attemptCount >= MAX_TRIES);
-  let correct = 0;
-
-  document.querySelectorAll('.tgt').forEach(el=>{
-    const id = el.dataset.for;
-    const target = t[id];
-    const cur = tokens.get(id)?.pos;
-    if(!cur || !target) return;
-    const tol = getTolFor(currentSituation.key,id);
-    const d = Math.hypot(cur.x - target.x, cur.y - target.y);
-    const isCorrect = d <= tol;
-
-    el.classList.toggle('good', isCorrect);
-    el.classList.toggle('bad',  !isCorrect);
-
-    if (!isCorrect && forceShowAll) el.classList.add('show-label');
-    else if (!calibrationTargetsOn) el.classList.remove('show-label');
-
-    if (isCorrect || forceShowAll || calibrationTargetsOn) el.style.display='block';
-    else el.style.display='none';
-
-    if (isCorrect) correct++;
-  });
-
-  scoreBox.textContent = `Score: ${correct}/9 • Try ${attemptCount}/${MAX_TRIES}`;
+function setChipsLocked(locked){ tokens.forEach(({el})=> el.classList.toggle('locked', locked && !coachUnlocked)); }
+function updateHud(scoreCount){ scoreVal.textContent=String(scoreCount ?? 0); triesVal.textContent=coachUnlocked ? '∞' : String(remainingTries); }
+function setCoachMode(enabled){
+  coachUnlocked = !!enabled;
+  coachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
+  coachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
+  if (coachUnlocked) setChipsLocked(false); else setChipsLocked(!gameActive || remainingTries===0);
+  buildTargets(); applyCoachVisibility(); updateHud(Number(scoreVal.textContent)||0);
 }
-function resetPlayers(){
-  try { cancelAnimationFrame(rafId); } catch(e){}
-  try { cancelAnimationFrame(runnerRafId); } catch(e){}
-  rafId = null; runnerRafId = null;
+function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
+function closePwModal(){ pwModal.style.display='none'; }
+function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
 
-  clearBallCanvas && clearBallCanvas();
+/* =======================
+   Situations I/O & helpers
+   ======================= */
+const STORAGE_STARTS='bb_iq_starts_v2';
+const STORAGE_HITS  ='bb_iq_hits_v1';
 
-  tokens.forEach((_,id)=>{ tokens.get(id).pos = JSON.parse(JSON.stringify(starts[id])); placeToken(id); });
-
-  attemptCount = 0;
-  document.querySelectorAll('.tgt').forEach(el=>{
-    el.style.display = calibrationTargetsOn ? 'block' : 'none';
-    if (calibrationTargetsOn) el.classList.add('show-label'); else el.classList.remove('show-label');
-    el.classList.remove('good','bad');
-  });
-  scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-
-  currentRunners = (currentSituation.runners || []).slice();
-  drawRunners();
-
-  if (typeof syncHitUI === 'function') syncHitUI();
-
-  unlockPlayHit(); // ✅ allow playing again after reset
+function defaultStartsMap(){
+  const map = {};
+  (SITUATIONS||[]).forEach(s=>{ map[s.key] = s.starts ? Fcopy(s.starts) : Fcopy(DEFAULT_STARTS); });
+  return map;
 }
-
-
-
-/* ================== BALL ANIMATION ================== */
-let rafId=null;
-function clearBallCanvas(){
-  const ctx=ballCanvas.getContext('2d'); ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
+function loadStarts(){
+  startsMap = defaultStartsMap();
+  try{
+    const raw = localStorage.getItem(STORAGE_STARTS); if (!raw) return;
+    const saved = JSON.parse(raw);
+    Object.keys(saved||{}).forEach(k=>{
+      const dst = startsMap[k] || (startsMap[k]=Fcopy(DEFAULT_STARTS));
+      POS_IDS.forEach(id=>{
+        const v = saved[k]?.[id];
+        if (v && !isNaN(v.x) && !isNaN(v.y)) dst[id] = { x:Math.round(Number(v.x)), y:Math.round(Number(v.y)) };
+      });
+    });
+  }catch(e){ console.warn('[Starts] localStorage merge error:', e); }
 }
-function drawStaticBallAtCss(x,y){
-  const ctx=ballCanvas.getContext('2d');
-  ctx.beginPath();
-  ctx.fillStyle='#ffffff'; // ✅ white ball
-  ctx.arc(x,y,6,0,Math.PI*2);
-  ctx.fill();
-  ctx.strokeStyle='rgba(0,0,0,.25)';
-  ctx.lineWidth=1;
-  ctx.stroke();
+function saveStarts(){ try{ localStorage.setItem(STORAGE_STARTS, JSON.stringify(startsMap)); }catch{} }
+function getStartFor(sKey,id){ const s = startsMap[sKey] || DEFAULT_STARTS; return s[id] || DEFAULT_STARTS[id]; }
+function setStartFor(sKey,id,pt){ if(!startsMap[sKey]) startsMap[sKey]=Fcopy(DEFAULT_STARTS); startsMap[sKey][id]={x:pt.x,y:pt.y}; }
+
+function loadHits(){ try{ const raw=localStorage.getItem(STORAGE_HITS); hitsMap = raw ? JSON.parse(raw) : {}; }catch{ hitsMap={}; } }
+function saveHits(){ try{ localStorage.setItem(STORAGE_HITS, JSON.stringify(hitsMap)); }catch{} }
+function getHitSaved(sKey){ const v=hitsMap[sKey]; return (v && !isNaN(v.x) && !isNaN(v.y)) ? { x:Math.round(v.x), y:Math.round(v.y) } : null; }
+function setHitSaved(sKey, pt){ if (!pt || isNaN(pt.x) || isNaN(pt.y)) return; hitsMap[sKey] = { x:Math.round(pt.x), y:Math.round(pt.y) }; }
+
+function setTargetFor(sKey,id,pt,tol=DEFAULT_TOL){
+  const s = SITUATIONS.find(x=>x.key===sKey); if(!s) return;
+  if(!s.targets) s.targets={};
+  const prevTol = s.targets[id]?.tol;
+  s.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(tol||prevTol||DEFAULT_TOL) };
+}
+function getTargetFor(sKey,id){
+  const s = SITUATIONS.find(x=>x.key===sKey);
+  return (s && s.targets && s.targets[id]) ? s.targets[id] : null;
 }
 
-function drawStaticBallAtNative(nativePt){
-  const css=unitToCss(nativePt);
-  drawStaticBallAtCss(css.left, css.top);
-}
-function lerp(a,b,t){ return a+(b-a)*t; }
-function quadBezier(p0,p1,p2,t){
-  const x = (1-t)*(1-t)*p0.x + 2*(1-t)*t*p1.x + t*t*p2.x;
-  const y = (1-t)*(1-t)*p0.y + 2*(1-t)*t*p1.y + t*t*p2.y;
+function normPoint(px){
+  if (!px || isNaN(px.x) || isNaN(px.y)) return null;
+  let x=Number(px.x), y=Number(px.y);
+  if (x>=0 && x<=1 && y>=0 && y<=1){ x=Math.round(x*IMG_W); y=Math.round(y*IMG_H); } else { x=Math.round(x); y=Math.round(y); }
   return {x,y};
 }
-function getLaunchPoint(){
-  // Home Plate anchor (HP) is the "launch"
-  const hp = BASES['HP'] || F(0.5, 0.905);
-  return hp;
+function normalizeStarts(obj){
+  if (!obj || typeof obj !== 'object') return null;
+  const out={}; POS_IDS.forEach(id=>{ if (obj[id]){ const p=normPoint(obj[id]); if(p) out[id]=p; }});
+  return Object.keys(out).length ? out : null;
 }
-function playHitAnimation(fromNative, toNative, type){
-  cancelAnimationFrame(rafId);
-  const ctx = ballCanvas.getContext('2d');
-  ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-
-  const fromCss = unitToCss(fromNative);
-  const toCss   = unitToCss(toNative);
-  const start = { x: fromCss.left, y: fromCss.top };
-  const end   = { x: toCss.left,   y: toCss.top  };
-
-  const duration = (type==='popup') ? 2200 : (type==='grounder' ? 1800 : 1600);
-  const t0 = performance.now();
-
-  const mid  = { x:(start.x+end.x)/2, y:(start.y+end.y)/2 };
-  const rise = -Math.hypot(end.x-start.x, end.y-start.y) * 0.25;
-  const ctrl = { x: mid.x, y: mid.y + rise };
-
-  const cssVar = (name, fallback)=> (getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback);
-  const strokeForType = ()=>{
-    ctx.setLineDash([]);
-    if(type==='line'){ ctx.strokeStyle = cssVar('--accent', '#ff8a00'); }
-    if(type==='popup'){ ctx.strokeStyle = cssVar('--popup',  '#06b6d4'); }
-    if(type==='grounder'){ ctx.setLineDash([8,8]); ctx.strokeStyle = cssVar('--ground', '#374151'); }
-  };
-  const drawBall = (x,y)=>{
-    ctx.beginPath();
-    ctx.fillStyle = '#ffffff';   // ✅ WHITE BALL
-    ctx.arc(x,y,6,0,Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle='rgba(0,0,0,.25)';
-    ctx.lineWidth=1;
-    ctx.stroke();
-  };
-
-  const draw = (now)=>{
-    const t = Math.min(1, (now - t0) / duration);
-    ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-
-    ctx.lineWidth = 4;
-    ctx.lineCap   = 'round';
-    strokeForType();
-
-    ctx.beginPath();
-    if(type === 'popup'){
-      const steps = 48;
-      let first = true;
-      for(let i=0;i<=Math.floor(steps*t);i++){
-        const tt = i/steps;
-        const p = {
-          x: (1-tt)*(1-tt)*start.x + 2*(1-tt)*tt*ctrl.x + tt*tt*end.x,
-          y: (1-tt)*(1-tt)*start.y + 2*(1-tt)*tt*ctrl.y + tt*tt*end.y
-        };
-        if(first){ ctx.moveTo(p.x,p.y); first=false; } else { ctx.lineTo(p.x,p.y); }
-      }
-      ctx.stroke();
-      const pb = {
-        x: (1-t)*(1-t)*start.x + 2*(1-t)*t*ctrl.x + t*t*end.x,
-        y: (1-t)*(1-t)*start.y + 2*(1-t)*t*ctrl.y + t*t*end.y
-      };
-      drawBall(pb.x, pb.y);
-    }else{
-      const px = start.x + (end.x - start.x) * t;
-      const py = start.y + (end.y - start.y) * t;
-      ctx.moveTo(start.x, start.y);
-      ctx.lineTo(px, py);
-      ctx.stroke();
-      drawBall(px, py);
-    }
-
-    if(t < 1){
-      rafId = requestAnimationFrame(draw);
-    }else{
-      setTimeout(()=>{
-        ctx.clearRect(0,0,ballCanvas.width,ballCanvas.height);
-        drawBall(end.x, end.y);
-      }, 80);
-    }
-  };
-
-  rafId = requestAnimationFrame(draw);
-}
-
-/* ---------- Hit Depth + Runner Profiles ---------- */
-
-/** Distance from HP (native pixels) */
-function distFromHP(nativePt){
-  const hp = BASES['HP'] || F(0.5, 0.905);
-  return Math.hypot(nativePt.x - hp.x, nativePt.y - hp.y);
-}
-
-/** Bucket the hit into shallow / medium / deep (tweak thresholds as you like) */
-function depthTier(nativeTarget){
-  const d = distFromHP(nativeTarget);
-  // thresholds in native image pixels (for 3000x2487)
-  // ~ shallow < 520 px, medium < 900 px, else deep
-  if (d < 520) return 'shallow';
-  if (d < 900) return 'medium';
-  return 'deep';
-}
-
-// Always advance HP -> 1B, 1B -> 2B, 2B -> 3B, 3B -> HP (scores)
-function nextBase(base){
-  if (base === 'HP') return '1B';
-  if (base === '1B') return '2B';
-  if (base === '2B') return '3B';
-  if (base === '3B') return 'HP';
-  return base;
-}
-
-
-/** Runner advance profiles by hit type + depth
- *  Steps are bases advanced: 0 (hold), 1 (one base), 2 (two bases)
- *  You can tune these as needed.
- */
-/**
-- Want deep line drives to score R3 and send R2 home? Keep line.deep = {R1:2, R2:2, R3:1}.
-- Want grounder deep to move everyone one? Change to {R1:1, R2:1, R3:1}.
-- Want medium popup to keep everyone frozen? Change to {R1:0, R2:0, R3:0}.
-**/
-const RUNNER_PROFILES = {
-  line: {
-    shallow: { R1:1, R2:1, R3:1 },             // ball on a line, quick — play it safe
-    medium:  { R1:1, R2:1, R3:1 },             // standard station-to-station
-    deep:    { R1:2, R2:2, R3:1 }              // gapper: R1/R2 aggressive, R3 scores
-  },
-  popup: {
-    shallow: { R1:0, R2:0, R3:0 },             // everyone holds (infield fly / shallow outfield)
-    medium:  { R1:0, R2:0, R3:1 },             // R3 tags & scores, others hold
-    deep:    { R1:1, R2:1, R3:1 }              // tag & advance one
-  },
-  grounder: {
-    shallow: { R1:1, R2:1, R3:1 },             // force draws everyone up one
-    medium:  { R1:1, R2:1, R3:1 },
-    deep:    { R1:2, R2:1, R3:1 }              // through the infield: R1 takes two
-  }
-};
-
-/** Create an advance plan for the *current* runners given the hit */
-function planRunnerAdvancesForCurrent(hit){
-  const type = (hit?.type || 'line');
-  const depth = depthTier(hit?.target || F(0.55,0.65));
-  const prof = (RUNNER_PROFILES[type] || RUNNER_PROFILES.line)[depth];
-
-  // Map currentRunners (like ['1B','2B']) into steps per starting base.
-  // We label by runner identity R1/R2/R3 based on their starting base.
-  const idForBase = (b)=> (b==='1B'?'R1': b==='2B'?'R2': b==='3B'?'R3':'R?');
-
-  const plan = {}; // { '1B': steps, '2B': steps, '3B': steps }
-  (currentRunners || []).forEach(b=>{
-    const id = idForBase(b);
-    const steps = prof[id]??0;
-    plan[b] = steps;
-  });
-
-  // ✅ Always include the batter-runner: HP -> 1B
-  plan['HP'] = 1;
-
-  return plan;
-}
-
-/** Animate runners according to a plan:
- *  plan example: { '1B':1, '2B':0, '3B':2 }
- *  durationMs covers the whole movement; two-base moves are split into two legs.
- */
-function animateRunnersAdvancePlan(plan, durationMs){
-  // Snapshot movers (only those with steps > 0)
-  const movers = (currentRunners || [])
-    .filter(b => (plan[b]||0) > 0)
-    .map(b => {
-      const steps = plan[b];
-      const from = BASES[b];
-      const midBase = nextBase(b);
-      const toBase  = steps >= 2 ? nextBase(midBase) : midBase;
-      const fromCss = unitToCss(from);
-      const midCss  = unitToCss(BASES[midBase]);
-      const toCss   = unitToCss(BASES[toBase]);
-      return { base:b, steps, fromCss, midCss, toCss, midBase, toBase };
-    });
-
-  if (!movers.length) return; // nothing to animate
-
-  // We animate all runners in a single RAF loop using piecewise legs
-  const startTime = performance.now();
-  const total = Math.max(1, durationMs);
-
-  function step(now){
-    const t = Math.min(1, (now - startTime) / total);
-
-    movers.forEach(m=>{
-      const el = runnersLayer.querySelector(`.runner[data-base="${m.base}"]`);
-      if(!el) return;
-
-      let x, y;
-      if (m.steps === 1){
-        // single leg
-        x = m.fromCss.left + (m.midCss.left - m.fromCss.left) * t;
-        y = m.fromCss.top  + (m.midCss.top  - m.fromCss.top ) * t;
-      }else{
-        // two legs compressed into total duration: first half to mid, second half to end
-        if (t <= 0.5){
-          const tt = t * 2;
-          x = m.fromCss.left + (m.midCss.left - m.fromCss.left) * tt;
-          y = m.fromCss.top  + (m.midCss.top  - m.fromCss.top ) * tt;
-        }else{
-          const tt = (t - 0.5) * 2;
-          x = m.midCss.left + (m.toCss.left - m.midCss.left) * tt;
-          y = m.midCss.top  + (m.toCss.top  - m.midCss.top ) * tt;
-        }
-      }
-
-      el.style.left = x + 'px';
-      el.style.top  = y + 'px';
-    });
-
-    if (t < 1){
-      requestAnimationFrame(step);
-    }else{
-      // Commit new bases
-      currentRunners = (currentRunners || []).map(b=>{
-        const steps = plan[b] || 0;
-        if (steps === 0) return b;
-        if (steps === 1) return nextBase(b);
-        // steps >= 2
-        return nextBase(nextBase(b));
-      }).filter(b => b !== 'HP'); // remove scored runners
-
-      drawRunners(); // snap to anchors and update data-base tags
-    }
-  }
-
-  requestAnimationFrame(step);
-}
-
-function playCurrentHit(){
-  if (playLocked) return;   // ✅ prevent multiple triggers
-  lockPlayHit();            // ✅ lock until reset or situation change
-
-  const hit = hitsMap[currentSituation.key] || {type:'line', target:F(0.55,0.65)};
-  const from = getLaunchPoint();
-
-  // Ensure batter-runner shows before animation (if you added this earlier)
-  if (!currentRunners.includes('HP')) currentRunners = ['HP', ...currentRunners];
-  drawRunners();
-
-  const duration = (hit.type==='popup') ? 2200
-                  : (hit.type==='grounder') ? 1800
-                  : 1600;
-
-  const plan = planRunnerAdvancesForCurrent(hit);
-  animateRunnersAdvancePlan(plan, duration);
-
-  playHitAnimation(from, hit.target, hit.type);
-}
-
-
-/* ================== CALIBRATION – STARTS ================== */
-function enableCalibStarts(on){
-  if(!isCalibUnlocked()) return;
-  calibrationStartsOn=on;
-  toggleCalibStarts.textContent=on?'Disable':'Enable';
-  chipPickerStarts.classList.toggle('show', on);
-  startsControls.classList.toggle('show', on);
-  tokensLayer.style.pointerEvents=on?'none':'auto';
-  appRoot.classList.toggle('wide-side', on);
-  if(on){ const r=wrap.getBoundingClientRect(); crosshairShowAt(r.width/2,r.height/2); }
-  else if(!calibrationTargetsOn && !calibrationRunnersOn && !calibrationHitOn){ crosshairHide(); }
-}
-function setSelectedStart(id){
-  selectedStartId=id;
-  [...chipPickerStarts.querySelectorAll('.pill[data-id]')].forEach(b=> b.classList.toggle('active', b.dataset.id===id));
-}
-function clickPlaceStart(e){
-  if(!calibrationStartsOn) return;
-  const {native,css}=getClickNative(e);
-  xyStarts.textContent=`x:${native.x} y:${native.y}`;
-  starts[selectedStartId]={x:native.x,y:native.y};
-  saveStarts();
-  tokens.get(selectedStartId).pos=Fcopy(starts[selectedStartId]);
-  placeToken(selectedStartId);
-  crosshairShowAt(css.x,css.y);
-}
-function resetSelectedStart(){
-  starts[selectedStartId]=Fcopy(DEFAULT_STARTS[selectedStartId]);
-  saveStarts(); tokens.get(selectedStartId).pos=Fcopy(starts[selectedStartId]); placeToken(selectedStartId);
-}
-
-/* ================== CALIBRATION – TARGETS + TOLERANCE ================== */
-function enableCalibTargets(on){
-  if(!isCalibUnlocked()) return;
-  calibrationTargetsOn=on;
-  toggleCalibTargets.textContent=on?'Disable Calibration':'Enable Calibration';
-  chipPickerTargets.classList.toggle('show', on);
-  targetsControls.classList.toggle('show', on);
-  tolPanel.style.display = on ? 'block' : 'none';
-  buildTargets();
-  if(on){ const r=wrap.getBoundingClientRect(); crosshairShowAt(r.width/2,r.height/2); syncTolUI(selectedTargetId); }
-  else if(!calibrationStartsOn && !calibrationRunnersOn && !calibrationHitOn){ crosshairHide(); }
-}
-function setSelectedTarget(id){
-  selectedTargetId=id;
-  [...chipPickerTargets.querySelectorAll('.pill[data-id]')].forEach(b=> b.classList.toggle('active', b.dataset.id===id));
-  if(calibrationTargetsOn) syncTolUI(id);
-}
-function clickPlaceTarget(e){
-  if(!calibrationTargetsOn) return;
-  const {native,css}=getClickNative(e);
-  xyTargets.textContent=`x:${native.x} y:${native.y}`;
-  const key=currentSituation.key;
-  if(!targetsMap[key]) targetsMap[key]={};
-  targetsMap[key][selectedTargetId]={x:native.x,y:native.y};
-  saveTargets();
-  buildTargets();
-  crosshairShowAt(css.x,css.y);
-}
-function resetSelectedTarget(){
-  const key=currentSituation.key;
-  if(!targetsMap[key]) targetsMap[key]={};
-  const def = (SITUATIONS.find(s=>s.key===key)?.targets||{})[selectedTargetId];
-  if(def){ targetsMap[key][selectedTargetId]=Fcopy(def); } else { delete targetsMap[key][selectedTargetId]; }
-  saveTargets(); buildTargets();
-}
-function resetTargetsForSituation(){
-  const key=currentSituation.key;
-  const def = SITUATIONS.find(s=>s.key===key)?.targets || {};
-  targetsMap[key]=Fcopy(def);
-  saveTargets(); buildTargets();
-}
-
-/* Tolerance UI */
-function syncTolUI(id){
-  tolChipName.textContent=id;
-  const cur = getTolFor(currentSituation.key,id);
-  tolNumber.value = cur;
-  tolRange.value  = cur;
-  tolBubble.textContent = cur + ' px';
-}
-function applyTolFor(id, val){
-  const n = Math.max(10, Math.min(400, Number(val)||DEFAULT_TOL));
-  if(!tolerancesMap[currentSituation.key]) tolerancesMap[currentSituation.key]={};
-  tolerancesMap[currentSituation.key][id]=n;
-  saveTols();
-  syncTolUI(id);
-  buildTargets();
-}
-function resetTolSelected(){
-  if(!tolerancesMap[currentSituation.key]) tolerancesMap[currentSituation.key]={};
-  tolerancesMap[currentSituation.key][selectedTargetId]=DEFAULT_TOL;
-  saveTols(); syncTolUI(selectedTargetId); buildTargets();
-}
-function resetTolsSituation(){
-  const key=currentSituation.key;
-  const out={}; ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=> out[id]=DEFAULT_TOL);
-  tolerancesMap[key]=out; saveTols(); syncTolUI(selectedTargetId); buildTargets();
-}
-tolNumber.addEventListener('input', ()=> applyTolFor(selectedTargetId, tolNumber.value));
-tolRange .addEventListener('input', ()=> applyTolFor(selectedTargetId, tolRange.value));
-
-/* ================== CALIBRATION – RUNNER BASES ================== */
-function enableCalibRunners(on){
-  if(!isCalibUnlocked()) return;
-  calibrationRunnersOn=on;
-  toggleCalibRunners.textContent=on?'Disable Calibration':'Enable Calibration';
-  runnersControls.classList.toggle('show', on);
-  baseButtons.forEach(b=> b.classList.toggle('active', b.dataset.base===selectedBaseId && on));
-  if(on){ const r=wrap.getBoundingClientRect(); crosshairShowAt(r.width/2,r.height/2); }
-  else if(!calibrationStartsOn && !calibrationTargetsOn && !calibrationHitOn){ crosshairHide(); }
-}
-function setSelectedBase(id){
-  selectedBaseId=id;
-  baseButtons.forEach(b=> b.classList.toggle('active', b.dataset.base===id));
-}
-function clickPlaceBase(e){
-  if(!calibrationRunnersOn) return;
-  const {native,css}=getClickNative(e);
-  xyRunners.textContent=`x:${native.x} y:${native.y} (${selectedBaseId})`;
-  BASES[selectedBaseId]={x:native.x,y:native.y};
-  saveBases();
-  drawRunners(getBuilderRunners());
-  crosshairShowAt(css.x,css.y);
-}
-function resetBaseSelected(){
-  BASES[selectedBaseId]=Fcopy(BASES_DEFAULT[selectedBaseId]);
-  saveBases(); drawRunners(getBuilderRunners());
-}
-
-/* ================== CALIBRATION – BALL HIT ================== */
-function enableCalibHit(on){
-  if(!isCalibUnlocked()) return;
-  calibrationHitOn=on;
-  toggleCalibHit.textContent=on?'Disable Calibration':'Enable Calibration';
-  hitControls.classList.toggle('show', on);
-
-  if(on){
-    const r=wrap.getBoundingClientRect();
-    crosshairShowAt(r.width/2,r.height/2);
-    // NEW: draw the existing hit target (if any) as a ball
-    const hit = hitsMap[currentSituation.key] || {type:'line', target:F(0.55,0.65)};
-    drawCalibrationBallAtNative(hit.target);
-  }else{
-    // Leaving hit calibration: hide crosshair, leave canvas as-is
-    if(!calibrationStartsOn && !calibrationTargetsOn && !calibrationRunnersOn) crosshairHide();
-  }
-}
-function syncHitUI(){
-  const hit = hitsMap[currentSituation.key] || {type:'line', target:F(0.55,0.65)};
-  hitTypeSel.value = hit.type || 'line';
-  xyHit.textContent = `x:${Math.round(hit.target.x)} y:${Math.round(hit.target.y)}`;
-  // NEW: if calibration is on, reflect the current target visually
-  if (calibrationHitOn) drawCalibrationBallAtNative(hit.target);
-}
-function clickPlaceHit(e){
-  if(!calibrationHitOn) return;
-  const {native,css}=getClickNative(e);
-  const key=currentSituation.key;
-  if(!hitsMap[key]) hitsMap[key]={type:'line', target:native};
-  hitsMap[key].target = {x:native.x,y:native.y};
-  saveHits();
-  xyHit.textContent=`x:${native.x} y:${native.y}`;
-  crosshairShowAt(css.x,css.y);
-
-  // NEW: immediately show a ball at the selected mark (no path)
-  drawCalibrationBallAtNative(hitsMap[key].target);
-}
-function resetHitForSituation(){
-  const key=currentSituation.key;
-  const def = SITUATIONS.find(s=>s.key===key)?.hit || {type:'line', target:F(0.55,0.65)};
-  hitsMap[key]=Fcopy(def);
-  saveHits(); syncHitUI();
-}
-hitTypeSel?.addEventListener('change', ()=>{
-  const key=currentSituation.key;
-  if(!hitsMap[key]) hitsMap[key]={type:hitTypeSel.value, target:F(0.55,0.65)};
-  hitsMap[key].type = hitTypeSel.value;
-  saveHits();
-});
-
-/* Crosshair & clicks */
-wrap.addEventListener('pointermove',e=>{
-  if(!(calibrationStartsOn||calibrationTargetsOn||calibrationRunnersOn||calibrationHitOn)) return;
-  const {native,css}=getClickNative(e);
-  crosshairShowAt(css.x,css.y);
-  if(calibrationStartsOn) xyStarts.textContent=`x:${native.x} y:${native.y}`;
-  else if(calibrationTargetsOn) xyTargets.textContent=`x:${native.x} y:${native.y}`;
-  else if(calibrationRunnersOn) xyRunners.textContent=`x:${native.x} y:${native.y} (${selectedBaseId})`;
-  else xyHit.textContent=`x:${native.x} y:${native.y}`;
-});
-wrap.addEventListener('pointerleave',()=> crosshairHide());
-wrap.addEventListener('click',e=>{
-  if(calibrationTargetsOn){ clickPlaceTarget(e); return; }
-  if(calibrationStartsOn){ clickPlaceStart(e); return; }
-  if(calibrationRunnersOn){ clickPlaceBase(e); return; }
-  if(calibrationHitOn){ clickPlaceHit(e); return; }
-});
-
-/* ================== BUILDER (incl. Load/Update Current) ================== */
-function nextSituationKey(){
-  const nums = SITUATIONS.map(s=>Number(String(s.key).replace(/\D+/g,''))||1);
-  const max = nums.length ? Math.max(...nums) : 1;
-  return 'S'+(max+1);
-}
-function currentTargetsObject(){ return Fcopy(targetsMap[currentSituation.key]||{}); }
-function currentTolerancesObject(){
-  const m=tolerancesMap[currentSituation.key]||{};
-  const out={}; ['P','C','1B','2B','SS','3B','LF','CF','RF'].forEach(id=> out[id]=Number(m[id]||DEFAULT_TOL));
+function normalizeTargets(obj){
+  const out={}; if (!obj || typeof obj !== 'object') return out;
+  POS_IDS.forEach(id=>{ const raw=obj[id]; if(raw){ const p=normPoint(raw); if(p){ out[id]={ x:p.x, y:p.y, tol:Number(raw.tol)||DEFAULT_TOL }; } } });
   return out;
 }
-function builderRunners(){
-  const r=[]; if(sbR1.checked) r.push('1B'); if(sbR2.checked) r.push('2B'); if(sbR3.checked) r.push('3B'); return r;
-}
-function setBuilderRunners(list){
-  sbR1.checked = list.includes('1B');
-  sbR2.checked = list.includes('2B');
-  sbR3.checked = list.includes('3B');
-  drawRunners(builderRunners());
-}
-function buildSituationFromUI(){
-  const t=currentTargetsObject();
-  const title=(sbName.value||'Untitled Situation').trim();
-  const desc=(sbDesc.value||'').trim();
-  const tol=currentTolerancesObject();
-  const hit = Fcopy(hitsMap[currentSituation.key] || {type:'line', target:F(0.55,0.65)});
-  const outs = Number(document.getElementById('sbOuts').value || 0);
-  return { key: nextSituationKey(), title, outs, runners: builderRunners(), desc, targets: t, tolerances: tol, hit };
-}
-function addSituationToApp(){
-  const obj=buildSituationFromUI();
-  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
-  SITUATIONS.push(obj);
-  targetsMap[obj.key]=Fcopy(obj.targets);
-  tolerancesMap[obj.key]=Fcopy(obj.tolerances);
-  hitsMap[obj.key]=Fcopy(obj.hit);
-  saveTargets(); saveTols(); saveHits();
-  populateSelect();
-  setSituation(obj.key);
-  sbStatus.textContent=`Added "${obj.title}" as ${obj.key}`;
-}
-function exportSituationSnippet(){
-  const obj=buildSituationFromUI();
-  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
-  const prettyTargets = JSON.stringify(obj.targets, null, 2);
-  const prettyTols = JSON.stringify(obj.tolerances, null, 2);
-  const prettyHit = JSON.stringify(obj.hit, null, 2);
-  const snippet =
-`{
-  key: '${obj.key}',
-  title: ${JSON.stringify(obj.title)},
-  runners: ${JSON.stringify(obj.runners)},
-  desc: ${JSON.stringify(obj.desc)},
-  targets: ${prettyTargets},
-  tolerances: ${prettyTols},
-  hit: ${prettyHit}
-}`;
-  sbOut.style.display='block';
-  sbOut.value = snippet;
-  sbOut.select(); try{ document.execCommand('copy'); }catch(e){}
-  sbStatus.textContent='Snippet generated (copied). Paste inside SITUATIONS[].';
-}
-function setActiveFromBuilder(){
-  const obj=buildSituationFromUI();
-  if(!obj.targets || Object.keys(obj.targets).length===0){ alert('No targets on this situation. Enable Calibration and place rings.'); return; }
-  targetsMap[obj.key]=Fcopy(obj.targets);
-  tolerancesMap[obj.key]=Fcopy(obj.tolerances);
-  hitsMap[obj.key]=Fcopy(obj.hit);
-  SITUATIONS.push({ key: obj.key, title: obj.title, runners: obj.runners, desc: obj.desc, targets: Fcopy(obj.targets), tolerances: Fcopy(obj.tolerances), hit:Fcopy(obj.hit) });
-  saveTargets(); saveTols(); saveHits();
-  populateSelect();
-  setSituation(obj.key);
-  sbStatus.textContent=`Set active: ${obj.title} (${obj.key})`;
-}
-/* Load/Update current */
-function loadBuilderFromCurrent(){
-  const s = currentSituation;
-  sbName.value = s.title || '';
-  sbDesc.value = s.desc || '';
-  setBuilderRunners(s.runners || []);
-  document.getElementById('sbOuts').value = Number(currentSituation.outs ?? 0);
-  if (curSitLabel) curSitLabel.textContent = `${s.key} — ${s.title}`;
-  // Ensure hitsMap has an entry
-  hitsMap[s.key] = Fcopy(hitsMap[s.key] || s.hit || {type:'line', target:F(0.55,0.65)});
-  syncHitUI();
-  sbStatus.textContent = `Loaded ${s.key} into builder.`;
-}
-function updateCurrentSituation(){
-  const s = currentSituation;
-  s.title = (sbName.value || s.title || '').trim();
-  s.desc  = (sbDesc.value || s.desc  || '').trim();
-  s.runners = builderRunners();
-  const key = s.key;
-  s.targets = Fcopy(targetsMap[key] || {});
-  s.tolerances = Fcopy(tolerancesMap[key] || currentTolerancesObject());
-  s.hit = Fcopy(hitsMap[key] || s.hit || {type:'line', target:F(0.55,0.65)});
-  s.outs = Number(document.getElementById('sbOuts').value || s.outs || 0);
-  const idx = SITUATIONS.findIndex(x=>x.key===key);
-  if (idx>=0) SITUATIONS[idx] = s;
-  saveTargets(); saveTols(); saveHits();
-  populateSelect();
-  setSituation(key);
-  sbStatus.textContent = `Updated ${s.key}.`;
-}
+function normalizeHit(obj){ if (!obj || typeof obj !== 'object') return {}; const p=normPoint(obj); return p ? {x:p.x,y:p.y} : {}; }
+function mapHitType(v){ const t=String(v||'').toLowerCase(); return (t==='line'||t==='popup'||t==='grounder')?t:'line'; }
 
-/* ================== PASSWORD / VISIBILITY ================== */
-function isCalibUnlocked(){ return sessionStorage.getItem(SESSION_CALIB_UNLOCK)==='yes'; }
-function showCalibUI(show){
-  targetsBuilderCard.style.display = show ? 'block' : 'none';
-  unlockBtn.textContent = show ? '🔓 Coach Tools Unlocked' : '🔒 Unlock Coach Tools';
-  if(show){
-    if(calibrationTargetsOn) { tolPanel.style.display='block'; syncTolUI(selectedTargetId); }
-    drawRunners(getBuilderRunners());
-  }else{
-    drawRunners();
+async function loadSituationsFromJson(){
+  try{
+    const res = await fetch('./situations.json?ts=' + Date.now(), { cache:'no-store' });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const arr = await res.json();
+    if (!Array.isArray(arr)) throw new Error('situations.json must be an array');
+    SITUATIONS = arr.map((s,i)=>{
+      const safe={...s};
+      safe.key   = String(s.key||'').trim() || `S${i+1}`;
+      safe.title = s.title || safe.key;
+      safe.desc  = s.desc  || '';
+      safe.targets = normalizeTargets(s.targets)||{};
+      safe.starts  = normalizeStarts(s.starts);
+      safe.hit     = normalizeHit(s.hit);
+      safe.hitType = mapHitType(s.hitType);
+      const advJSON = (typeof s.batterAdvance==='number') ? clampInt(s.batterAdvance,0,4) : null;
+      safe.batterAdvance = (advJSON!=null) ? advJSON : mapHitTypeToAdvance(safe.hitType);
+      safe.outs = clampInt((s.outs ?? 0), 0, 2);
+      safe.runnersOn = normalizeRunnersOn(s.runnersOn);
+      return safe;
+    });
+    console.info('[Situations] Loaded', SITUATIONS.length);
+  }catch(err){
+    console.warn('[Situations] JSON load failed, using fallback:', err?.message||err);
+    SITUATIONS = (SITUATIONS_FALLBACK||[]).map((s,i)=>({
+      ...s, key:String(s.key||'').trim() || `S${i+1}`, targets:normalizeTargets(s.targets)||{},
+      starts:normalizeStarts(s.starts), hit:normalizeHit(s.hit), hitType:'line',
+      outs:clampInt((s.outs ?? 0),0,2), runnersOn:normalizeRunnersOn(s.runnersOn)
+    }));
   }
 }
-function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; setTimeout(()=>pwInput.focus(),50); }
-function closePwModal(){ pwModal.style.display='none'; }
 
-/* ================== WIRING / INIT ================== */
-document.getElementById('randomBtn').addEventListener('click', ()=>{
-  const i=Math.floor(Math.random()*SITUATIONS.length);
-  setSituation(SITUATIONS[i].key);
-});
-document.getElementById('checkBtn').addEventListener('click', checkPositions);
-document.getElementById('resetBtn').addEventListener('click', resetPlayers);
-playHitBtn.addEventListener('click', playCurrentHit);
-sitSelect.addEventListener('change', e=> setSituation(e.target.value));
+/* =======================
+   Situation lifecycle
+   ======================= */
+function syncScenarioInputsFromCurrent(){
+  if (!currentSituation) return;
 
-/* Starts calibration */
-toggleCalibStarts.addEventListener('click', ()=> enableCalibStarts(!calibrationStartsOn));
-chipPickerStarts.querySelectorAll('.pill[data-id]').forEach(b=> b.addEventListener('click', ()=> setSelectedStart(b.dataset.id)));
-resetStartSelectedBtn.addEventListener('click', resetSelectedStart);
-exportStartsBtn.addEventListener('click', ()=>{
-  const blob=new Blob([JSON.stringify(starts,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-starts.json'; a.click(); URL.revokeObjectURL(a.href);
-});
-importStartsInput.addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ try{ const map=JSON.parse(reader.result); Object.assign(starts,map); saveStarts(); resetPlayers(); } catch(err){ alert('Invalid Starts JSON'); } };
-  reader.readAsText(f);
-});
-clearStartsBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_STARTS); loadStarts(); resetPlayers(); });
+  if (newTitleInput) newTitleInput.value = currentSituation.title || currentSituation.key || '';
+  if (newDescInput)  newDescInput.value  = currentSituation.desc  || '';
 
-/* Targets calibration */
-toggleCalibTargets.addEventListener('click', ()=> enableCalibTargets(!calibrationTargetsOn));
-chipPickerTargets.querySelectorAll('.pill[data-id]').forEach(b=> b.addEventListener('click', ()=> setSelectedTarget(b.dataset.id)));
-resetTargetSelectedBtn.addEventListener('click', resetSelectedTarget);
-resetTargetsSituationBtn.addEventListener('click', resetTargetsForSituation);
-exportTargetsBtn.addEventListener('click', ()=>{
-  const blob=new Blob([JSON.stringify(targetsMap,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-targets.json'; a.click(); URL.revokeObjectURL(a.href);
-});
-importTargetsInput.addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ try{ const map=JSON.parse(reader.result); Object.keys(map).forEach(k=> targetsMap[k]=Object.assign(targetsMap[k]||{}, map[k])); saveTargets(); buildTargets(); } catch(err){ alert('Invalid Targets JSON'); } };
-  reader.readAsText(f);
-});
-clearTargetsBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_TARGETS); loadTargets(); buildTargets(); });
+  // also mirror into the left panel
+  if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
+  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
 
-/* Tolerances */
-resetTolSelectedBtn.addEventListener('click', resetTolSelected);
-resetTolsSituationBtn.addEventListener('click', resetTolsSituation);
-tolNumber.addEventListener('input', ()=> applyTolFor(selectedTargetId, tolNumber.value));
-tolRange .addEventListener('input', ()=> applyTolFor(selectedTargetId, tolRange.value));
+  const o = clampInt((currentSituation.outs ?? 0), 0, 2);
+  setOuts(o, {quiet:true});
+}
+function startsToTargets(starts, tol=DEFAULT_TOL){
+  const out={}; POS_IDS.forEach(id=>{ const p=starts[id]; if(p) out[id]={ x:Math.round(p.x), y:Math.round(p.y), tol:Number(tol)||DEFAULT_TOL }; });
+  return out;
+}
+function seedTargetsFromStarts(){
+  if (!currentSituation) return;
+  const onscreenStarts = getOnscreenStarts();
+  currentSituation.targets = startsToTargets(onscreenStarts, DEFAULT_TOL);
+  buildTargets(); if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
+  if (scenarioMsg){ scenarioMsg.textContent='Targets seeded from starts.'; setTimeout(()=> scenarioMsg.textContent='', 1400); }
+}
+function genSlug(s){return String(s||'S').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'s';}
+function genUniqueKey(title){
+  const base=genSlug(title||'scenario'); let k=base, i=2; const has=key=>(SITUATIONS||[]).some(s=>s.key===key);
+  while(has(k)) k=`${base}-${i++}`; return k.toUpperCase();
+}
+function makeBlankScenario(){
+  const title=(newTitleInput?.value.trim())||(currentSituation?.title?`${currentSituation.title} (New)`:'New Scenario');
+  const desc =(newDescInput?.value.trim()) || (currentSituation?.desc||'');
+  const key  = genUniqueKey(title);
+  const outsInit = outsSelScenario ? clampInt(outsSelScenario.value,0,2) : clampInt(currentSituation?.outs ?? 0,0,2);
+  const runnersInit = getRunnersFromCheckboxes();
 
-/* Runner bases calibration */
-toggleCalibRunners.addEventListener('click', ()=> enableCalibRunners(!calibrationRunnersOn));
-baseButtons.forEach(b=> b.addEventListener('click', ()=> setSelectedBase(b.dataset.base)));
-resetBaseSelectedBtn.addEventListener('click', resetBaseSelected);
-exportBasesBtn.addEventListener('click', ()=>{
-  const blob=new Blob([JSON.stringify(BASES,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-bases.json'; a.click(); URL.revokeObjectURL(a.href);
-});
-importBasesInput.addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ try{ const map=JSON.parse(reader.result); Object.assign(BASES,map); saveBases(); drawRunners(getBuilderRunners()); } catch(err){ alert('Invalid Bases JSON'); } };
-  reader.readAsText(f);
-});
-resetBasesBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_BASES); loadBases(); drawRunners(getBuilderRunners()); });
+  return {
+    key,
+    title,
+    desc,
+    starts: Fcopy(DEFAULT_STARTS),
+    // 👇 give the new situation visible rings immediately
+    targets: startsToTargets(DEFAULT_STARTS, DEFAULT_TOL),
+    hit: { x:1500, y:900 },
+    hitType: 'line',
+    batterAdvance: 1,
+    outs: outsInit,
+    runnersOn: normalizeRunnersOn(runnersInit)
+  };
+}
+function addNewScenario(){
+  const s=makeBlankScenario(); SITUATIONS.push(s);
+  startsMap[s.key]=Fcopy(s.starts); saveStarts();
+  populateSituations(); setSituation(s.key);
+  if (scenarioMsg){ scenarioMsg.textContent='New scenario created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
+}
+function saveCurrentScenario(){
+  if (!currentSituation) return;
 
-/* Ball Hit calibration */
-toggleCalibHit.addEventListener('click', ()=> enableCalibHit(!calibrationHitOn));
-hitTestBtn.addEventListener('click', ()=> playCurrentHit());
-resetHitBtn.addEventListener('click', resetHitForSituation);
-exportHitsBtn.addEventListener('click', ()=>{
-  const blob=new Blob([JSON.stringify(hitsMap,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='baseball-iq-hits.json'; a.click(); URL.revokeObjectURL(a.href);
-});
-importHitsInput.addEventListener('change', e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ try{ const map=JSON.parse(reader.result); Object.keys(map).forEach(k=> hitsMap[k]=Object.assign(hitsMap[k]||{}, map[k])); saveHits(); syncHitUI(); } catch(err){ alert('Invalid Hits JSON'); } };
-  reader.readAsText(f);
-});
+  // Title/Desc from inputs
+  if (newTitleInput){
+    const t = newTitleInput.value.trim();
+    if (t) currentSituation.title = t;
+  }
+  if (newDescInput){
+    currentSituation.desc = newDescInput.value.trim();
+  }
 
-/* Builder actions */
-[sbR1,sbR2,sbR3].forEach(cb=> cb.addEventListener('change', ()=> drawRunners(getBuilderRunners())));
-sbAddBtn.addEventListener('click', addSituationToApp);
-sbExportBtn.addEventListener('click', exportSituationSnippet);
-sbSetActiveBtn.addEventListener('click', setActiveFromBuilder);
-sbLoadCurrent.addEventListener('click', loadBuilderFromCurrent);
-sbUpdateCurrent.addEventListener('click', updateCurrentSituation);
+  // Outs (HUD sync)
+  if (outsSelScenario){
+    setOuts(outsSelScenario.value, {quiet:true});
+  } else {
+    currentSituation.outs = clampInt(currentSituation.outs ?? 0, 0, 2);
+  }
 
-/* Password gate */
-unlockBtn.addEventListener('click',()=>{
-  if(isCalibUnlocked()){
-    const visible = targetsBuilderCard.style.display!=='none';
-    showCalibUI(!visible);
-  }else{
-    openPwModal();
+  // Runners (model + HUD + markers)
+  setRunnersOn(getRunnersFromCheckboxes(), {quiet:true});
+
+  // Starts from chips -> persist
+  const starts = getOnscreenStarts();
+  currentSituation.starts = Fcopy(starts);
+  startsMap[currentSituation.key] = Fcopy(starts);
+  saveStarts();
+
+  // Targets from rings (or seed from starts)
+  let targets = getRenderedTargets();
+  if (!targets || Object.keys(targets).length === 0){
+    targets = {};
+    POS_IDS.forEach(id=>{
+      const p = starts[id];
+      if (p) targets[id] = { x:Math.round(p.x), y:Math.round(p.y), tol:DEFAULT_TOL };
+    });
+  }
+  currentSituation.targets = {};
+  Object.entries(targets).forEach(([id,pt])=>{
+    currentSituation.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(pt.tol)||DEFAULT_TOL };
+  });
+
+  // Hit + meta (+ persist)
+  ensureDefaultHit();
+  currentSituation.hitType = (hitTypeSel && hitTypeSel.value) || currentSituation.hitType || 'line';
+  currentSituation.batterAdvance = clampInt((advanceSel && advanceSel.value) ?? currentSituation.batterAdvance ?? 1, 0, 4);
+  setHitSaved(currentSituation.key, currentSituation.hit);
+  saveHits();
+
+  // Refresh UI
+  populateSituations();
+  sitSelect.value = currentSituation.key;
+  // update the left panel immediately (title + desc)
+  if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
+  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
+
+  syncScenarioInputsFromCurrent();
+  renderBaseRunners();
+  scaleMarkers();
+  updateRunnersHudFromLive();
+
+  if (scenarioMsg){ scenarioMsg.textContent='Scenario saved.'; setTimeout(()=> scenarioMsg.textContent='', 1400); }
+}
+function populateSituations(){
+  const prev = sitSelect ? sitSelect.value : '';
+  if (sitSelect) sitSelect.innerHTML='';
+  (SITUATIONS||[]).forEach(s=>{
+    const o=document.createElement('option'); o.value=s.key; o.textContent=s.title || s.key; sitSelect.appendChild(o);
+  });
+  const want = (SITUATIONS||[]).some(s=>s.key===prev) ? prev : (SITUATIONS[0] && SITUATIONS[0].key);
+  if (want && sitSelect) sitSelect.value = want;
+}
+function setSituation(key){
+  currentSituation = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
+  if (!currentSituation) return;
+
+  if (!tokens || tokens.size===0) buildTokens();
+  resetBallAndRunnerForSituation();
+
+  // Title + Description UI
+  if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
+  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
+
+  const savedHit = getHitSaved(currentSituation.key); if (savedHit) currentSituation.hit = savedHit;
+
+  // Tolerance dropdown
+  tolTargetSel.innerHTML='';
+  POS_IDS.forEach(id=>{
+    const opt=document.createElement('option'); opt.value=id; opt.textContent=id;
+    tolTargetSel.appendChild(opt);
+  });
+
+  // Move chips to starts
+  POS_IDS.forEach(id=>{
+    const t=tokens.get(id); if(!t) return;
+    t.pos = Fcopy(getStartFor(currentSituation.key,id));
+    placeToken(id);
+  });
+
+  // If this situation has no targets yet, seed them from the current chip starts
+  if (!currentSituation.targets || Object.keys(currentSituation.targets).length === 0) {
+    currentSituation.targets = startsToTargets(getOnscreenStarts(), DEFAULT_TOL);
+  }
+
+  // Targets & coach visibility
+  buildTargets();
+  if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
+
+  // HUD / controls
+  updateHud(0); gameActive=false; remainingTries=0;
+  startBtn.disabled=false; resetBtn.disabled=true; checkBtn.disabled=true;
+  setChipsLocked(!coachUnlocked);
+
+  // Tolerance inputs
+  const firstId=POS_IDS[0];
+  tolTargetSel.value=firstId;
+  syncTolInputsFromModel(firstId);
+
+  // Hit + ball
+  placeHitMarker();
+  syncBallToHit();
+
+  // Hit meta
+  if (typeof currentSituation.hitType==='string') hitTypeSel.value=currentSituation.hitType;
+  else currentSituation.hitType = hitTypeSel.value || 'line';
+
+  if (typeof currentSituation.batterAdvance==='number') {
+    advanceSel.value = String(clampInt(currentSituation.batterAdvance,0,4));
+  } else {
+    advanceSel.value = String(mapHitTypeToAdvance(currentSituation.hitType));
+    currentSituation.batterAdvance = clampInt(advanceSel.value,0,4);
+  }
+
+  // Outs and runners
+  const outsInit=clampInt((currentSituation.outs ?? 0),0,2);
+  setOuts(outsInit,{quiet:true});
+  setRunnersOn(normalizeRunnersOn(currentSituation.runnersOn), {quiet:true});
+
+  // Sync Coach Tool inputs
+  syncScenarioInputsFromCurrent();
+  applyCoachVisibility();
+
+  renderBaseRunners();
+  scaleMarkers();
+  updateRunnersHudFromLive();
+}
+
+/* =======================
+   Export helpers
+   ======================= */
+function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
+function getRenderedTargets(){
+  const out={}; getAllRings().forEach(el=>{
+    const id=el.dataset.id; const left=parseFloat(el.style.left), top=parseFloat(el.style.top);
+    const native=cssToUnit(left,top); const tol=currentSituation.targets?.[id]?.tol ?? DEFAULT_TOL;
+    out[id]={x:Math.round(native.x),y:Math.round(native.y),tol:Math.round(tol)};
+  }); return out;
+}
+function getHitForExport(sit){ return sit && sit.hit ? { x:Math.round(sit.hit.x), y:Math.round(sit.hit.y) } : undefined; }
+function getStartsForExport(key){
+  const src=(startsMap && startsMap[key]) ? startsMap[key] : DEFAULT_STARTS;
+  const out={}; POS_IDS.forEach(id=>{ const p=src[id] || DEFAULT_STARTS[id]; out[id]={ x:Math.round(p.x), y:Math.round(p.y) }; });
+  return out;
+}
+function composeSituationForExport(base,starts,targets,hit){
+  const extra={...base}; delete extra.starts; delete extra.targets; delete extra.hit; delete extra.hitType; delete extra.batterAdvance;
+  const payload={...extra, starts, targets}; if (hit) payload.hit=hit;
+  if (base.hitType) payload.hitType=base.hitType;
+  if (typeof base.batterAdvance==='number') payload.batterAdvance=clampInt(base.batterAdvance,0,4);
+  return payload;
+}
+function buildCurrentSituationExport(){
+  const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
+  const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
+  return JSON.stringify([one],null,2);
+}
+function buildAllSituationsExport(){
+  const arr=(SITUATIONS||[]).map(s=>{
+    const isCurrent=currentSituation && (s.key===currentSituation.key);
+    const starts=isCurrent?getOnscreenStarts():getStartsForExport(s.key);
+    let targets=isCurrent?getRenderedTargets():{};
+    if (!isCurrent){ Object.entries(s.targets||{}).forEach(([id,pt])=>{ targets[id]={ x:Math.round(pt.x), y:Math.round(pt.y), tol:Math.round(pt.tol||DEFAULT_TOL)}; }); }
+    const hit=getHitSaved(s.key) || getHitForExport(s);
+    return composeSituationForExport(s,starts,targets,hit);
+  });
+  return JSON.stringify(arr,null,2);
+}
+function download(filename,content){
+  const blob=new Blob([content], {type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ===============================================
+   One-button refresh that updates/saves EVERYTHING
+   under Coach Tools and rebuilds the UI view.
+   =============================================== */
+function refreshSituationAll(){
+  if (!currentSituation) return;
+
+  // 1) Title / Description
+  if (newTitleInput){
+    const t = newTitleInput.value.trim();
+    if (t) currentSituation.title = t;
+  }
+  if (newDescInput){
+    currentSituation.desc = newDescInput.value.trim();
+  }
+
+  // 2) Outs (HUD + dropdown sync)
+  if (outsSelScenario){
+    setOuts(outsSelScenario.value, {quiet:true});
+  } else {
+    currentSituation.outs = clampInt(currentSituation.outs ?? 0, 0, 2);
+  }
+
+  // 3) Runners (model + HUD + markers)
+  setRunnersOn(getRunnersFromCheckboxes(), {quiet:true});
+
+  // 4) Starts: pull from chips and persist
+  const starts = getOnscreenStarts();
+  currentSituation.starts = Fcopy(starts);
+  startsMap[currentSituation.key] = Fcopy(starts);
+  saveStarts();
+
+  // 5) Targets:
+  //    - If visible rings exist, read them back (live tol & positions).
+  //    - Otherwise seed from starts (ensures targets always exist).
+  let targets = getRenderedTargets();
+  if (!targets || Object.keys(targets).length === 0){
+    targets = {};
+    POS_IDS.forEach(id=>{
+      const p = starts[id];
+      if (p) targets[id] = { x:Math.round(p.x), y:Math.round(p.y), tol:DEFAULT_TOL };
+    });
+  }
+  currentSituation.targets = {};
+  Object.entries(targets).forEach(([id,pt])=>{
+    currentSituation.targets[id] = {
+      x:Math.round(pt.x),
+      y:Math.round(pt.y),
+      tol:Number(pt.tol)||DEFAULT_TOL
+    };
+  });
+
+  // 6) Hit + meta (+ persist hit location only)
+  ensureDefaultHit();
+  currentSituation.hitType = (hitTypeSel && hitTypeSel.value) || currentSituation.hitType || 'line';
+  currentSituation.batterAdvance = clampInt(
+    (advanceSel && advanceSel.value) ?? currentSituation.batterAdvance ?? 1,
+    0, 4
+  );
+  setHitSaved(currentSituation.key, currentSituation.hit);
+  saveHits();
+
+  // 7) Rebuild UI pieces to reflect the saved model
+  populateSituations();
+  sitSelect.value = currentSituation.key;
+
+  const labelEl = document.getElementById('curSitLabel');
+  if (labelEl) labelEl.textContent = currentSituation.title || '';
+  if (curSitDesc) curSitDesc.textContent = currentSituation.desc || '';
+
+  // Rebuild targets (applies new tolerance sizes), hit marker & ball
+  buildTargets();
+  placeHitMarker();
+  syncBallToHit();
+  renderBaseRunners();
+  scaleMarkers();
+  updateRunnersHudFromLive();
+
+  // Keep tolerance inputs in sync with selected target
+  if (tolTargetSel){
+    const id = tolTargetSel.value || POS_IDS[0];
+    if (id) syncTolInputsFromModel(id);
+  }
+
+  // 8) Toasty message
+  if (scenarioMsg){
+    scenarioMsg.textContent='Situation refreshed.';
+    setTimeout(()=> scenarioMsg.textContent='', 1400);
+  }
+}
+
+/* =======================
+   Game flow
+   ======================= */
+function checkPositions(){
+  if (!coachUnlocked && !gameActive) return;
+  const t=currentSituation.targets||{}; let correct=0;
+  const isFinalTry = (!coachUnlocked && gameActive && remainingTries===1);
+  getAllRings().forEach(el=>{
+    const id=el.dataset.id; const target=t[id]; if(!target) return;
+    const cur=tokens.get(id).pos; const tol=Number(target.tol)||DEFAULT_TOL;
+    const d=Math.hypot(cur.x-target.x, cur.y-target.y); const isCorrect=d<=tol;
+    el.classList.toggle('good',isCorrect); el.classList.toggle('bad',!isCorrect); el.classList.add('show-label');
+    if (coachUnlocked){ el.style.display='block'; } else { el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none'; }
+    if (isCorrect) correct++;
+  });
+  updateHud(correct);
+  if (!coachUnlocked && gameActive){
+    remainingTries = Math.max(0, remainingTries - 1);
+    updateHud(correct);
+    if (correct===9 || remainingTries===0){ checkBtn.disabled=true; setChipsLocked(true); }
+  }
+}
+function resetBallAndRunnerForSituation(){
+  if (animReq){ cancelAnimationFrame(animReq); animReq=null; }
+  if (ballSvg) ballSvg.innerHTML='';
+  if (ballEl) syncBallToHit();
+  if (runnerAnimId){ cancelAnimationFrame(runnerAnimId); runnerAnimId=null; }
+  hideRunner();
+}
+function resetPlayers(){
+  POS_IDS.forEach(id=>{ const t=tokens.get(id); if(!t) return; t.pos=Fcopy(getStartFor(currentSituation.key,id)); placeToken(id); });
+  getAllRings().forEach(el=> el.style.display=coachUnlocked ? 'block' : 'none');
+  updateHud(0); gameActive=false; remainingTries=0;
+  startBtn.disabled=false; resetBtn.disabled=true; checkBtn.disabled=true;
+  setChipsLocked(!coachUnlocked);
+  if (ballSvg) ballSvg.innerHTML=''; if (ballEl) syncBallToHit();
+  hideRunner();
+  liveRunners = normalizeRunnersOn(currentSituation.runnersOn);
+  renderBaseRunners();
+  scaleMarkers();
+  updateRunnersHudFromLive();
+}
+
+/* =======================
+   Init & events
+   ======================= */
+async function init(){
+  try{
+    sizeOverlays();
+    await loadSituationsFromJson();
+    loadStarts(); loadHits();
+    if (!Array.isArray(SITUATIONS) || SITUATIONS.length===0){
+      SITUATIONS=[{ key:'S1', title:'Default', desc:'', starts:Fcopy(DEFAULT_STARTS), targets:{},
+        hit:{x:1500,y:900}, hitType:'line', batterAdvance:1, outs:0, runnersOn:{first:false,second:false,third:false} }];
+    }
+    populateSituations();
+    const firstKey = (sitSelect && sitSelect.value) || (SITUATIONS[0] && SITUATIONS[0].key);
+    buildTokens(); updateChipScale(); setSituation(firstKey); setCoachMode(false);
+    observeWrap(); scheduleLayout();
+  } catch (err){
+    console.error('[Init] fatal error:', err && (err.stack||err.message||err));
+    alert('There was an error starting the app. Open the console for details.');
+  }
+}
+
+/* Wiring */
+if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
+if (resetBtn)  resetBtn.addEventListener('click', resetPlayers);
+if (checkBtn)  checkBtn.addEventListener('click', checkPositions);
+if (startBtn)  startBtn.addEventListener('click', ()=>{
+  if (!currentSituation) return;
+
+  gameActive=true; remainingTries=MAX_TRIES; updateHud(0);
+  if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
+  startBtn.disabled=true; if (resetBtn) resetBtn.disabled=false; if (checkBtn) checkBtn.disabled=false;
+  setChipsLocked(false); syncBallToHit();
+
+  // Ball animation (slowed like before)
+  const ht = (currentSituation.hitType) || (hitTypeSel && hitTypeSel.value) || 'line';
+  animateHit(ht);
+
+  // Bases batter will advance
+  const advFromSit=(typeof currentSituation.batterAdvance==='number') ? currentSituation.batterAdvance : null;
+  const advFromUI = advanceSel ? clampInt(advanceSel.value,0,4) : null;
+  const advance   = (advFromSit ?? advFromUI ?? mapHitTypeToAdvance(ht));
+
+  // 1) Start positions from the template (don’t compute final yet)
+  liveRunners = normalizeRunnersOn(currentSituation.runnersOn);
+
+  // 2) Animate existing runners in parallel (first/second/third)
+  let existingDone = false, batterDone = false;
+  let finalExisting = null;
+  let batterDest = null;
+
+  animateExistingRunnersAdvance(advance, (finalState)=>{
+    finalExisting = finalState;
+    existingDone = true;
+    maybeFinish();
+  });
+
+  // 3) Animate batter (don’t place static until done)
+  animateBatterAdvance(advance, (destBase)=>{
+    batterDest = destBase; // remember where he ended
+    batterDone = true;
+    maybeFinish();
+  });
+
+  // 4) When both animations finish, commit final state and render
+  function maybeFinish(){
+    if (!existingDone || !batterDone) return;
+    // start from existing runners’ final positions
+    liveRunners = normalizeRunnersOn(finalExisting || liveRunners);
+
+    // add batter if he stopped on a base (home == scored, no marker)
+    if (batterDest === 'first')   liveRunners.first  = true;
+    else if (batterDest === 'second') liveRunners.second = true;
+    else if (batterDest === 'third')  liveRunners.third  = true;
+
+    renderBaseRunners();
+    updateRunnersHudFromLive();
   }
 });
+coachBtn.addEventListener('click', ()=>{ coachUnlocked ? (setCoachMode(false), coachCard.classList.add('hidden'), setChipsLocked(!gameActive||remainingTries===0), getAllRings().forEach(el=>el.style.display='none'), syncBallToHit()) : openPwModal(); });
+pwCancel.addEventListener('click', closePwModal);
 pwOk.addEventListener('click', tryUnlock);
-pwInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryUnlock(); });
-function tryUnlock(){
-  if(pwInput.value===CALIB_PASSWORD){
-    sessionStorage.setItem(SESSION_CALIB_UNLOCK,'yes');
-    showCalibUI(true);
-    closePwModal();
-  }else{
-    pwMsg.textContent='Incorrect password.';
+pwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+
+hitTypeSel.addEventListener('change', ()=>{
+  if (!currentSituation) return;
+  currentSituation.hitType = hitTypeSel.value || 'line';
+  if (currentSituation.batterAdvance == null) advanceSel.value = String(mapHitTypeToAdvance(currentSituation.hitType));
+});
+advanceSel.addEventListener('change', ()=>{ if(currentSituation) currentSituation.batterAdvance=clampInt(advanceSel.value,0,4); });
+testHitBtn.addEventListener('click', ()=> animateHit());
+
+if (run1B) run1B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
+if (run2B) run2B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
+if (run3B) run3B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
+
+function syncTolInputsFromModel(id){
+  const tol = Number(getTargetFor(currentSituation.key,id)?.tol) || DEFAULT_TOL;
+  tolNum.value = tolRange.value = String(tol);
+}
+tolTargetSel.addEventListener('change', ()=> syncTolInputsFromModel(tolTargetSel.value));
+function setTolLive(id,tol){
+  tol = clamp(Number(tol)||DEFAULT_TOL,5,400);
+  let tgt = getTargetFor(currentSituation.key,id);
+  if (!tgt){
+    const pt = tokens.get(id)?.pos || getStartFor(currentSituation.key,id);
+    setTargetFor(currentSituation.key,id,pt,tol);
+    buildTargets();
+  } else { tgt.tol = tol; }
+  const ring = getRingEl(id);
+  if (ring){
+    const d=tolToCssDiameter(tol, coachUnlocked);
+    ring.style.width=d+'px'; ring.style.height=d+'px';
+    if (coachUnlocked) { ring.style.display='block'; ring.classList.add('show-label'); }
   }
+  tolNum.value = tolRange.value = String(tol);
 }
+tolNum.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolNum.value));
+tolRange.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolRange.value));
 
-/* Select + labels */
-function populateSelectAndLabels(){
-  populateSelect(currentSituation?.key);
-  if (typeof curSitLabel !== 'undefined' && curSitLabel) {
-    curSitLabel.textContent = `${currentSituation.key} — ${currentSituation.title}`;
-  }
-}
+if (newScenarioBtn)  newScenarioBtn.addEventListener('click', addNewScenario);
+if (seedTargetsBtn)  seedTargetsBtn.addEventListener('click', seedTargetsFromStarts);
+if (saveScenarioBtn) saveScenarioBtn.addEventListener('click', refreshSituationAll);
 
-/* INIT */
-function init(){
-  sizeOverlays();
-  loadStarts();
-  loadTargets();
-  loadTols();
-  loadBases();
-  loadHits();
-  populateSelectAndLabels();
-  buildTokens();
-  setSituation(SITUATIONS[0].key);
-  showCalibUI(isCalibUnlocked());
+if (outsSelScenario) outsSelScenario.addEventListener('change', e=> setOuts(e.target.value, {quiet:false}));
 
-  // Hide all controls by default
-  startsControls?.classList.remove('show');
-  chipPickerStarts?.classList.remove('show');
-  targetsControls?.classList.remove('show');
-  chipPickerTargets?.classList.remove('show');
-  runnersControls?.classList.remove('show');
-  hitControls?.classList.remove('show');
-  tolPanel.style.display='none';
+downloadCurrentBtn.addEventListener('click', ()=> download('situation-current.json', buildCurrentSituationExport()));
+downloadAllBtn.addEventListener('click', ()=> download('situations-all.json', buildAllSituationsExport()));
+copyAllBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{} });
 
-  scoreBox.textContent = `Score: 0/9 • Try 0/${MAX_TRIES}`;
-  clearBallCanvas();
-}
-
-// Initialize even if the image errors
-if (img.complete || img.naturalWidth > 0) {
-  requestAnimationFrame(init);
-} else {
-  img.addEventListener('load',  () => requestAnimationFrame(init));
-  img.addEventListener('error', () => requestAnimationFrame(init));
-}
-new ResizeObserver(()=>{ sizeOverlays(); tokens.forEach((_,id)=>placeToken(id)); buildTargets(); drawRunners(getBuilderRunners()); clearBallCanvas(); }).observe(wrap);
-window.addEventListener('resize', ()=>{ sizeOverlays(); buildTargets(); drawRunners(getBuilderRunners()); clearBallCanvas(); });
+/* Kickoff */
+if (img && img.complete) init();
+else if (img){ img.addEventListener('load', init, { once:true }); window.addEventListener('load', ()=>{ if (!SITUATIONS.length) init(); }, { once:true }); }
+else { window.addEventListener('load', init, { once:true }); }
 </script>
+
 </body>
 </html>
