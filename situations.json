@@ -1,106 +1,206 @@
 [
   {
     "key": "S1",
-    "title": "Single to LF (no runners) – cut to 2B",
-    "outs": 0,
-    "runners": [],
-    "desc": "LF fields/throws to 2B; SS is cut; 2B covers; 1B & 3B hold; P backs toward 2B lane; C trails 1B line; CF backs LF; RF pinches.",
-    "targets": {
-      "LF": { "x": 0.320, "y": 0.560 },
-      "SS": { "x": 0.430, "y": 0.520 },
-      "2B": { "x": 0.580, "y": 0.515 },
-      "1B": { "x": 0.805, "y": 0.540 },
-      "3B": { "x": 0.225, "y": 0.535 },
-      "P": { "x": 0.525, "y": 0.630 },
-      "C": { "x": 0.615, "y": 0.730 },
-      "CF": { "x": 0.410, "y": 0.380 },
-      "RF": { "x": 0.660, "y": 0.465 }
+    "title": "Fly ball to CF (R:1, O:1)",
+    "desc": "Fly ball to Center Field, runner on 1st, no outs.",
+    "outs": 1,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
     },
-    "tolerances": {
-      "P": 65, "C": 65, "1B": 65, "2B": 65,
-      "SS": 65, "3B": 65, "LF": 65, "CF": 65, "RF": 65
+    "starts": {
+      "P": {
+        "x": 1517,
+        "y": 1461
+      },
+      "C": {
+        "x": 1962,
+        "y": 1826
+      },
+      "1B": {
+        "x": 1875,
+        "y": 1535
+      },
+      "2B": {
+        "x": 1529,
+        "y": 1155
+      },
+      "SS": {
+        "x": 1494,
+        "y": 934
+      },
+      "3B": {
+        "x": 1096,
+        "y": 1535
+      },
+      "LF": {
+        "x": 1182,
+        "y": 425
+      },
+      "CF": {
+        "x": 1631,
+        "y": 592
+      },
+      "RF": {
+        "x": 2196,
+        "y": 1212
+      }
+    },
+    "targets": {
+      "P": {
+        "x": 1518,
+        "y": 1472,
+        "tol": 65
+      },
+      "C": {
+        "x": 1917,
+        "y": 1807,
+        "tol": 97
+      },
+      "1B": {
+        "x": 1869,
+        "y": 1571,
+        "tol": 65
+      },
+      "2B": {
+        "x": 1497,
+        "y": 1191,
+        "tol": 65
+      },
+      "SS": {
+        "x": 1509,
+        "y": 916,
+        "tol": 110
+      },
+      "3B": {
+        "x": 1135,
+        "y": 1568,
+        "tol": 65
+      },
+      "LF": {
+        "x": 1162,
+        "y": 463,
+        "tol": 110
+      },
+      "CF": {
+        "x": 1643,
+        "y": 631,
+        "tol": 65
+      },
+      "RF": {
+        "x": 2253,
+        "y": 1211,
+        "tol": 106
+      }
     },
     "hit": {
-      "type": "line",
-      "target": { "x": 0.300, "y": 0.520 }
-    }
+      "x": 1632,
+      "y": 647
+    },
+    "hitType": "popup",
+    "batterAdvance": 2
   },
   {
     "key": "S2",
-    "title": "Popup to shallow CF (R1)",
+    "title": "Grounder to 1B (R1)",
+    "desc": "Runner on 1B and 3B; corners in.",
     "outs": 0,
-    "runners": ["1B"],
-    "desc": "Popup to shallow CF. 2B drifts for short out; SS shades middle; CF charges in; LF/RF pinch; corners hold; P/C trail.",
-    "targets": {
-      "CF": { "x": 0.500, "y": 0.420 },
-      "2B": { "x": 0.575, "y": 0.480 },
-      "SS": { "x": 0.440, "y": 0.470 },
-      "LF": { "x": 0.330, "y": 0.500 },
-      "RF": { "x": 0.630, "y": 0.495 },
-      "3B": { "x": 0.220, "y": 0.545 },
-      "1B": { "x": 0.790, "y": 0.555 },
-      "P": { "x": 0.515, "y": 0.640 },
-      "C": { "x": 0.615, "y": 0.730 }
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
     },
-    "tolerances": {
-      "P": 65, "C": 65, "1B": 65, "2B": 65,
-      "SS": 65, "3B": 65, "LF": 65, "CF": 65, "RF": 65
+    "starts": {
+      "P": {
+        "x": 1500,
+        "y": 1631
+      },
+      "C": {
+        "x": 1503,
+        "y": 2147
+      },
+      "1B": {
+        "x": 1858,
+        "y": 1541
+      },
+      "2B": {
+        "x": 1768,
+        "y": 1116
+      },
+      "SS": {
+        "x": 1156,
+        "y": 1143
+      },
+      "3B": {
+        "x": 1145,
+        "y": 1536
+      },
+      "LF": {
+        "x": 742,
+        "y": 790
+      },
+      "CF": {
+        "x": 1466,
+        "y": 482
+      },
+      "RF": {
+        "x": 2273,
+        "y": 772
+      }
+    },
+    "targets": {
+      "P": {
+        "x": 1560,
+        "y": 1592,
+        "tol": 65
+      },
+      "C": {
+        "x": 1500,
+        "y": 1915,
+        "tol": 65
+      },
+      "1B": {
+        "x": 2252,
+        "y": 1364,
+        "tol": 65
+      },
+      "2B": {
+        "x": 1770,
+        "y": 1368,
+        "tol": 65
+      },
+      "SS": {
+        "x": 1260,
+        "y": 1393,
+        "tol": 65
+      },
+      "3B": {
+        "x": 600,
+        "y": 1666,
+        "tol": 65
+      },
+      "LF": {
+        "x": 780,
+        "y": 995,
+        "tol": 65
+      },
+      "CF": {
+        "x": 1500,
+        "y": 771,
+        "tol": 65
+      },
+      "RF": {
+        "x": 2340,
+        "y": 870,
+        "tol": 65
+      }
     },
     "hit": {
-      "type": "popup",
-      "target": { "x": 0.500, "y": 0.420 }
-    }
-  },
-  {
-    "key": "S3",
-    "title": "Chopper to 3B (R1, R2)",
-    "outs": 0,
-    "runners": ["1B", "2B"],
-    "desc": "Chopper toward 3B. 3B charges; SS covers 3B; 2B covers 2B; 1B holds; P backs up 3B line; C sets inside line; LF backs 3B; CF shifts left; RF pinches.",
-    "targets": {
-      "3B": { "x": 0.260, "y": 0.500 },
-      "SS": { "x": 0.375, "y": 0.465 },
-      "2B": { "x": 0.600, "y": 0.500 },
-      "1B": { "x": 0.795, "y": 0.540 },
-      "P": { "x": 0.460, "y": 0.600 },
-      "C": { "x": 0.615, "y": 0.730 },
-      "LF": { "x": 0.320, "y": 0.560 },
-      "CF": { "x": 0.430, "y": 0.420 },
-      "RF": { "x": 0.660, "y": 0.465 }
+      "x": 1081,
+      "y": 709
     },
-    "tolerances": {
-      "P": 65, "C": 65, "1B": 65, "2B": 65,
-      "SS": 65, "3B": 65, "LF": 65, "CF": 65, "RF": 65
-    },
-    "hit": {
-      "type": "grounder",
-      "target": { "x": 0.260, "y": 0.500 }
-    }
-  },
-  {
-    "key": "S4",
-    "title": "Chopper to 1B (R1, R2)",
-    "outs": 0,
-    "runners": ["1B", "2B"],
-    "desc": "Chopper to 1B",
-    "targets": {
-      "3B": { "x": 0.260, "y": 0.500 },
-      "SS": { "x": 0.375, "y": 0.465 },
-      "2B": { "x": 0.600, "y": 0.500 },
-      "1B": { "x": 0.795, "y": 0.540 },
-      "P": { "x": 0.460, "y": 0.600 },
-      "C": { "x": 0.615, "y": 0.730 },
-      "LF": { "x": 0.320, "y": 0.560 },
-      "CF": { "x": 0.430, "y": 0.420 },
-      "RF": { "x": 0.660, "y": 0.465 }
-    },
-    "tolerances": {
-      "P": 65, "C": 65, "1B": 65, "2B": 65,
-      "SS": 65, "3B": 65, "LF": 65, "CF": 65, "RF": 65
-    },
-    "hit": {
-      "type": "grounder",
-      "target": { "x": 0.260, "y": 0.500 }
-    }
+    "hitType": "grounder",
+    "batterAdvance": 1
   }
 ]
