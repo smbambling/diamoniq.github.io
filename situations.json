@@ -1,11 +1,11 @@
 [
   {
     "key": "S1",
-    "title": "Fly ball to CF (R:1, O:1)",
-    "desc": "Fly ball to Center Field, runner on 1st, no outs.",
-    "outs": 1,
+    "title": "Situation #1",
+    "desc": "Single to LF No Runners On 0 Outs.",
+    "outs": 0,
     "runnersOn": {
-      "first": true,
+      "first": false,
       "second": false,
       "third": false
     },
@@ -49,56 +49,56 @@
     },
     "targets": {
       "P": {
-        "x": 1093,
-        "y": 1809,
+        "x": 1645,
+        "y": 1457,
         "tol": 96
       },
       "C": {
-        "x": 1917,
-        "y": 1807,
+        "x": 1955,
+        "y": 1813,
         "tol": 97
       },
       "1B": {
-        "x": 1869,
-        "y": 1571,
+        "x": 1903,
+        "y": 1567,
         "tol": 65
       },
       "2B": {
-        "x": 1497,
-        "y": 1191,
+        "x": 1503,
+        "y": 1167,
         "tol": 65
       },
       "SS": {
-        "x": 1509,
-        "y": 916,
-        "tol": 110
+        "x": 1083,
+        "y": 989,
+        "tol": 70
       },
       "3B": {
-        "x": 1135,
-        "y": 1568,
+        "x": 1094,
+        "y": 1575,
         "tol": 65
       },
       "LF": {
-        "x": 1482,
-        "y": 315,
-        "tol": 110
-      },
-      "CF": {
-        "x": 1643,
-        "y": 631,
+        "x": 849,
+        "y": 872,
         "tol": 65
       },
+      "CF": {
+        "x": 807,
+        "y": 503,
+        "tol": 105
+      },
       "RF": {
-        "x": 2253,
-        "y": 1211,
+        "x": 2215,
+        "y": 1184,
         "tol": 106
       }
     },
     "hit": {
-      "x": 1632,
-      "y": 647
+      "x": 884,
+      "y": 909
     },
-    "hitType": "popup",
-    "batterAdvance": 2
+    "hitType": "line",
+    "batterAdvance": 1
   }
 ]
