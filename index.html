@@ -9,6 +9,27 @@
   body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f7fb;color:#1f2937}
   header{display:flex;align-items:center;gap:10px;padding:12px;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
   header h1{margin:0 8px 0 0;font-size:16px;font-weight:800}
+  /* Coach password modal alignment */
+  #pwModal{display:none;align-items:center;justify-content:center}
+  #pwModal .box{max-width:min(92vw,480px);width:100%;padding:18px}
+  #pwModal input[type="password"]{
+    display:block;width:100% !important;box-sizing:border-box;
+    margin-top:8px;padding:10px 12px;
+    border:1px solid #cbd5e1 !important;border-radius:10px;
+    background:#fff;
+  }
+  #pwModal input[type="password"]:focus{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.35)}
+  #pwModal .row{justify-content:flex-end !important;gap:10px;margin-top:12px !important}
+
+  /* Description as HUD in header */
+  #descHud{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 10px;border-radius:999px;font-weight:900;font-size:13px;
+    border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
+    background:#f8fafc;color:#0b1321; white-space:pre-wrap; max-width:min(48vw,820px); overflow:auto;
+  }
+  @media (max-width:720px){ #descHud{font-size:12px; max-width:100%} }
+
   select,button,input[type="number"],input[type="range"]{padding:6px 10px;font-weight:700;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
   button{cursor:pointer}
   .btn-green{background:#16a34a;color:#fff;border-color:#15803d}
@@ -48,6 +69,16 @@
   }
   .badge-score{background:#ecfeff;border-color:#a5f3fc}
   .badge-tries{background:#eef2ff;border-color:#c7d2fe}
+  /* Tries HUD color states */
+  .tries-green{ background:#dcfce7; border-color:#86efac }
+  .tries-yellow{ background:#fef9c3; border-color:#fde68a }
+  .tries-red{ background:#fee2e2; border-color:#fecaca }
+
+  /* Score HUD color states */
+  .score-green{ background:#dcfce7; border-color:#86efac }
+  .score-yellow{ background:#fef9c3; border-color:#fde68a }
+  .score-red{ background:#fee2e2; border-color:#fecaca }
+
   .badge .dot{width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
   .dot-score{background:#06b6d4}
   .dot-tries{background:#6366f1}
@@ -181,7 +212,9 @@
 
 <header>
   <h1>Diamond IQ</h1>
-  <select id="sitSelect" aria-label="Situation"></select>
+    <button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">🎲 Random</button>
+<select id="sitSelect" aria-label="Situation"></select>
+  <span id="descHud" class="badge"></span>
   <span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span>
   <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
     Outs: <b><span id="outsVal">0</span></b>
@@ -191,8 +224,8 @@
   <button id="checkBtn" class="btn-green" disabled>Check Positions</button>
 
   <div id="hud" class="hud">
-    <span id="scoreBadge" class="badge badge-score"><span class="dot dot-score"></span>Score: <b><span id="scoreVal">0</span>/9</b></span>
-    <span id="triesBadge" class="badge badge-tries"><span class="dot dot-tries"></span>Tries remaining: <b><span id="triesVal">0</span></b></span>
+    <span id="scoreBadge" class="badge badge-score">Score: <b><span id="scoreVal">0</span>/9</b></span>
+    <span id="triesBadge" class="badge badge-tries">Tries: <b><span id="triesVal">0</span></b></span>
   </div>
 
   <button id="coachBtn" class="btn-slate">Coach Tools</button>
@@ -213,52 +246,53 @@
     <div class="card">
       <strong>How to play</strong>
       <ol style="margin:6px 0 0 1.2em">
-        <li>Select a situation.</li>
-        <li>Press <em>Start Situation</em> (3 tries).</li>
-        <li>Drag the 9 chips into position.</li>
-        <li>Press <em>Check Positions</em> (uses 1 try).</li>
+        <li>Select a situation or click <em>Random</em>.</li>
+        <li>Review the displayed Description, Runners, and Outs.</li>
+        <li>Press <em>Start Situation</em>.</li>
+        <li>Drag the 9 player chips into the correct positions for the situation.</li>
+        <li>Press <em>Check Positions</em> to verify correctness (3 tries).</li>
       </ol>
-      <div id="curSitDesc"  style="margin-top:6px;color:#475569;font-weight:600"></div>
-    </div>
+      </div>
 
     <!-- Coach Tools (hidden until unlocked) -->
     <div id="coachCard" class="card hidden">
       <div class="coachGrid">
-        <div class="row">
-          <strong>Coach Tools</strong>
-          <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
-          <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
-        </div>
+  <div class="row">
+    <strong>Coach Tools</strong>
+    <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
+    <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
+  </div>
 
-        <!-- Situation Builder -->
-        <div class="subsec">
-          <div class="title">Situation Builder</div>
-
-          <div class="row">
-            <label class="hint">Title:</label>
-            <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
-          </div>
-          <div class="row">
-            <label class="hint">Description:</label>
-            <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
-          </div>
-
-          <div class="row">
-            <label class="hint">Outs:</label>
-            <select id="outsSelScenario">
-              <option value="0">0 outs</option>
-              <option value="1">1 out</option>
-              <option value="2">2 outs</option>
-            </select>
-          </div>
-
-          <!-- Single refresh button -->
-          <div class="row">
-            <button id="newScenarioBtn"  class="btn-slate">➕ New Scenario</button>
-            <button id="saveScenarioBtn" class="btn-slate">🔄 Refresh Situation</button>
-            <span id="scenarioMsg" class="hint" style="margin-left:auto"></span>
-          </div>
-        </div>
+  <!-- Situation Builder -->
+  <div class="subsec">
+    <div class="title">Situation Builder</div>
+    <div class="row">
+      <button id="newScenarioBtn" class="btn-slate">➕ New Situation</button>
+    </div>
+    <div class="row">
+      <label class="hint">Title:</label>
+      <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
+    </div>
+    <div class="row">
+      <label class="hint">Description:</label>
+      <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
+    </div>
+    <div class="row">
+      <label class="hint">Outs:</label>
+      <select id="outsSelScenario">
+        <option value="0">0 outs</option>
+        <option value="1">1 out</option>
+        <option value="2">2 outs</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="saveScenarioBtn" class="btn-slate">🔄 Refresh Situation</button>
+      <button id="deleteScenarioBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
+      <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
+      <span id="scenarioMsg" class="hint" style="margin-left:auto"></span>
+    </div>
+  </div>
+</div>
 
         <!-- Runners on Base -->
         <div class="subsec">
@@ -387,13 +421,16 @@ const targetsLayer=document.getElementById('targetsLayer');
 const ballLayer=document.getElementById('ballLayer');
 
 const sitSelect=document.getElementById('sitSelect');
+const randomSitBtn = document.getElementById('randomSitBtn');
 const startBtn=document.getElementById('startBtn');
 const resetBtn=document.getElementById('resetBtn');
 const checkBtn=document.getElementById('checkBtn');
 const scoreVal=document.getElementById('scoreVal');
 const triesVal=document.getElementById('triesVal');
+const triesBadge = document.getElementById('triesBadge');
+const scoreBadge = document.getElementById('scoreBadge');
 const curSitLabel=document.getElementById('curSitLabel');
-const curSitDesc = document.getElementById('curSitDesc');
+const descHud = document.getElementById('descHud');
 
 const coachBtn=document.getElementById('coachBtn');
 const coachCard=document.getElementById('coachCard');
@@ -422,6 +459,8 @@ const newDescInput    = document.getElementById('newDescInput');
 const newScenarioBtn  = document.getElementById('newScenarioBtn');
 const seedTargetsBtn  = document.getElementById('seedTargetsBtn');
 const saveScenarioBtn = document.getElementById('saveScenarioBtn');
+const deleteScenarioBtn = document.getElementById('deleteScenarioBtn');
+const resetStartsBtn = document.getElementById('resetStartsBtn');
 const scenarioMsg     = document.getElementById('scenarioMsg');
 
 const outsValHud      = document.getElementById('outsVal');
@@ -1156,7 +1195,17 @@ function applyCoachVisibility(){
   syncBallToHit();
 }
 function setChipsLocked(locked){ tokens.forEach(({el})=> el.classList.toggle('locked', locked && !coachUnlocked)); }
-function updateHud(scoreCount){ scoreVal.textContent=String(scoreCount ?? 0); triesVal.textContent=coachUnlocked ? '∞' : String(remainingTries); }
+function updateHud(scoreCount){
+  scoreVal.textContent = String(scoreCount ?? 0);
+  const triesLeft = coachUnlocked ? Infinity : (gameActive ? remainingTries : MAX_TRIES);
+  if (triesVal) triesVal.textContent = coachUnlocked ? '∞' : `${triesLeft}/${MAX_TRIES}`;
+  if (triesBadge){
+    triesBadge.classList.remove('tries-green','tries-yellow','tries-red');
+    if (coachUnlocked || triesLeft >= 2) triesBadge.classList.add('tries-green');
+    else if (triesLeft === 1) triesBadge.classList.add('tries-yellow');
+    else triesBadge.classList.add('tries-red');
+  }
+}
 function setCoachMode(enabled){
   coachUnlocked = !!enabled;
   coachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
@@ -1275,7 +1324,7 @@ function syncScenarioInputsFromCurrent(){
 
   // also mirror into the left panel
   if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
-  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
+  if (descHud)  descHud.textContent  = currentSituation.desc  || '';
 
   const o = clampInt((currentSituation.outs ?? 0), 0, 2);
   setOuts(o, {quiet:true});
@@ -1297,18 +1346,16 @@ function genUniqueKey(title){
   while(has(k)) k=`${base}-${i++}`; return k.toUpperCase();
 }
 function makeBlankScenario(){
-  const title=(newTitleInput?.value.trim())||(currentSituation?.title?`${currentSituation.title} (New)`:'New Scenario');
-  const desc =(newDescInput?.value.trim()) || (currentSituation?.desc||'');
-  const key  = genUniqueKey(title);
+  const title = 'New Situation';
+  const desc  = '';
+  const key   = genUniqueKey(title);
   const outsInit = outsSelScenario ? clampInt(outsSelScenario.value,0,2) : clampInt(currentSituation?.outs ?? 0,0,2);
   const runnersInit = getRunnersFromCheckboxes();
-
   return {
     key,
     title,
     desc,
     starts: Fcopy(DEFAULT_STARTS),
-    // 👇 give the new situation visible rings immediately
     targets: startsToTargets(DEFAULT_STARTS, DEFAULT_TOL),
     hit: { x:1500, y:900 },
     hitType: 'line',
@@ -1317,12 +1364,32 @@ function makeBlankScenario(){
     runnersOn: normalizeRunnersOn(runnersInit)
   };
 }
+
 function addNewScenario(){
-  const s=makeBlankScenario(); SITUATIONS.push(s);
-  startsMap[s.key]=Fcopy(s.starts); saveStarts();
-  populateSituations(); setSituation(s.key);
-  if (scenarioMsg){ scenarioMsg.textContent='New scenario created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
+  const s = makeBlankScenario();
+  SITUATIONS.push(s);
+  startsMap[s.key] = Fcopy(s.starts);
+  saveStarts();
+  populateSituations();
+  setSituation(s.key);
+
+  if (newTitleInput) newTitleInput.value = 'New Situation';
+  if (newDescInput)  newDescInput.value  = '';
+  if (currentSituation){
+    currentSituation.title = 'New Situation';
+    currentSituation.desc  = '';
+  }
+
+  populateSituations();
+  if (sitSelect && currentSituation) sitSelect.value = currentSituation.key;
+
+  if (typeof syncScenarioInputsFromCurrent === 'function') syncScenarioInputsFromCurrent();
+  if (scenarioMsg){ scenarioMsg.textContent='New situation created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
 }
+
+
+
+
 function saveCurrentScenario(){
   if (!currentSituation) return;
 
@@ -1377,7 +1444,7 @@ function saveCurrentScenario(){
   sitSelect.value = currentSituation.key;
   // update the left panel immediately (title + desc)
   if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
-  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
+  if (descHud)  descHud.textContent  = currentSituation.desc  || '';
 
   syncScenarioInputsFromCurrent();
   renderBaseRunners();
@@ -1386,6 +1453,70 @@ function saveCurrentScenario(){
 
   if (scenarioMsg){ scenarioMsg.textContent='Scenario saved.'; setTimeout(()=> scenarioMsg.textContent='', 1400); }
 }
+
+function deleteCurrentSituation(){
+  if (!currentSituation) return;
+  const key = currentSituation.key;
+  const idx = (SITUATIONS||[]).findIndex(s=>s.key===key);
+  if (idx < 0) return;
+  const ok = confirm(`Delete situation "${currentSituation.title||key}"? This cannot be undone.`);
+  if (!ok) return;
+
+  // Remove from arrays/maps + persist
+  SITUATIONS.splice(idx,1);
+  if (startsMap && startsMap[key]){ delete startsMap[key]; saveStarts(); }
+  if (hitsMap && hitsMap[key]){ delete hitsMap[key]; saveHits(); }
+
+  // Ensure at least one situation remains
+  if (!SITUATIONS.length){
+    const s = makeBlankScenario();
+    SITUATIONS.push(s);
+    startsMap[s.key] = Fcopy(s.starts||DEFAULT_STARTS);
+    saveStarts();
+  }
+
+  // Pick next selection (prefer previous index)
+  const nextIdx = Math.max(0, Math.min(idx, SITUATIONS.length - 1));
+  const nextKey = SITUATIONS[nextIdx].key;
+
+  // Rebuild UI
+  populateSituations();
+  if (sitSelect) sitSelect.value = nextKey;
+  setSituation(nextKey);
+
+  if (scenarioMsg){
+    scenarioMsg.textContent = 'Situation deleted.';
+    setTimeout(()=> scenarioMsg.textContent = '', 1400);
+  }
+}
+
+function resetStartsToDefaults(){
+  if (!currentSituation) return;
+  POS_IDS.forEach(id=>{
+    const p = DEFAULT_STARTS[id];
+    const rec = tokens.get(id);
+    if (rec){ rec.pos = { x:p.x, y:p.y }; placeToken(id); }
+  });
+  currentSituation.starts = Fcopy(DEFAULT_STARTS);
+  if (currentSituation.key){
+    startsMap[currentSituation.key] = Fcopy(DEFAULT_STARTS);
+    saveStarts();
+  }
+  if (scenarioMsg){
+    scenarioMsg.textContent = 'Player starts reset to defaults.';
+    setTimeout(()=> scenarioMsg.textContent = '', 1400);
+  }
+}
+function pickRandomSituation(){
+  if (!Array.isArray(SITUATIONS) || SITUATIONS.length === 0) return;
+  const cur = sitSelect && sitSelect.value || (currentSituation && currentSituation.key);
+  let keys = SITUATIONS.map(s=>s.key);
+  if (cur && keys.length > 1) keys = keys.filter(k=>k !== cur);
+  const key = keys[Math.floor(Math.random() * keys.length)];
+  if (sitSelect) sitSelect.value = key;
+  setSituation(key);
+}
+
 function populateSituations(){
   const prev = sitSelect ? sitSelect.value : '';
   if (sitSelect) sitSelect.innerHTML='';
@@ -1404,7 +1535,7 @@ function setSituation(key){
 
   // Title + Description UI
   if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
-  if (curSitDesc)  curSitDesc.textContent  = currentSituation.desc  || '';
+  if (descHud)  descHud.textContent  = currentSituation.desc  || '';
 
   const savedHit = getHitSaved(currentSituation.key); if (savedHit) currentSituation.hit = savedHit;
 
@@ -1585,7 +1716,7 @@ function refreshSituationAll(){
 
   const labelEl = document.getElementById('curSitLabel');
   if (labelEl) labelEl.textContent = currentSituation.title || '';
-  if (curSitDesc) curSitDesc.textContent = currentSituation.desc || '';
+  if (descHud) descHud.textContent = currentSituation.desc || '';
 
   // Rebuild targets (applies new tolerance sizes), hit marker & ball
   buildTargets();
@@ -1624,7 +1755,14 @@ function checkPositions(){
     if (isCorrect) correct++;
   });
   updateHud(correct);
-  if (!coachUnlocked && gameActive){
+  
+  // colorize score HUD by percent correct
+  if (scoreBadge){
+    const pct = correct / 9;
+    scoreBadge.classList.remove('score-green','score-yellow','score-red');
+    scoreBadge.classList.add(pct >= 2/3 ? 'score-green' : (pct >= 1/3 ? 'score-yellow' : 'score-red'));
+  }
+if (!coachUnlocked && gameActive){
     remainingTries = Math.max(0, remainingTries - 1);
     updateHud(correct);
     if (correct===9 || remainingTries===0){ checkBtn.disabled=true; setChipsLocked(true); }
@@ -1651,6 +1789,26 @@ function resetPlayers(){
   updateRunnersHudFromLive();
 }
 
+
+function addNewSituationClear(){
+  // Create via existing flow
+  addNewScenario();
+  // Set desired defaults for the new situation
+  if (currentSituation){
+    currentSituation.title = 'New Situation';
+    currentSituation.desc = '';
+  }
+  if (newTitleInput) newTitleInput.value = 'New Situation';
+  if (newDescInput)  newDescInput.value  = '';
+  // Refresh selector to show the new title instead of key
+  populateSituations();
+  if (sitSelect && currentSituation) sitSelect.value = currentSituation.key;
+  // Mirror to any dependent UI
+  if (typeof syncScenarioInputsFromCurrent === 'function') syncScenarioInputsFromCurrent();
+  if (scenarioMsg){ scenarioMsg.textContent='New situation created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
+}
+
+
 /* =======================
    Init & events
    ======================= */
@@ -1675,6 +1833,7 @@ async function init(){
 
 /* Wiring */
 if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
+if (randomSitBtn) randomSitBtn.addEventListener('click', pickRandomSituation);
 if (resetBtn)  resetBtn.addEventListener('click', resetPlayers);
 if (checkBtn)  checkBtn.addEventListener('click', checkPositions);
 if (startBtn)  startBtn.addEventListener('click', ()=>{
@@ -1771,9 +1930,16 @@ function setTolLive(id,tol){
 tolNum.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolNum.value));
 tolRange.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolRange.value));
 
-if (newScenarioBtn)  newScenarioBtn.addEventListener('click', addNewScenario);
+if (newScenarioBtn) newScenarioBtn.addEventListener('click', addNewScenario);
 if (seedTargetsBtn)  seedTargetsBtn.addEventListener('click', seedTargetsFromStarts);
 if (saveScenarioBtn) saveScenarioBtn.addEventListener('click', refreshSituationAll);
+if (deleteScenarioBtn) deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
+if (resetStartsBtn) resetStartsBtn.addEventListener('click', resetStartsToDefaults);
+if (newScenarioBtn) newScenarioBtn.addEventListener('click', addNewScenario);
+
+if (deleteScenarioBtn && typeof deleteCurrentSituation === 'function') deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
+if (resetStartsBtn) resetStartsBtn.addEventListener('click', resetStartsToDefaults);
+if (deleteScenarioBtn) deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
 
 if (outsSelScenario) outsSelScenario.addEventListener('change', e=> setOuts(e.target.value, {quiet:false}));
 
