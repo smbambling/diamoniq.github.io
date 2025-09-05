@@ -9,6 +9,251 @@
   body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f7fb;color:#1f2937}
   header{display:flex;align-items:center;gap:10px;padding:12px;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
   header h1{margin:0 8px 0 0;font-size:16px;font-weight:800}
+  /* ===== iPad (11–13") — CSS-only layout: actions not oversized; metrics inline ===== */
+  @media (min-width:1024px) and (max-width:1440px){
+    header{display:flex !important;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px}
+    /* order: title/controls/desc on row 1; metrics end of row 1; actions row 2 */
+    #sitSelect{order:1;min-width:220px;width:auto}
+    #sitDescBar{order:2;flex:1 1 auto;min-width:280px;max-width:100%;white-space:pre-wrap}
+    /* metrics (Runners, Outs, Score, Tries) inline on same row */
+    #runnersBadge,#outsHud,#hud{order:3;flex:0 0 auto}
+    #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
+    /* actions (Start, Reset, Check, Coach) inline — no full-width buttons */
+    #startBtn,#resetBtn,#checkBtn,#coachBtn{order:4;flex:0 0 auto;width:auto !important}
+  }
+
+  /* ===== iPad (11–13") — actions not oversized; metrics in one row ===== */
+  @media (min-width:1024px) and (max-width:1440px){
+    header{display:flex !important;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px}
+    /* Top row pieces */
+    #sitSelect{order:1;width:auto;min-width:220px;white-space:nowrap}
+    #sitDescBar{order:2;flex:1 1 auto;min-width:280px;max-width:100%;white-space:pre-wrap}
+    /* Metrics group: Runners, Outs, Score, Tries on ONE line */
+    .metrics-row{order:3;display:flex !important;flex-wrap:nowrap;gap:8px}
+    #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
+    /* Actions row: Start/Reset/Check/Coach inline, not full-width */
+    header .header-actions{order:4;display:flex !important;flex-wrap:nowrap;gap:8px}
+    header .header-actions button{width:auto !important}
+  }
+  /* Default fallback: actions are inline flex (mobile overrides elsewhere) */
+  header .header-actions{display:flex;gap:8px}
+
+  /* ===== Metrics + Actions grouping and iPad two-row layout ===== */
+  .metrics-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .header-actions{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,auto);gap:8px}
+  /* Keep Score/Tries with Runners/Outs across sizes */
+  #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
+  @media (min-width:820px) and (max-width:1440px){
+    header{display:flex !important;flex-wrap:wrap;column-gap:10px;row-gap:8px;align-items:center}
+    /* order blocks to ensure exactly two rows */
+    #sitBadge, #sitSelect{order:1}
+    #sitDescBar{order:2;flex:1 1 40%;min-width:360px;white-space:pre-wrap}
+    #metricsRow{order:3;flex:0 0 auto}
+    .header-actions{order:4}
+  }
+
+  /* ===== iPad (11–13") header: force exactly two rows ===== */
+  @media (min-width:820px) and (max-width:1440px){
+    header{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:minmax(36px,auto);align-items:center;column-gap:10px;row-gap:8px}
+    header > *{min-width:0}
+
+    /* Row 1 placement */
+    header h1{grid-column:1 / span 2}
+    #randomSitBtn{grid-column:3 / span 1}
+    #sitSelect{grid-column:4 / span 2}
+    #sitDescBar{grid-column:6 / span 3;min-width:280px;max-width:100%;white-space:pre-wrap}
+    #runnersBadge{grid-column:9 / span 1}
+    #outsHud{grid-column:10 / span 1}
+    #hud{grid-column:11 / span 2;margin-left:0!important;justify-content:flex-start;gap:8px}
+
+    /* Row 2 placement: actions + Coach Tools on same line */
+    .header-actions{grid-column:1 / span 6;grid-row:2;display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,auto);gap:8px}
+    #coachBtn{grid-column:7 / span 2;grid-row:2;justify-self:start}
+  }
+
+  /* ===== iPad (11"–13") header: keep metrics on one row; Coach next to Check ===== */
+  @media (min-width:820px) and (max-width:1440px){
+    /* allow wrapping and consistent spacing whether direct children or inside .header-row */
+    header, header .header-row{display:flex;flex-wrap:wrap;column-gap:10px;row-gap:8px}
+
+    /* group metrics (Runners, Outs, Score/Tries) together on the same line */
+    #runnersBadge, #outsHud, #hud{order:3;flex:0 0 auto}
+    /* remove auto push so #hud can sit with the badges */
+    #hud{margin-left:0!important;justify-content:flex-start;gap:8px}
+
+    /* actions row: start/reset/check + coach tools on the same line */
+    .header-actions{order:4;display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,auto);gap:8px}
+    #coachBtn{order:4;flex:0 0 auto;align-self:center}
+
+    /* compact control sizing to avoid overlap */
+    header button, header select{padding:6px 10px}
+    .badge{padding:6px 10px}
+
+    /* keep description readable but not dominating; it can wrap, takes leftover space */
+    #sitDescBar{order:2;flex:1 1 40%;min-width:320px;max-width:100%;white-space:pre-wrap}
+  }
+
+  /* ===== iPad 13" header overlap fix ===== */
+  @media (min-width:1024px) and (max-width:1440px){
+    header, header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
+    header > *, header .header-row > *{min-width:0}
+    #sitBadge, #sitSelect{order:1}
+    #sitDescBar{order:2;flex:1 1 60%;min-width:420px;max-width:100%;white-space:pre-wrap}
+    #runnersBadge, #outsHud{order:3}
+    .header-actions{order:4;display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:8px;width:100%}
+    #hud{order:5;margin-left:0;flex:1 1 100%;justify-content:flex-start;gap:8px}
+    #coachBtn{order:6}
+    header button, header select{padding:6px 10px}
+    .badge{padding:6px 10px}
+  }
+
+  /* ===== iPad / mid-width header fix: wrap, 2-row actions, readable description ===== */
+  @media (min-width:901px) and (max-width:1200px){
+    /* enable wrapping whether content is direct in <header> or inside .header-row */
+    header{display:flex;flex-wrap:wrap;row-gap:8px}
+    header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
+    header > *, header .header-row > *{min-width:0}
+
+    /* order + sizing so things don't overlap */
+    #sitBadge, #sitSelect{order:1}
+    #sitDescBar{order:2;flex:1 1 60%;min-width:380px;max-width:100%;white-space:pre-wrap}
+    #runnersBadge, #outsHud{order:3}
+    .header-actions{order:4;display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:8px;width:100%}
+    #hud{order:5;margin-left:0;justify-content:flex-start;gap:8px}
+    #coachBtn{order:6}
+
+    /* compact control sizing at this breakpoint */
+    header button, header select{padding:6px 10px}
+    .badge{padding:6px 10px}
+  }
+
+  /* ===== Small-screen: collapse + stack header, keep description readable ===== */
+  @media (max-width: 900px){
+    header{padding:8px}
+    header{display:flex;flex-wrap:wrap;row-gap:8px}
+    header > *{flex:1 1 100%;min-width:0}
+
+    /* Situations first */
+    #sitBadge, #sitSelect{order:1}
+
+    /* Description takes its own full row and never shrinks */
+    #sitDescBar{order:2;display:block;flex:1 1 100%;max-width:100%;max-height:none;overflow:visible;white-space:pre-wrap}
+
+    /* Runners / Outs next */
+    #runnersBadge, #outsHud{order:3}
+
+    /* Action buttons stack */
+    .header-actions{order:4;display:grid;grid-template-columns:1fr;gap:8px;width:100%}
+    header button, header select{width:100%}
+
+    /* Score / Tries */
+    #hud{order:5;justify-content:flex-start;gap:8px;margin-left:0}
+
+    /* Coach toggle last */
+    #coachBtn{order:6}
+  }
+  @media (min-width: 901px){
+    /* Desktop keeps compact inline actions */
+    .header-actions{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(130px,auto);gap:8px}
+  }
+
+  /* ===== Small-screen: stack header items, no horizontal scroll ===== */
+  @media (max-width:900px){
+    header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
+    .header-row > *{flex:1 1 100%;min-width:0}
+    /* Ensure badges/metrics don't push layout */
+    .header-row #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
+    /* Full-width, readable description */
+    #sitDescBar{order:2;flex:1 1 100%;display:block;max-width:100%;max-height:none;overflow:visible;white-space:pre-wrap}
+    /* Inputs/buttons readable and non-clipping */
+    .header-row button,.header-row select{width:100%;padding:6px 8px;font-size:12px}
+  }
+  @media (max-width:520px){
+    #sitSelect{min-width:140px}
+  }
+  /* Action buttons grid wrapper (desktop keeps inline, mobile stacks) */
+  .header-actions{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(130px,auto);gap:8px}
+  @media (max-width:900px){
+    .header-actions{display:grid;grid-template-columns:1fr;grid-auto-flow:row}
+  }
+
+  /* ===== Collapsing top bar for small screens ===== */
+  @media (max-width: 900px){
+    header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
+    .header-row > *{flex:1 1 100%}
+    /* Situations selector */
+    #sitBadge, #sitSelect{order:1}
+    /* Description: own full row, readable */
+    #sitDescBar{order:2;flex:1 1 100%;display:block;max-width:100%;max-height:8em;overflow:auto;white-space:pre-wrap}
+    /* Runners + Outs */
+    #runnersBadge, #outsHud{order:3}
+    /* Action buttons */
+    #startBtn, #resetBtn, #checkBtn{order:4}
+    /* Score/Tries */
+    #hud{order:5}
+    /* Coach toggle */
+    #coachBtn{order:6}
+    /* Compact controls */
+    .header-row button, .header-row select{padding:6px 8px;font-size:12px}
+    .badge{font-size:12px;padding:5px 8px}
+  }
+  @media (min-width: 901px){
+    /* restore inline layout on larger screens */
+    .header-row > *{flex:initial}
+    #sitDescBar{display:inline-flex}
+  }
+
+  /* ===== Mobile-friendly header compaction ===== */
+  header .header-row{flex-wrap:wrap;row-gap:8px}
+  /* Make selector a bit narrower on phones */
+  #sitSelect{min-width:180px}
+  @media (max-width:900px){
+    /* Put description on its own full row by default */
+    #sitDescBar{order:2;flex:1 1 100%;display:block;max-width:100%}
+    /* Cluster badges wrap more gracefully */
+    #runnersBadge,#outsHud{order:3}
+    #hud{order:4}
+    #startBtn,#resetBtn,#checkBtn{order:5}
+    #coachBtn{order:6}
+    .badge{font-size:12px;padding:5px 8px}
+    .header-row button,.header-row select{padding:6px 8px;font-size:12px}
+  }
+  /* Collapsible description behavior */
+  #sitDescBar.desc-collapsed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #sitDescBar.desc-expanded{white-space:pre-wrap}
+
+  /* ===== Responsive header + mobile-friendly controls ===== */
+  header .header-row{flex-wrap:wrap;row-gap:8px}
+  /* Nicer situation select (not embedded inside a HUD) */
+  #sitSelect{min-width:200px;border-color:#cbd5e1;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)}
+  #sitSelect:focus{outline:none;border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.35)}
+  /* Description HUD ensures inline look */
+  #sitDescBar{display:inline-flex;align-items:center;gap:6px}
+  @media (max-width:900px){
+    header h1{order:0;flex:1 1 100%}
+    /* Situations + Description immediately after title */
+    #sitBadge, .diq-sit-row, .diq-sit-stack, #sitSelect{order:1}
+    #sitDescBar{order:2}
+    /* Runners / Outs next */
+    #runnersBadge, #outsHud{order:3}
+    /* Score / Tries */
+    #hud{order:4}
+    /* Start / Reset / Check */
+    #startBtn{order:5}
+    #resetBtn{order:5}
+    #checkBtn{order:5}
+    /* Coach Tools toggle at the end */
+    #coachBtn{order:6;margin-left:0}
+
+    .header-row button, .header-row select{padding:6px 8px;font-size:12px}
+    .badge{font-size:12px;padding:5px 8px}
+    #sitDescBar{max-width:100%;max-height:6em}
+  }
+  @media (max-width:600px){
+    #runnersBadge, #outsHud{flex:1 1 48%}
+    #sitSelect{min-width:160px}
+  }
+
   /* Coach password modal alignment */
   #pwModal{display:none;align-items:center;justify-content:center}
   #pwModal .box{max-width:min(92vw,480px);width:100%;padding:18px}
@@ -84,6 +329,25 @@
   .dot-tries{background:#6366f1}
 
   .app{display:grid;grid-template-columns:1fr 340px;gap:14px;padding:14px;max-width:min(1600px,96vw);margin:0 auto}
+  /* Unify header width with main app and make mobile full-width */
+  header .header-row{width:100%;max-width:min(1600px,96vw);margin:0 auto}
+  @media (max-width:1100px){
+    .app{grid-template-columns:1fr;max-width:100vw}
+    header .header-row{max-width:100vw}
+  }
+  @media (max-width:900px){
+    .app{max-width:100vw;padding-left:8px;padding-right:8px}
+    /* Description takes full row, never shrinks */
+    #sitDescBar{order:2;flex:1 1 100%;display:block;max-width:100%;max-height:none;overflow:visible;white-space:pre-wrap}
+  }
+
+  @media (max-width:1100px){
+    .app{grid-template-columns:1fr;gap:12px;padding:10px;max-width:98vw}
+  }
+  @media (max-width:600px){
+    .card{padding:8px}
+  }
+
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
   .sideCol{display:flex;flex-direction:column;gap:12px}
 
@@ -219,9 +483,7 @@
   <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
     Outs: <b><span id="outsVal">0</span></b>
   </span>
-  <button id="startBtn" class="btn-green">Start Situation</button>
-  <button id="resetBtn" class="btn-orange">Reset</button>
-  <button id="checkBtn" class="btn-green" disabled>Check Positions</button>
+  <div class="header-actions"><div class="header-actions"><button id="startBtn" class="btn-green">Start Situation</button> <button id="resetBtn" class="btn-orange">Reset</button> <button id="checkBtn" class="btn-green" disabled>Check Positions</button></div></div>
 
   <div id="hud" class="hud">
     <span id="scoreBadge" class="badge badge-score">Score: <b><span id="scoreVal">0</span>/9</b></span>
@@ -433,6 +695,31 @@ const curSitLabel=document.getElementById('curSitLabel');
 const descHud = document.getElementById('descHud');
 
 const coachBtn=document.getElementById('coachBtn');
+// Ensure header groups exist and move elements into them for consistent layout
+
+
+const ensureHeaderGrouping = ()=>{
+  const header = document.querySelector('header');
+  if (!header) return;
+  // Move Coach Tools into actions row
+  const actions = document.querySelector('.header-actions');
+  if (actions && coachBtn && !actions.contains(coachBtn)) actions.appendChild(coachBtn);
+  // Ensure metrics row exists and contains Runners, Outs, and Score/Tries
+  let m = document.getElementById('metricsRow');
+  if (!m){
+    m = document.createElement('div');
+    m.id = 'metricsRow';
+    m.className = 'metrics-row';
+    // Insert metrics row before the actions block
+    const actionsAnchor = document.querySelector('.header-actions') || document.getElementById('startBtn') || header.lastElementChild;
+    header.insertBefore(m, actionsAnchor);
+  }
+  ['runnersBadge','outsHud','hud'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el && el.parentNode !== m) m.appendChild(el);
+  });
+};
+
 const coachCard=document.getElementById('coachCard');
 const coachStatus=document.getElementById('coachStatus');
 
@@ -571,6 +858,10 @@ function observeWrap(){
 /* global listeners */
 window.addEventListener('resize', scheduleLayout);
 window.addEventListener('orientationchange', scheduleLayout);
+
+window.addEventListener('resize', updateDescriptionHudText);
+window.addEventListener('orientationchange', updateDescriptionHudText);
+
 
 /* =======================
    🎯 Marker Scaling (single copy)
@@ -800,7 +1091,11 @@ function runnersStateToArray(r){ const out=[]; if(r.first)out.push('1B'); if(r.s
 function getRunnersFromCheckboxes(){ return { first:!!(run1B&&run1B.checked), second:!!(run2B&&run2B.checked), third:!!(run3B&&run3B.checked) }; }
 function updateRunnersHudFromLive(){
   if (!runnersValHud) return;
-  const arr = runnersStateToArray(normalizeRunnersOn(liveRunners));
+  // Show the runners defined by the situation (static), not the live/animated state
+  const baseSource = (currentSituation && currentSituation.runnersOn)
+    ? normalizeRunnersOn(currentSituation.runnersOn)
+    : normalizeRunnersOn(liveRunners);
+  const arr = runnersStateToArray(baseSource);
   runnersValHud.textContent = arr.length ? arr.join(',') : '—';
 }
 function setRunnersOn(next,{quiet=true}={}){
@@ -1312,6 +1607,33 @@ async function loadSituationsFromJson(){
     }));
   }
 }
+
+/* ===== Description HUD helpers (mobile-friendly) ===== */
+function updateDescriptionHudText(){
+  const el = document.getElementById('sitDescBar');
+  if (!el || !currentSituation) return;
+  const txt = currentSituation.desc || '';
+  el.textContent = txt;
+  el.title = txt || '';
+  if (window.innerWidth <= 900) {
+    el.classList.remove('desc-expanded');
+    el.classList.add('desc-collapsed');
+  } else {
+    el.classList.remove('desc-collapsed');
+  }
+}
+
+document.addEventListener('click', (e)=>{
+  const el = e.target && e.target.closest && e.target.closest('#sitDescBar');
+  if (!el) return;
+  if (el.classList.contains('desc-collapsed')){
+    el.classList.remove('desc-collapsed');
+    el.classList.add('desc-expanded');
+  } else if (window.innerWidth <= 900) {
+    el.classList.remove('desc-expanded');
+    el.classList.add('desc-collapsed');
+  }
+});
 
 /* =======================
    Situation lifecycle
@@ -1825,6 +2147,9 @@ async function init(){
     const firstKey = (sitSelect && sitSelect.value) || (SITUATIONS[0] && SITUATIONS[0].key);
     buildTokens(); updateChipScale(); setSituation(firstKey); setCoachMode(false);
     observeWrap(); scheduleLayout();
+
+    updateDescriptionHudText();
+
   } catch (err){
     console.error('[Init] fatal error:', err && (err.stack||err.message||err));
     alert('There was an error starting the app. Open the console for details.');
