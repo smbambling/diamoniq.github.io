@@ -483,7 +483,11 @@
   <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
     Outs: <b><span id="outsVal">0</span></b>
   </span>
-  <div class="header-actions"><div class="header-actions"><button id="startBtn" class="btn-green">Start Situation</button> <button id="resetBtn" class="btn-orange">Reset</button> <button id="checkBtn" class="btn-green" disabled>Check Positions</button></div></div>
+  <div class="header-actions">
+    <button id="startBtn" class="btn-green">Start Situation</button>
+    <button id="resetBtn" class="btn-orange">Reset</button>
+    <button id="checkBtn" class="btn-green" disabled>Check Positions</button>
+  </div>
 
   <div id="hud" class="hud">
     <span id="scoreBadge" class="badge badge-score">Score: <b><span id="scoreVal">0</span>/9</b></span>
@@ -529,7 +533,7 @@
   <div class="subsec">
     <div class="title">Situation Builder</div>
     <div class="row">
-      <button id="newScenarioBtn" class="btn-slate">➕ New Situation</button>
+      <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
     </div>
     <div class="row">
       <label class="hint">Title:</label>
@@ -541,17 +545,17 @@
     </div>
     <div class="row">
       <label class="hint">Outs:</label>
-      <select id="outsSelScenario">
+      <select id="outsSelSituation">
         <option value="0">0 outs</option>
         <option value="1">1 out</option>
         <option value="2">2 outs</option>
       </select>
     </div>
     <div class="row">
-      <button id="saveScenarioBtn" class="btn-slate">🔄 Refresh Situation</button>
-      <button id="deleteScenarioBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
+      <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
+      <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
       <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
-      <span id="scenarioMsg" class="hint" style="margin-left:auto"></span>
+      <span id="situationMsg" class="hint" style="margin-left:auto"></span>
     </div>
   </div>
 </div>
@@ -629,7 +633,7 @@
 
 <script>
 /* =======================
-   Constants & pure helpers
+   [A0] Constants & pure helpers
    ======================= */
 const IMG_W=3000, IMG_H=2487;
 const DEFAULT_TOL=65;
@@ -642,11 +646,19 @@ const BASES_NATIVE = {
 const Fcopy = o => JSON.parse(JSON.stringify(o));
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const clampInt=(v,min,max)=>{v=Math.floor(Number(v)); if(Number.isNaN(v)) v=min; return clamp(v,min,max);};
+// --- Guard to ignore programmatic changes in input handlers
+let _muteCoachInputs = false;
+function withInputMute(fn){
+  _muteCoachInputs = true;
+  try { fn(); } finally { _muteCoachInputs = false; }
+}
+
+
 const lerp=(a,b,t)=>a+(b-a)*t;
 function quadBezier(p0,p1,p2,t){return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2.x,y:(1-t)*(1-t)*p0.y+2*(1-t)*t*p1.y+t*t*p2.y};}
 
 /* =======================
-   App state (mutable)
+   [A0.1] App state (mutable)
    ======================= */
 let SITUATIONS = [];
 const SITUATIONS_FALLBACK = [];
@@ -675,7 +687,7 @@ let liveRunners = { first:false, second:false, third:false };
 let _animSuppressedBases = new Set();
 
 /* =======================
-   DOM refs
+   [A0.2] DOM refs
    ======================= */
 const img=document.getElementById('fieldImg');
 const wrap=document.getElementById('wrap');
@@ -743,15 +755,15 @@ const pwMsg=document.getElementById('pwMsg');
 
 const newTitleInput   = document.getElementById('newTitleInput');
 const newDescInput    = document.getElementById('newDescInput');
-const newScenarioBtn  = document.getElementById('newScenarioBtn');
+const newSituationBtn  = document.getElementById('newSituationBtn');
 const seedTargetsBtn  = document.getElementById('seedTargetsBtn');
-const saveScenarioBtn = document.getElementById('saveScenarioBtn');
-const deleteScenarioBtn = document.getElementById('deleteScenarioBtn');
+const saveSituationBtn = document.getElementById('saveSituationBtn');
+const deleteSituationBtn = document.getElementById('deleteSituationBtn');
 const resetStartsBtn = document.getElementById('resetStartsBtn');
-const scenarioMsg     = document.getElementById('scenarioMsg');
+const situationMsg     = document.getElementById('situationMsg');
 
 const outsValHud      = document.getElementById('outsVal');
-const outsSelScenario = document.getElementById('outsSelScenario');
+const outsSelSituation = document.getElementById('outsSelSituation');
 const runnersValHud   = document.getElementById('runnersVal');
 
 const run1B = document.getElementById('run1B');
@@ -759,7 +771,7 @@ const run2B = document.getElementById('run2B');
 const run3B = document.getElementById('run3B');
 
 /* =======================
-   Geometry & scaling (deduped)
+   [A0.3] Geometry & scaling (deduped)
    ======================= */
 function unitToCss(native){ return { left:native.x*(imgRect.width/IMG_W), top:native.y*(imgRect.height/IMG_H) }; }
 function cssToUnit(left,top){ return { x:left*(IMG_W/imgRect.width), y:top*(IMG_H/imgRect.height) }; }
@@ -783,7 +795,7 @@ function tolToCssDiameter(tol, allowTiny=false){
 }
 
 /* =======================
-   ✨ Resize & Layout (single source of truth)
+   [A1] Resize & Layout (single source of truth)
    ======================= */
 function sizeOverlays(){
   if (!wrap) return;
@@ -864,7 +876,7 @@ window.addEventListener('orientationchange', updateDescriptionHudText);
 
 
 /* =======================
-   🎯 Marker Scaling (single copy)
+   [A2] Marker Scaling (single copy)
    Scales: .ball, .runner, .baseRunner, .hitTarget + SVG stroke width
    ======================= */
 // Increased starting sizes; still scale down/up responsively
@@ -937,7 +949,7 @@ if (_origAnimateHit){
 }
 
 /* =======================
-   Chips (tokens) — REQUIRED (restores placeToken etc.)
+   [A3] Chips (tokens) — core drag/drop
    ======================= */
 
 /* Default starting spots (native image coords) */
@@ -1032,7 +1044,7 @@ function makeChipDraggable(el,id){
 }
 
 /* =======================
-   Targets (rings)
+   [A4] Targets (rings)
    ======================= */
 function getRingEl(id){ return wrap.querySelector(`.tgt[data-id="${id}"]`); }
 function getAllRings(){ return Array.from(wrap.querySelectorAll('.tgt')); }
@@ -1084,7 +1096,7 @@ function makeTargetDraggable(el,id){
 }
 
 /* =======================
-   Runners & Outs
+   [A5] Runners & Outs
    ======================= */
 function normalizeRunnersOn(obj){ const src=obj||{}; return { first:!!src.first, second:!!src.second, third:!!src.third }; }
 function runnersStateToArray(r){ const out=[]; if(r.first)out.push('1B'); if(r.second)out.push('2B'); if(r.third)out.push('3B'); return out; }
@@ -1107,15 +1119,15 @@ function setRunnersOn(next,{quiet=true}={}){
   updateRunnersHudFromLive();
   renderBaseRunners();
   scaleMarkers();
-  if (!quiet && scenarioMsg){ scenarioMsg.textContent='Runners updated'; setTimeout(()=>scenarioMsg.textContent='',900); }
+  if (!quiet && situationMsg){ situationMsg.textContent='Runners updated'; setTimeout(()=>situationMsg.textContent='',900); }
 }
 function setOuts(value,{quiet=true}={}){
   if (!currentSituation) return;
   const v = clampInt(value,0,2);
   currentSituation.outs = v;
   if (outsValHud) outsValHud.textContent = String(v);
-  if (outsSelScenario && outsSelScenario.value !== String(v)) outsSelScenario.value = String(v);
-  if (!quiet && scenarioMsg){ scenarioMsg.textContent='Outs updated'; setTimeout(()=>{scenarioMsg.textContent='';},900); }
+  if (outsSelSituation && outsSelSituation.value !== String(v)) outsSelSituation.value = String(v);
+  if (!quiet && situationMsg){ situationMsg.textContent='Outs updated'; setTimeout(()=>{situationMsg.textContent='';},900); }
 }
 /* draw/remove base runners  */
 function renderBaseRunners(state, exclude = new Set()){
@@ -1157,7 +1169,7 @@ function advanceRunnersState(state,bases){
 }
 
 /* =======================
-   Ball & Hit
+   [A6] Ball & Hit
    ======================= */
 function buildBallGraphics(){
   ballLayer.innerHTML = '';
@@ -1480,7 +1492,7 @@ function animateExistingRunnersAdvance(advance, onDone){
 }
 
 /* =======================
-   Coach tools & visibility
+   [A7] Coach tools & visibility
    ======================= */
 const CALIB_PASSWORD='coach';
 function applyCoachVisibility(){
@@ -1513,7 +1525,7 @@ function closePwModal(){ pwModal.style.display='none'; }
 function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
 
 /* =======================
-   Situations I/O & helpers
+   [A8] Situations I/O & helpers
    ======================= */
 const STORAGE_STARTS='bb_iq_starts_v2';
 const STORAGE_HITS  ='bb_iq_hits_v1';
@@ -1608,20 +1620,15 @@ async function loadSituationsFromJson(){
   }
 }
 
-/* ===== Description HUD helpers (mobile-friendly) ===== */
+/* ===== [A8.1] Description HUD helpers (mobile-friendly) ===== */
 function updateDescriptionHudText(){
-  const el = document.getElementById('sitDescBar');
+  const el = document.getElementById('descHud');
   if (!el || !currentSituation) return;
   const txt = currentSituation.desc || '';
   el.textContent = txt;
   el.title = txt || '';
-  if (window.innerWidth <= 900) {
-    el.classList.remove('desc-expanded');
-    el.classList.add('desc-collapsed');
-  } else {
-    el.classList.remove('desc-collapsed');
-  }
 }
+
 
 document.addEventListener('click', (e)=>{
   const el = e.target && e.target.closest && e.target.closest('#sitDescBar');
@@ -1636,21 +1643,24 @@ document.addEventListener('click', (e)=>{
 });
 
 /* =======================
-   Situation lifecycle
+   [A9] Situation lifecycle
    ======================= */
-function syncScenarioInputsFromCurrent(){
+function syncSituationInputsFromCurrent(){
   if (!currentSituation) return;
 
-  if (newTitleInput) newTitleInput.value = currentSituation.title || currentSituation.key || '';
-  if (newDescInput)  newDescInput.value  = currentSituation.desc  || '';
+  withInputMute(() => {
+    if (newTitleInput) newTitleInput.value = currentSituation.title || currentSituation.key || '';
+    if (newDescInput)  newDescInput.value  = currentSituation.desc  || '';
+  });
 
-  // also mirror into the left panel
   if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
-  if (descHud)  descHud.textContent  = currentSituation.desc  || '';
+  if (descHud)     descHud.textContent     = currentSituation.desc  || '';
 
   const o = clampInt((currentSituation.outs ?? 0), 0, 2);
-  setOuts(o, {quiet:true});
+  setOuts(o, { quiet: true });
 }
+
+
 function startsToTargets(starts, tol=DEFAULT_TOL){
   const out={}; POS_IDS.forEach(id=>{ const p=starts[id]; if(p) out[id]={ x:Math.round(p.x), y:Math.round(p.y), tol:Number(tol)||DEFAULT_TOL }; });
   return out;
@@ -1660,25 +1670,64 @@ function seedTargetsFromStarts(){
   const onscreenStarts = getOnscreenStarts();
   currentSituation.targets = startsToTargets(onscreenStarts, DEFAULT_TOL);
   buildTargets(); if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
-  if (scenarioMsg){ scenarioMsg.textContent='Targets seeded from starts.'; setTimeout(()=> scenarioMsg.textContent='', 1400); }
+  if (situationMsg){ situationMsg.textContent='Targets seeded from starts.'; setTimeout(()=> situationMsg.textContent='', 1400); }
 }
 function genSlug(s){return String(s||'S').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'s';}
-function genUniqueKey(title){
-  const base=genSlug(title||'scenario'); let k=base, i=2; const has=key=>(SITUATIONS||[]).some(s=>s.key===key);
-  while(has(k)) k=`${base}-${i++}`; return k.toUpperCase();
+
+// Generates a unique, title-independent key. Keys never change when you edit titles.
+let __NEW_KEY_SEQ = 0;
+function genUniqueKey(_title){
+  const has = key => (SITUATIONS || []).some(s => s.key === key);
+  let key;
+  do {
+    // S-<base36 timestamp>-<base36 counter>, all uppercase for consistency
+    key = `S-${Date.now().toString(36)}-${(__NEW_KEY_SEQ++).toString(36)}`.toUpperCase();
+  } while (has(key));
+  return key;
 }
-function makeBlankScenario(){
-  const title = 'New Situation';
+
+function nextNewSituationTitle(){
+  const base = 'New Situation';
+
+  // Collect numbers from titles that match:
+  // "New Situation"  -> 1
+  // "New Situation N" -> N
+  const nums = (SITUATIONS || [])
+    .map(s => String(s.title || ''))
+    .map(t => {
+      const m = t.match(/^New Situation(?: (\d+))?$/);
+      return m ? Number(m[1] || 1) : null;
+    })
+    .filter(n => n != null);
+
+  if (nums.length === 0) return base;
+
+  const next = Math.max(...nums) + 1;
+  return `${base} ${next}`;
+}
+
+
+function makeBlankSituation(){
+  const title = nextNewSituationTitle();            // UI label only; can be edited later
   const desc  = '';
-  const key   = genUniqueKey(title);
-  const outsInit = outsSelScenario ? clampInt(outsSelScenario.value,0,2) : clampInt(currentSituation?.outs ?? 0,0,2);
+  const key   = genUniqueKey(title);                // Stable key (not tied to title)
+
+  const outsInit = outsSelSituation
+    ? clampInt(outsSelSituation.value, 0, 2)
+    : clampInt(currentSituation?.outs ?? 0, 0, 2);
+
   const runnersInit = getRunnersFromCheckboxes();
+
   return {
     key,
     title,
     desc,
     starts: Fcopy(DEFAULT_STARTS),
-    targets: startsToTargets(DEFAULT_STARTS, DEFAULT_TOL),
+    targets: (() => {
+      const t = {};
+      POS_IDS.forEach(id => { const p = DEFAULT_STARTS[id]; if (p) t[id] = { x:p.x, y:p.y, tol:DEFAULT_TOL }; });
+      return t;
+    })(),
     hit: { x:1500, y:900 },
     hitType: 'line',
     batterAdvance: 1,
@@ -1687,94 +1736,36 @@ function makeBlankScenario(){
   };
 }
 
-function addNewScenario(){
-  const s = makeBlankScenario();
+function addNewSituation(){
+  const s = makeBlankSituation();
+
+  // Add to model + persist default starts for this key
   SITUATIONS.push(s);
   startsMap[s.key] = Fcopy(s.starts);
   saveStarts();
-  populateSituations();
-  setSituation(s.key);
 
-  if (newTitleInput) newTitleInput.value = 'New Situation';
-  if (newDescInput)  newDescInput.value  = '';
-  if (currentSituation){
-    currentSituation.title = 'New Situation';
-    currentSituation.desc  = '';
-  }
+  // Rebuild the dropdown (includes the new option) and switch to it immediately
+  populateSituations(s.key);
+  setSituation(s.key);                 // currentSituation now points to the newly created situation
+  if (sitSelect) sitSelect.value = s.key;
 
-  populateSituations();
-  if (sitSelect && currentSituation) sitSelect.value = currentSituation.key;
-
-  if (typeof syncScenarioInputsFromCurrent === 'function') syncScenarioInputsFromCurrent();
-  if (scenarioMsg){ scenarioMsg.textContent='New situation created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
-}
-
-
-
-
-function saveCurrentScenario(){
-  if (!currentSituation) return;
-
-  // Title/Desc from inputs
-  if (newTitleInput){
-    const t = newTitleInput.value.trim();
-    if (t) currentSituation.title = t;
-  }
-  if (newDescInput){
-    currentSituation.desc = newDescInput.value.trim();
-  }
-
-  // Outs (HUD sync)
-  if (outsSelScenario){
-    setOuts(outsSelScenario.value, {quiet:true});
-  } else {
-    currentSituation.outs = clampInt(currentSituation.outs ?? 0, 0, 2);
-  }
-
-  // Runners (model + HUD + markers)
-  setRunnersOn(getRunnersFromCheckboxes(), {quiet:true});
-
-  // Starts from chips -> persist
-  const starts = getOnscreenStarts();
-  currentSituation.starts = Fcopy(starts);
-  startsMap[currentSituation.key] = Fcopy(starts);
-  saveStarts();
-
-  // Targets from rings (or seed from starts)
-  let targets = getRenderedTargets();
-  if (!targets || Object.keys(targets).length === 0){
-    targets = {};
-    POS_IDS.forEach(id=>{
-      const p = starts[id];
-      if (p) targets[id] = { x:Math.round(p.x), y:Math.round(p.y), tol:DEFAULT_TOL };
-    });
-  }
-  currentSituation.targets = {};
-  Object.entries(targets).forEach(([id,pt])=>{
-    currentSituation.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(pt.tol)||DEFAULT_TOL };
+  // Seed inputs without triggering 'input' listeners
+  withInputMute(() => {
+    if (newTitleInput) newTitleInput.value = s.title || '';
+    if (newDescInput)  newDescInput.value  = s.desc  || '';
   });
 
-  // Hit + meta (+ persist)
-  ensureDefaultHit();
-  currentSituation.hitType = (hitTypeSel && hitTypeSel.value) || currentSituation.hitType || 'line';
-  currentSituation.batterAdvance = clampInt((advanceSel && advanceSel.value) ?? currentSituation.batterAdvance ?? 1, 0, 4);
-  setHitSaved(currentSituation.key, currentSituation.hit);
-  saveHits();
+  // Put caret in Title for convenience
+  setTimeout(() => { try { newTitleInput?.focus(); } catch{} }, 0);
 
-  // Refresh UI
-  populateSituations();
-  sitSelect.value = currentSituation.key;
-  // update the left panel immediately (title + desc)
-  if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
-  if (descHud)  descHud.textContent  = currentSituation.desc  || '';
+  if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
 
-  syncScenarioInputsFromCurrent();
-  renderBaseRunners();
-  scaleMarkers();
-  updateRunnersHudFromLive();
-
-  if (scenarioMsg){ scenarioMsg.textContent='Scenario saved.'; setTimeout(()=> scenarioMsg.textContent='', 1400); }
+  if (situationMsg){
+    situationMsg.textContent = 'New situation created.';
+    setTimeout(() => situationMsg.textContent = '', 1400);
+  }
 }
+
 
 function deleteCurrentSituation(){
   if (!currentSituation) return;
@@ -1791,7 +1782,7 @@ function deleteCurrentSituation(){
 
   // Ensure at least one situation remains
   if (!SITUATIONS.length){
-    const s = makeBlankScenario();
+    const s = makeBlankSituation();
     SITUATIONS.push(s);
     startsMap[s.key] = Fcopy(s.starts||DEFAULT_STARTS);
     saveStarts();
@@ -1802,13 +1793,12 @@ function deleteCurrentSituation(){
   const nextKey = SITUATIONS[nextIdx].key;
 
   // Rebuild UI
-  populateSituations();
-  if (sitSelect) sitSelect.value = nextKey;
+  populateSituations(nextKey);
   setSituation(nextKey);
 
-  if (scenarioMsg){
-    scenarioMsg.textContent = 'Situation deleted.';
-    setTimeout(()=> scenarioMsg.textContent = '', 1400);
+  if (situationMsg){
+    situationMsg.textContent = 'Situation deleted.';
+    setTimeout(()=> situationMsg.textContent = '', 1400);
   }
 }
 
@@ -1824,9 +1814,9 @@ function resetStartsToDefaults(){
     startsMap[currentSituation.key] = Fcopy(DEFAULT_STARTS);
     saveStarts();
   }
-  if (scenarioMsg){
-    scenarioMsg.textContent = 'Player starts reset to defaults.';
-    setTimeout(()=> scenarioMsg.textContent = '', 1400);
+  if (situationMsg){
+    situationMsg.textContent = 'Player starts reset to defaults.';
+    setTimeout(()=> situationMsg.textContent = '', 1400);
   }
 }
 function pickRandomSituation(){
@@ -1839,15 +1829,26 @@ function pickRandomSituation(){
   setSituation(key);
 }
 
-function populateSituations(){
+function populateSituations(selectedKey){
   const prev = sitSelect ? sitSelect.value : '';
-  if (sitSelect) sitSelect.innerHTML='';
+  if (sitSelect) sitSelect.innerHTML = '';
+
   (SITUATIONS||[]).forEach(s=>{
-    const o=document.createElement('option'); o.value=s.key; o.textContent=s.title || s.key; sitSelect.appendChild(o);
+    const o = document.createElement('option');
+    o.value = s.key;
+    o.textContent = s.title || s.key;
+    sitSelect.appendChild(o);
   });
-  const want = (SITUATIONS||[]).some(s=>s.key===prev) ? prev : (SITUATIONS[0] && SITUATIONS[0].key);
+
+  const keyExists = k => (SITUATIONS||[]).some(s => s.key === k);
+  const want =
+    (selectedKey && keyExists(selectedKey)) ? selectedKey :
+    (keyExists(prev) ? prev :
+     (SITUATIONS[0] && SITUATIONS[0].key));
+
   if (want && sitSelect) sitSelect.value = want;
 }
+
 function setSituation(key){
   currentSituation = SITUATIONS.find(s=>s.key===key) || SITUATIONS[0];
   if (!currentSituation) return;
@@ -1915,7 +1916,7 @@ function setSituation(key){
   setRunnersOn(normalizeRunnersOn(currentSituation.runnersOn), {quiet:true});
 
   // Sync Coach Tool inputs
-  syncScenarioInputsFromCurrent();
+  syncSituationInputsFromCurrent();
   applyCoachVisibility();
 
   renderBaseRunners();
@@ -1924,7 +1925,7 @@ function setSituation(key){
 }
 
 /* =======================
-   Export helpers
+   [A10] Export helpers
    ======================= */
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
@@ -1971,8 +1972,7 @@ function download(filename,content){
 }
 
 /* ===============================================
-   One-button refresh that updates/saves EVERYTHING
-   under Coach Tools and rebuilds the UI view.
+   [A10.1] One-button refresh (saves Coach Tools + rebuilds UI)
    =============================================== */
 function refreshSituationAll(){
   if (!currentSituation) return;
@@ -1987,8 +1987,8 @@ function refreshSituationAll(){
   }
 
   // 2) Outs (HUD + dropdown sync)
-  if (outsSelScenario){
-    setOuts(outsSelScenario.value, {quiet:true});
+  if (outsSelSituation){
+    setOuts(outsSelSituation.value, {quiet:true});
   } else {
     currentSituation.outs = clampInt(currentSituation.outs ?? 0, 0, 2);
   }
@@ -2033,12 +2033,12 @@ function refreshSituationAll(){
   saveHits();
 
   // 7) Rebuild UI pieces to reflect the saved model
-  populateSituations();
-  sitSelect.value = currentSituation.key;
+  populateSituations(currentSituation.key);
 
   const labelEl = document.getElementById('curSitLabel');
   if (labelEl) labelEl.textContent = currentSituation.title || '';
   if (descHud) descHud.textContent = currentSituation.desc || '';
+  if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
 
   // Rebuild targets (applies new tolerance sizes), hit marker & ball
   buildTargets();
@@ -2055,14 +2055,17 @@ function refreshSituationAll(){
   }
 
   // 8) Toasty message
-  if (scenarioMsg){
-    scenarioMsg.textContent='Situation refreshed.';
-    setTimeout(()=> scenarioMsg.textContent='', 1400);
+  if (situationMsg){
+    situationMsg.textContent='Situation refreshed.';
+    setTimeout(()=> situationMsg.textContent='', 1400);
   }
 }
 
+// Use one canonical saver; keep alias for any internal callers.
+const saveCurrentSituation = refreshSituationAll;
+
 /* =======================
-   Game flow
+   [A11] Game flow
    ======================= */
 function checkPositions(){
   if (!coachUnlocked && !gameActive) return;
@@ -2111,32 +2114,16 @@ function resetPlayers(){
   updateRunnersHudFromLive();
 }
 
-
-function addNewSituationClear(){
-  // Create via existing flow
-  addNewScenario();
-  // Set desired defaults for the new situation
-  if (currentSituation){
-    currentSituation.title = 'New Situation';
-    currentSituation.desc = '';
-  }
-  if (newTitleInput) newTitleInput.value = 'New Situation';
-  if (newDescInput)  newDescInput.value  = '';
-  // Refresh selector to show the new title instead of key
-  populateSituations();
-  if (sitSelect && currentSituation) sitSelect.value = currentSituation.key;
-  // Mirror to any dependent UI
-  if (typeof syncScenarioInputsFromCurrent === 'function') syncScenarioInputsFromCurrent();
-  if (scenarioMsg){ scenarioMsg.textContent='New situation created.'; setTimeout(()=> scenarioMsg.textContent='',1400); }
-}
-
-
 /* =======================
-   Init & events
+   [A12] Init & events
    ======================= */
 async function init(){
   try{
     sizeOverlays();
+
+    // Ensure header metrics/actions are grouped before first paint
+    ensureHeaderGrouping();
+
     await loadSituationsFromJson();
     loadStarts(); loadHits();
     if (!Array.isArray(SITUATIONS) || SITUATIONS.length===0){
@@ -2159,8 +2146,10 @@ async function init(){
 /* Wiring */
 if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
 if (randomSitBtn) randomSitBtn.addEventListener('click', pickRandomSituation);
+
 if (resetBtn)  resetBtn.addEventListener('click', resetPlayers);
 if (checkBtn)  checkBtn.addEventListener('click', checkPositions);
+
 if (startBtn)  startBtn.addEventListener('click', ()=>{
   if (!currentSituation) return;
 
@@ -2169,19 +2158,15 @@ if (startBtn)  startBtn.addEventListener('click', ()=>{
   startBtn.disabled=true; if (resetBtn) resetBtn.disabled=false; if (checkBtn) checkBtn.disabled=false;
   setChipsLocked(false); syncBallToHit();
 
-  // Ball animation (slowed like before)
   const ht = (currentSituation.hitType) || (hitTypeSel && hitTypeSel.value) || 'line';
   animateHit(ht);
 
-  // Bases batter will advance
   const advFromSit=(typeof currentSituation.batterAdvance==='number') ? currentSituation.batterAdvance : null;
   const advFromUI = advanceSel ? clampInt(advanceSel.value,0,4) : null;
   const advance   = (advFromSit ?? advFromUI ?? mapHitTypeToAdvance(ht));
 
-  // 1) Start positions from the template (don’t compute final yet)
   liveRunners = normalizeRunnersOn(currentSituation.runnersOn);
 
-  // 2) Animate existing runners in parallel (first/second/third)
   let existingDone = false, batterDone = false;
   let finalExisting = null;
   let batterDest = null;
@@ -2192,40 +2177,48 @@ if (startBtn)  startBtn.addEventListener('click', ()=>{
     maybeFinish();
   });
 
-  // 3) Animate batter (don’t place static until done)
   animateBatterAdvance(advance, (destBase)=>{
-    batterDest = destBase; // remember where he ended
+    batterDest = destBase;
     batterDone = true;
     maybeFinish();
   });
 
-  // 4) When both animations finish, commit final state and render
   function maybeFinish(){
     if (!existingDone || !batterDone) return;
-    // start from existing runners’ final positions
     liveRunners = normalizeRunnersOn(finalExisting || liveRunners);
 
-    // add batter if he stopped on a base (home == scored, no marker)
-    if (batterDest === 'first')   liveRunners.first  = true;
-    else if (batterDest === 'second') liveRunners.second = true;
-    else if (batterDest === 'third')  liveRunners.third  = true;
+    if (batterDest === 'first')        liveRunners.first  = true;
+    else if (batterDest === 'second')  liveRunners.second = true;
+    else if (batterDest === 'third')   liveRunners.third  = true;
 
     renderBaseRunners();
     updateRunnersHudFromLive();
   }
 });
-coachBtn.addEventListener('click', ()=>{ coachUnlocked ? (setCoachMode(false), coachCard.classList.add('hidden'), setChipsLocked(!gameActive||remainingTries===0), getAllRings().forEach(el=>el.style.display='none'), syncBallToHit()) : openPwModal(); });
-pwCancel.addEventListener('click', closePwModal);
-pwOk.addEventListener('click', tryUnlock);
-pwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
 
-hitTypeSel.addEventListener('change', ()=>{
+if (coachBtn) coachBtn.addEventListener('click', ()=>{
+  if (coachUnlocked){
+    setCoachMode(false);
+    coachCard.classList.add('hidden');
+    setChipsLocked(!gameActive||remainingTries===0);
+    getAllRings().forEach(el=>el.style.display='none');
+    syncBallToHit();
+  } else {
+    openPwModal();
+  }
+});
+
+if (pwCancel) pwCancel.addEventListener('click', closePwModal);
+if (pwOk)     pwOk.addEventListener('click', tryUnlock);
+if (pwInput)  pwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+
+if (hitTypeSel)  hitTypeSel.addEventListener('change', ()=>{
   if (!currentSituation) return;
   currentSituation.hitType = hitTypeSel.value || 'line';
   if (currentSituation.batterAdvance == null) advanceSel.value = String(mapHitTypeToAdvance(currentSituation.hitType));
 });
-advanceSel.addEventListener('change', ()=>{ if(currentSituation) currentSituation.batterAdvance=clampInt(advanceSel.value,0,4); });
-testHitBtn.addEventListener('click', ()=> animateHit());
+if (advanceSel)  advanceSel.addEventListener('change', ()=>{ if(currentSituation) currentSituation.batterAdvance=clampInt(advanceSel.value,0,4); });
+if (testHitBtn)  testHitBtn.addEventListener('click', ()=> animateHit());
 
 if (run1B) run1B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
 if (run2B) run2B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
@@ -2255,22 +2248,43 @@ function setTolLive(id,tol){
 tolNum.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolNum.value));
 tolRange.addEventListener('input', ()=> setTolLive(tolTargetSel.value,tolRange.value));
 
-if (newScenarioBtn) newScenarioBtn.addEventListener('click', addNewScenario);
+if (newSituationBtn)  newSituationBtn.addEventListener('click', addNewSituation);
 if (seedTargetsBtn)  seedTargetsBtn.addEventListener('click', seedTargetsFromStarts);
-if (saveScenarioBtn) saveScenarioBtn.addEventListener('click', refreshSituationAll);
-if (deleteScenarioBtn) deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
-if (resetStartsBtn) resetStartsBtn.addEventListener('click', resetStartsToDefaults);
-if (newScenarioBtn) newScenarioBtn.addEventListener('click', addNewScenario);
+if (saveSituationBtn) saveSituationBtn.addEventListener('click', refreshSituationAll);
+if (deleteSituationBtn && typeof deleteCurrentSituation === 'function') deleteSituationBtn.addEventListener('click', deleteCurrentSituation);
+if (resetStartsBtn)  resetStartsBtn.addEventListener('click', resetStartsToDefaults);
 
-if (deleteScenarioBtn && typeof deleteCurrentSituation === 'function') deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
-if (resetStartsBtn) resetStartsBtn.addEventListener('click', resetStartsToDefaults);
-if (deleteScenarioBtn) deleteScenarioBtn.addEventListener('click', deleteCurrentSituation);
+if (outsSelSituation) outsSelSituation.addEventListener('change', e=> setOuts(e.target.value, {quiet:false}));
 
-if (outsSelScenario) outsSelScenario.addEventListener('change', e=> setOuts(e.target.value, {quiet:false}));
+// --- Live Title update (guard programmatic value sets) ---
+if (newTitleInput) {
+  newTitleInput.addEventListener('input', () => {
+    if (_muteCoachInputs || !currentSituation) return;  // Ignore programmatic changes
+    currentSituation.title = newTitleInput.value.trim();
 
-downloadCurrentBtn.addEventListener('click', ()=> download('situation-current.json', buildCurrentSituationExport()));
-downloadAllBtn.addEventListener('click', ()=> download('situations-all.json', buildAllSituationsExport()));
-copyAllBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{} });
+    // Update dropdown option label for THIS situation only
+    const opt = sitSelect && sitSelect.querySelector(`option[value="${currentSituation.key}"]`);
+    if (opt) opt.textContent = currentSituation.title || currentSituation.key;
+
+    if (curSitLabel) curSitLabel.textContent = currentSituation.title || '';
+  });
+}
+
+// --- Live Description update (guard programmatic value sets) ---
+if (newDescInput) {
+  newDescInput.addEventListener('input', () => {
+    if (_muteCoachInputs || !currentSituation) return;  // Ignore programmatic changes
+    currentSituation.desc = newDescInput.value;
+
+    if (descHud) descHud.textContent = currentSituation.desc || '';
+    if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
+  });
+}
+
+if (downloadCurrentBtn) downloadCurrentBtn.addEventListener('click', ()=> download('situation-current.json', buildCurrentSituationExport()));
+if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=> download('situations-all.json', buildAllSituationsExport()));
+if (copyAllBtn)        copyAllBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{} });
+
 
 /* Kickoff */
 if (img && img.complete) init();
