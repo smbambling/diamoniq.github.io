@@ -1092,26 +1092,41 @@ function renderTargetPanel(id){
   if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
   _currentSelectedTargetId = id;
 
-  // Make panel visible
   targetPanel.classList.remove('hidden');
-
-  // Title
   targetPanelTitle.textContent = `Selected Target: ${id}`;
 
-  // Body: show NOTES (or a hint if blank)
   const notes = getTargetNotes(currentSituation.key, id);
   targetPanelBody.innerHTML = notes
     ? `<div>${String(notes).replace(/\n/g, '<br>')}</div>`
-    : `<div class="hint">No notes for ${id}.</div>`;
+    : `<div class="hint">No notes for ${id}</div>`;
 }
+
+function showTargetInstruction(){
+  if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
+  _currentSelectedTargetId = null;
+  targetPanel.classList.remove('hidden');
+  targetPanelTitle.textContent = 'Selected Target';
+  targetPanelBody.innerHTML = '<div class="hint">Select a target ring on the field to view its notes.</div>';
+}
+
 
 /** Enable click-to-select for rings (used only after last try) */
 function enableTargetSelection(){
   getAllRings().forEach(ring=>{
-    ring.classList.add('selectable');           // purely visual (CSS optional)
+    ring.classList.add('selectable');           // visual affordance
     ring.addEventListener('click', onRingClick);
   });
+
+  // Always show the instruction card when selection turns on (non-coach)
+  if (!coachUnlocked) {
+    if (typeof showTargetInstruction === 'function') {
+      showTargetInstruction();                  // ← ensures "Select a target ring..." is visible now
+    } else if (typeof showTargetPanel === 'function') {
+      showTargetPanel();
+    }
+  }
 }
+
 
 /** Disable click-to-select for rings and forget the current selection */
 function disableTargetSelection(){
@@ -2185,61 +2200,76 @@ function checkPositions(){
   const t = currentSituation.targets || {};
   let correct = 0;
 
+  // Final try is determined BEFORE we decrement tries
   const isFinalTry = (!coachUnlocked && gameActive && remainingTries === 1);
 
-  getAllRings().forEach(el=>{
+  // Evaluate each position vs target
+  getAllRings().forEach(el => {
     const id = el.dataset.id;
     const target = t[id];
     if (!target) return;
 
     const cur = tokens.get(id).pos;
     const tol = Number(target.tol) || DEFAULT_TOL;
-    const d   = Math.hypot(cur.x - target.x, cur.y - target.y);
+    const d = Math.hypot(cur.x - target.x, cur.y - target.y);
     const isCorrect = d <= tol;
 
     el.classList.toggle('good', isCorrect);
     el.classList.toggle('bad', !isCorrect);
     el.classList.add('show-label');
 
-    if (coachUnlocked){
+    if (coachUnlocked) {
       el.style.display = 'block';
     } else {
-      // In play mode: show on final try OR when that ring is correct
+      // On non-final tries, reveal only correct rings; on the last try reveal all
       el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none';
     }
 
     if (isCorrect) correct++;
   });
 
+  // Update numeric score
   updateHud(correct);
 
-  // Colorize score
+  // Colorize score HUD by percent correct
   if (scoreBadge){
     const pct = correct / 9;
     const state = pct >= 2/3 ? 'green' : (pct >= 1/3 ? 'yellow' : 'red');
     setBadgeState(scoreBadge, state, 'score');
   }
 
-  if (!coachUnlocked && gameActive){
-    remainingTries = Math.max(0, remainingTries - 1);
-    updateHud(correct);
+  // If not in coach mode, handle tries and end-of-round behavior
+  if (!coachUnlocked){
+    // Determine if ALL targets are correct for this check
+    const allCorrectNow = (correct === POS_IDS.length);
+    // Expose a global flag for any other code paths that may reference it
+    try { window._allTargetsCorrect = allCorrectNow; } catch {}
 
-    // NEW: keep a flag of "all correct"
-    _allTargetsCorrect = (correct === 9);
-
-    const isOutOfTries = (remainingTries === 0);
-
-    // If either the puzzle is solved OR you're out of tries, freeze chips/check
-    if (_allTargetsCorrect || isOutOfTries){
-      checkBtn.disabled = true;
-      setChipsLocked(true);
-      gameActive = false;                    // <-- ensure play is over so clicks are allowed
+    // Decrement tries only when an active game is in progress
+    if (gameActive){
+      remainingTries = Math.max(0, remainingTries - 1);
+      updateHud(correct);
     }
 
-    // Allow ring selection in both success and out-of-tries cases
-    if ((_allTargetsCorrect || isOutOfTries) && !coachUnlocked){
+    const outOfTries = (remainingTries === 0);
+    const shouldEndRound = allCorrectNow || outOfTries;
+
+    // If the player is done (either by success or running out of tries)…
+    if (shouldEndRound){
+      checkBtn.disabled = true;
+      setChipsLocked(true);
+      gameActive = false;                 // freeze game state for inspection
+
+      // Allow clicking targets to inspect notes
       enableTargetSelection();
-      showTargetPanel();                     // panel opens; body fills when a ring is clicked
+
+      // Show the instruction card ("Select a target ring to view notes")
+      if (typeof showTargetInstruction === 'function') {
+        showTargetInstruction();
+      } else if (typeof showTargetPanel === 'function') {
+        // Fallback if helper wasn't added yet
+        showTargetPanel();
+      }
     }
   }
 }
