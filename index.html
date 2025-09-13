@@ -487,6 +487,16 @@ function getTargetNotes(sKey, id){
   return s?.targets?.[id]?.notes || '';
 }
 
+// Add this helper near your other small helpers
+function isPostRound(){
+  // Only after a round was started AND is now over (either out of tries or all correct)
+  return (
+    !coachUnlocked &&
+    _roundHasStarted === true &&
+    ( _allTargetsCorrect || (!gameActive && remainingTries === 0) )
+  );
+}
+
 function wireOnce(){
   if (_wired) return;
   _wired = true;
@@ -500,6 +510,7 @@ function wireOnce(){
 
   if (startBtn)  startBtn.addEventListener('click', ()=>{
     if (!currentSituation) return;
+    _roundHasStarted = true;
 
     gameActive=true; remainingTries=MAX_TRIES; updateHud(0);
     _allTargetsCorrect = false;
@@ -657,6 +668,8 @@ let liveRunners = { first:false, second:false, third:false };
 let _animSuppressedBases = new Set();
 
 let _wired = false;
+
+let _roundHasStarted = false;
 
 const Bus = (() => {
   /** @type {Record<string, Set<Function>>} */ const map = {};
@@ -1104,11 +1117,12 @@ function renderTargetPanel(id){
 function showTargetInstruction(){
   if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
   _currentSelectedTargetId = null;
-  targetPanel.classList.remove('hidden');
-  targetPanelTitle.textContent = 'Selected Target';
-  targetPanelBody.innerHTML = '<div class="hint">Select a target ring on the field to view its notes.</div>';
-}
 
+  targetPanel.classList.remove('hidden');
+  targetPanelTitle.textContent = `Selected Target`;
+  targetPanelBody.innerHTML = `<div class="hint">Select a target ring on the field to view its notes.</div>`;
+  targetPanelBody.classList.add('show-instruction');
+}
 
 /** Enable click-to-select for rings (used only after last try) */
 function enableTargetSelection(){
@@ -1118,7 +1132,7 @@ function enableTargetSelection(){
   });
 
   // Always show the instruction card when selection turns on (non-coach)
-  if (!coachUnlocked) {
+  if (isPostRound()) {
     if (typeof showTargetInstruction === 'function') {
       showTargetInstruction();                  // ← ensures "Select a target ring..." is visible now
     } else if (typeof showTargetPanel === 'function') {
@@ -1139,14 +1153,15 @@ function disableTargetSelection(){
 
 /** Click handler for a ring; shows panel only when game is over (non-coach mode) */
 function onRingClick(e){
-  // Allow selection in PLAY mode if either:
-  //  - all targets are correct, OR
-  //  - game is over due to no tries left
-  if (!coachUnlocked && (_allTargetsCorrect || (!gameActive && remainingTries === 0))){
+  if (isPostRound()){
     const id = e.currentTarget?.dataset?.id;
-    if (id) renderTargetPanel(id);
+    if (id) {
+      renderTargetPanel(id);
+      targetPanelBody.classList.remove('show-instruction');
+    }
   }
 }
+
 
 /** Panel visibility helpers */
 function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
@@ -1723,19 +1738,16 @@ function updateDescriptionHudText(){
   el.title = txt || '';
 }
 
-
 document.addEventListener('click', (e)=>{
-  const el = e.target && e.target.closest && e.target.closest('#descHud'); // was #sitDescBar
-  if (!el) return;
-  if (el.classList.contains('desc-collapsed')){
-    el.classList.remove('desc-collapsed');
-    el.classList.add('desc-expanded');
-  } else if (window.innerWidth <= 900) {
-    el.classList.remove('desc-expanded');
-    el.classList.add('desc-collapsed');
+  if (!targetPanel || coachUnlocked) return;
+  const clickedRing = e.target.closest('.tgt');
+  // Only re-show the instruction if we're truly in post-round state
+  if (!clickedRing &&
+      targetPanelBody.classList.contains('show-instruction') === false &&
+      isPostRound()) {
+    showTargetInstruction();
   }
 });
-
 
 /* =======================
    [A9] Situation lifecycle
@@ -1957,6 +1969,7 @@ function setSituation(key){
   disableTargetSelection();
   hideTargetPanel();
   _allTargetsCorrect = false;
+  _roundHasStarted = false;
 
   if (!tokens || tokens.size===0) buildTokens();
   resetBallAndRunnerForSituation();
@@ -2200,7 +2213,7 @@ function checkPositions(){
   const t = currentSituation.targets || {};
   let correct = 0;
 
-  // Final try is determined BEFORE we decrement tries
+  // Determine if this is the last available try BEFORE decrementing
   const isFinalTry = (!coachUnlocked && gameActive && remainingTries === 1);
 
   // Evaluate each position vs target
@@ -2221,7 +2234,7 @@ function checkPositions(){
     if (coachUnlocked) {
       el.style.display = 'block';
     } else {
-      // On non-final tries, reveal only correct rings; on the last try reveal all
+      // Before the final try, reveal only correct rings; on the final try reveal all
       el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none';
     }
 
@@ -2238,14 +2251,11 @@ function checkPositions(){
     setBadgeState(scoreBadge, state, 'score');
   }
 
-  // If not in coach mode, handle tries and end-of-round behavior
+  // Non-coach: handle tries and end-of-round behavior
   if (!coachUnlocked){
-    // Determine if ALL targets are correct for this check
     const allCorrectNow = (correct === POS_IDS.length);
-    // Expose a global flag for any other code paths that may reference it
     try { window._allTargetsCorrect = allCorrectNow; } catch {}
 
-    // Decrement tries only when an active game is in progress
     if (gameActive){
       remainingTries = Math.max(0, remainingTries - 1);
       updateHud(correct);
@@ -2254,21 +2264,21 @@ function checkPositions(){
     const outOfTries = (remainingTries === 0);
     const shouldEndRound = allCorrectNow || outOfTries;
 
-    // If the player is done (either by success or running out of tries)…
     if (shouldEndRound){
       checkBtn.disabled = true;
       setChipsLocked(true);
       gameActive = false;                 // freeze game state for inspection
 
-      // Allow clicking targets to inspect notes
+      // Enable selecting rings to view notes (always allowed at round end)
       enableTargetSelection();
 
-      // Show the instruction card ("Select a target ring to view notes")
-      if (typeof showTargetInstruction === 'function') {
-        showTargetInstruction();
-      } else if (typeof showTargetPanel === 'function') {
-        // Fallback if helper wasn't added yet
-        showTargetPanel();
+      // Show the instruction card ONLY if a round had actually started
+      if (typeof _roundHasStarted === 'undefined' || _roundHasStarted){
+        if (typeof showTargetInstruction === 'function') {
+          showTargetInstruction();
+        } else if (typeof showTargetPanel === 'function') {
+          showTargetPanel();
+        }
       }
     }
   }
@@ -2285,6 +2295,7 @@ function resetPlayers(){
   disableTargetSelection();
   hideTargetPanel();
   _allTargetsCorrect = false;
+  _roundHasStarted = false;
   POS_IDS.forEach(id=>{ const t=tokens.get(id); if(!t) return; t.pos=Fcopy(getStartFor(currentSituation.key,id)); placeToken(id); });
   getAllRings().forEach(el=> el.style.display=coachUnlocked ? 'block' : 'none');
   updateHud(0); gameActive=false; remainingTries=0;
