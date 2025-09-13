@@ -6,38 +6,78 @@
 <title>Diamond IQ — Chips + Targets + Coach Tools (JSON situations)</title>
 <style>
   /* --- Base UI --- */
-  body{margin:0;font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:#f6f7fb;color:#1f2937}
-  header{display:flex;align-items:center;gap:10px;padding:12px;background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
-  header h1{margin:0 8px 0 0;font-size:16px;font-weight:800}
-
-  /* Default actions layout (desktop-first) */
-  header .header-actions{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(130px,auto);gap:8px}
-
-  /* ===== Metrics + Actions grouping ===== */
-  .metrics-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .header-actions{display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(140px,auto);gap:8px}
-  #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
-
-  /* Coach password modal (single copy) */
-  #pwModal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:1000}
-  #pwModal .box{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-width:280px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  #pwModal input[type="password"]{
-    display:block;width:100% !important;box-sizing:border-box;
-    margin-top:8px;padding:10px 12px;border:1px solid #cbd5e1 !important;border-radius:10px;background:#fff;
+  body{
+    margin:0;
+    font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    background:#f6f7fb;color:#1f2937;
   }
-  #pwModal input[type="password"]:focus{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.35)}
-  #pwModal .row{justify-content:flex-end !important;gap:10px;margin-top:12px !important}
 
-  /* Description HUD */
+  /* ---- Header (DOM-order driven) ---- */
+  header{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px;
+    background:#fff;
+    border-bottom:1px solid #e5e7eb;
+    position:sticky; top:0; z-index:10;
+  }
+  header h1{
+    margin:0 8px 0 0;
+    font-size:16px;
+    font-weight:800;
+  }
+
+  /* Everything except <h1> lives inside .header-actions in the desired DOM order:
+     Random → Select → Description → Runners → Outs → Start → Reset → Check → HUD → Coach */
+  header .header-actions{
+    display:flex;
+    flex-wrap:wrap;              /* wrap nicely on smaller screens */
+    align-items:center;
+    gap:8px;
+    flex:1;                      /* allow actions row to stretch */
+  }
+
+  /* Situation dropdown auto-sizes to its text */
+  #sitSelect{
+    width:auto;
+    min-width:140px;
+    border-color:#cbd5e1;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.04);
+  }
+  #sitSelect:focus{
+    outline:none;
+    border-color:#94a3b8;
+    box-shadow:0 0 0 3px rgba(148,163,184,.35);
+  }
+
+  /* Description pill — auto-size with graceful truncation on wide screens */
   #descHud{
-    display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-weight:900;font-size:13px;
-    border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.06);
-    background:#f8fafc;color:#0b1321;white-space:pre-wrap;max-width:min(48vw,820px);overflow:auto;
-  }
-  @media (max-width:720px){ #descHud{font-size:12px;max-width:100%} }
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 10px;border-radius:999px;font-weight:900;font-size:13px;
+    border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
+    background:#f8fafc;color:#0b1321;
 
-  select,button,input[type="number"],input[type="range"]{padding:6px 10px;font-weight:700;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
-  button{cursor:pointer}
+    max-width:50%;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  @media (max-width:720px){ #descHud{ font-size:12px } }
+
+  /* Keep Score & Tries together, pinned at right before Coach */
+  #hud{
+    margin-left:auto;            /* pushes HUD to the right edge */
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  /* Inputs / buttons */
+  select,button,input[type="number"],input[type="range"]{
+    padding:6px 10px;font-weight:700;border:1px solid #e5e7eb;border-radius:8px;background:#fff;
+  }
+  button{ cursor:pointer }
   .btn-green{background:#16a34a;color:#fff;border-color:#15803d}
   .btn-orange{background:#f97316;color:#fff;border-color:#ea580c}
   .btn-slate{background:#fff;color:#334155;border:1px solid #cbd5e1}
@@ -46,14 +86,15 @@
   #startBtn:disabled,#resetBtn:disabled{
     background:#f1f5f9;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed;
   }
-  #checkBtn:disabled{background:#e5e7eb !important;color:#94a3b8 !important;border-color:#cbd5e1 !important;cursor:not-allowed}
+  #checkBtn:disabled{
+    background:#e5e7eb !important;color:#94a3b8 !important;border-color:#cbd5e1 !important;cursor:not-allowed;
+  }
 
   /* HUD badges */
-  .hud{display:flex;gap:10px;margin-left:auto;align-items:center}
   .badge{
     display:inline-flex;align-items:center;gap:6px;
     padding:6px 10px;border-radius:999px;font-weight:900;font-size:13px;
-    border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 2px rgba(0,0,0,.06);
+    border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
     background:#f8fafc;color:#0b1321;
   }
   .badge-score{background:#ecfeff;border-color:#a5f3fc}
@@ -68,20 +109,17 @@
   .dot-score{background:#06b6d4}
   .dot-tries{background:#6366f1}
 
+  /* App shell */
   .app{display:grid;grid-template-columns:1fr 340px;gap:14px;padding:14px;max-width:min(1600px,96vw);margin:0 auto}
   header .header-row{width:100%;max-width:min(1600px,96vw);margin:0 auto}
   @media (max-width:1100px){
-    .app{grid-template-columns:1fr;max-width:100vw}
+    .app{grid-template-columns:1fr;gap:12px;padding:10px;max-width:98vw}
     header .header-row{max-width:100vw}
   }
   @media (max-width:900px){
     .app{max-width:100vw;padding-left:8px;padding-right:8px}
   }
-  @media (max-width:1100px){
-    .app{grid-template-columns:1fr;gap:12px;padding:10px;max-width:98vw}
-  }
   @media (max-width:600px){ .card{padding:8px} }
-
   .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px}
   .sideCol{display:flex;flex-direction:column;gap:12px}
 
@@ -95,8 +133,10 @@
   /* Chips */
   :root { --chip-size: 36px; --chip-font: 14px; }
   .chip{
-    position:absolute;transform:translate(-50%,-50%);width:var(--chip-size);height:var(--chip-size);
-    border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:var(--chip-font);color:#fff;cursor:grab;
+    position:absolute;transform:translate(-50%,-50%);
+    width:var(--chip-size);height:var(--chip-size);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:var(--chip-font);color:#fff;cursor:grab;
     box-shadow:0 1px 3px rgba(0,0,0,.35);user-select:none;touch-action:none;pointer-events:auto;z-index:1;
   }
   .chip:active{transform:translate(-50%,-50%) scale(1.045)}
@@ -107,18 +147,28 @@
 
   /* Targets */
   .tgt{
-    position:absolute;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.98);border-radius:999px;display:none;
-    box-shadow:0 0 0 3px rgba(0,0,0,.28),0 0 0 10px rgba(255,255,255,.18);background:rgba(0,0,0,0.05);touch-action:none;z-index:2;
+    position:absolute;transform:translate(-50%,-50%);
+    border:3px solid rgba(255,255,255,.98);border-radius:999px;display:none;
+    box-shadow:0 0 0 3px rgba(0,0,0,.28),0 0 0 10px rgba(255,255,255,.18);
+    background:rgba(0,0,0,0.05);touch-action:none;z-index:2;
   }
   .tgt.draggable{cursor:grab;pointer-events:auto}
   .tgt.good{background:rgba(22,163,74,.25)}
   .tgt.bad{background:rgba(239,68,68,.25)}
   .tgt .tgt-label{
-    position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:2px 7px;border-radius:6px;font-weight:900;font-size:12px;
+    position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);
+    padding:2px 7px;border-radius:6px;font-weight:900;font-size:12px;
     color:#0b1321;background:rgba(255,255,255,.95);border:1px solid rgba(0,0,0,.2);white-space:nowrap;display:none;
   }
   .tgt.show-label .tgt-label{display:block}
   .tgt.locked{cursor:not-allowed}
+
+  /* Clickable after last try */
+  .tgt.selectable{ pointer-events:auto; cursor:pointer; }
+  .tgt.selected{ box-shadow:0 0 0 3px rgba(2,132,199,.45), 0 0 0 10px rgba(2,132,199,.15) }
+
+  /* Target Notes textarea */
+  #tolNotes{ font:13px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
 
   /* Ball path + ball */
   #ballLayer svg{width:100%;height:100%;display:block}
@@ -155,124 +205,56 @@
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
   .hidden{display:none!important}
 
-  /* Collapsible description behavior */
+  /* Collapsible description behavior (legacy support if used) */
   #sitDescBar.desc-collapsed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #sitDescBar.desc-expanded{white-space:pre-wrap}
 
-  /* Nicer situation select */
-  #sitSelect{min-width:200px;border-color:#cbd5e1;box-shadow:inset 0 1px 2px rgba(0,0,0,.04)}
-  #sitSelect:focus{outline:none;border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.35)}
-  #sitDescBar{display:inline-flex;align-items:center;gap:6px}
-
-  /* ===== iPad 11–13" (1024–1440px): merged ===== */
-  @media (min-width:1024px) and (max-width:1440px){
-    /* Flexible/wrap header */
-    header{display:flex !important;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:8px}
-    #sitSelect{order:1;min-width:220px;width:auto}
-    #sitDescBar{order:2;flex:1 1 auto;min-width:280px;max-width:100%;white-space:pre-wrap}
-    #runnersBadge,#outsHud,#hud{order:3;flex:0 0 auto}
-    #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
-    .header-actions{order:4;display:flex !important;flex-wrap:nowrap;gap:8px}
-    .header-actions button{width:auto !important}
-
-    /* Two-row grid placement on larger iPads */
-    header{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-rows:minmax(36px,auto);align-items:center;column-gap:10px;row-gap:8px}
-    header > *{min-width:0}
-    header h1{grid-column:1 / span 2}
-    #randomSitBtn{grid-column:3 / span 1}
-    #sitSelect{grid-column:4 / span 2}
-    #sitDescBar{grid-column:6 / span 3;min-width:280px;max-width:100%}
-    #runnersBadge{grid-column:9 / span 1}
-    #outsHud{grid-column:10 / span 1}
-    #hud{grid-column:11 / span 2}
-    .header-actions{grid-column:1 / span 6;grid-row:2;display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,auto);gap:8px}
-    #coachBtn{grid-column:7 / span 2;grid-row:2;justify-self:start}
-
-    /* Compact controls */
-    header button, header select{padding:6px 10px}
-    .badge{padding:6px 10px}
+  /* Coach password modal */
+  #pwModal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:1000}
+  #pwModal .box{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-width:280px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  #pwModal input[type="password"]{
+    display:block;width:100% !important;box-sizing:border-box;
+    margin-top:8px;padding:10px 12px;border:1px solid #cbd5e1 !important;border-radius:10px;background:#fff;
   }
+  #pwModal input[type="password"]:focus{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.35)}
+  #pwModal .row{justify-content:flex-end !important;gap:10px;margin-top:12px !important}
 
-  /* ===== Mid-width shared (820–1440px): merged ===== */
-  @media (min-width:820px) and (max-width:1440px){
-    header, header .header-row{display:flex;flex-wrap:wrap;column-gap:10px;row-gap:8px;align-items:center}
-    #sitBadge,#sitSelect{order:1}
-    #sitDescBar{order:2;flex:1 1 40%;min-width:320px;max-width:100%;white-space:pre-wrap}
-    #metricsRow{order:3;flex:0 0 auto}
-    .header-actions{order:4;display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(150px,auto);gap:8px}
-    #coachBtn{order:4;flex:0 0 auto;align-self:center}
-    #hud{margin-left:0!important;justify-content:flex-start;gap:8px}
-    header button, header select{padding:6px 10px}
-    .badge{padding:6px 10px}
-  }
-
-  /* ===== Mid-small (901–1200px): merged ===== */
-  @media (min-width:901px) and (max-width:1200px){
-    header, header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
-    header > *, header .header-row > *{min-width:0}
-    #sitBadge,#sitSelect{order:1}
-    #sitDescBar{order:2;flex:1 1 60%;min-width:380px;max-width:100%;white-space:pre-wrap}
-    #runnersBadge,#outsHud{order:3}
-    .header-actions{order:4;display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:8px;width:100%}
-    #hud{order:5;margin-left:0;justify-content:flex-start;gap:8px}
-    #coachBtn{order:6}
-    header button, header select{padding:6px 10px}
-    .badge{padding:6px 10px}
-  }
-
-  /* ===== Small screens (≤900px): merged ===== */
+  /* ===== Responsive tweaks ===== */
   @media (max-width:900px){
-    header{padding:8px}
-    header, header .header-row{display:flex;flex-wrap:wrap;row-gap:8px}
-    header > *{flex:1 1 100%;min-width:0}
+    /* Let select + description use full width rows when needed */
+    #sitSelect{
+      flex:1 1 100%;
+      max-width:100%;
+    }
+    #descHud{
+      flex:1 1 100%;
+      max-width:100%;
+      white-space:pre-wrap;
+      text-overflow:clip;
+    }
 
-    /* Situations first */
-    #sitBadge,#sitSelect{order:1}
-
-    /* Description full row */
-    #sitDescBar{order:2;flex:1 1 100%;display:block;max-width:100%;max-height:none;overflow:visible;white-space:pre-wrap}
-    #descHud{max-width:100%;max-height:6em}
-
-    /* Runners / Outs */
-    #runnersBadge,#outsHud{order:3}
-
-    /* Actions stack */
-    .header-actions{order:4;display:grid;grid-template-columns:1fr;grid-auto-flow:row;gap:8px;width:100%}
-    header button, header select{width:100%;padding:6px 8px;font-size:12px}
-
-    /* Score / Tries */
-    #hud{order:5;justify-content:flex-start;gap:8px;margin-left:0}
-
-    /* Coach toggle last */
-    #coachBtn{order:6;margin-left:0}
-
-    .badge{font-size:12px;padding:5px 8px}
-    .header-row > *{flex:1 1 100%;min-width:0}
-    .header-row #hud{margin-left:0 !important;justify-content:flex-start;gap:8px}
+    /* Make controls easier to tap; stack if needed */
+    header .header-actions > button,
+    header .header-actions > select{
+      width:100%;
+    }
   }
-
-  /* Other small tweaks */
   @media (max-width:600px){
-    #runnersBadge, #outsHud{flex:1 1 48%}
-    #sitSelect{min-width:160px}
+    #runnersBadge, #outsHud{ flex:1 1 48%; }
+    #sitSelect{ min-width:160px; }
   }
   @media (max-width:520px){
-    #sitSelect{min-width:140px}
-  }
-
-  /* Desktop restore specifics */
-  @media (min-width:901px){
-    .header-row > *{flex:initial}
-    #sitDescBar{display:inline-flex}
+    #sitSelect{ min-width:140px; }
   }
 </style>
+
 </head>
 <body>
 
 <header>
   <h1>Diamond IQ</h1>
     <button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button>
-<select id="sitSelect" aria-label="Situation" data-testid="sit-select"></select>
+  <select id="sitSelect" aria-label="Situation" data-testid="sit-select"></select>
   <span id="descHud" class="badge"></span>
   <span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span>
   <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
@@ -313,7 +295,12 @@
         <li>Drag the 9 player chips into the correct positions for the situation.</li>
         <li>Press <em>Check Positions</em> to verify correctness (3 tries).</li>
       </ol>
-      </div>
+    </div>
+    <!-- Selected Target (appears after last try) -->
+    <div id="targetPanel" class="card hidden">
+      <strong id="targetPanelTitle">Selected Target</strong>
+      <div id="targetPanelBody" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
+    </div>
 
     <!-- Coach Tools (hidden until unlocked) -->
     <div id="coachCard" class="card hidden">
@@ -376,6 +363,12 @@
             <label class="hint">Tolerance:</label>
             <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
             <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
+          </div>
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
+            <textarea id="tolNotes" rows="3"
+              placeholder="Enter coaching notes for this target…"
+              style="width:100%; min-height:72px; resize:vertical"></textarea>
+            <span class="hint">Saved per target (based on the Target dropdown above).</span>
           </div>
         </div>
 
@@ -482,6 +475,18 @@ function quadBezier(p0,p1,p2,t){return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2
 
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
+function setTargetNotes(sKey, id, text){
+  const s = SITUATIONS.find(x => x.key === sKey); if (!s) return;
+  if (!s.targets) s.targets = {};
+  const prev = s.targets[id] || {};
+  s.targets[id] = { ...prev, notes: String(text || '') };
+}
+
+function getTargetNotes(sKey, id){
+  const s = SITUATIONS.find(x => x.key === sKey);
+  return s?.targets?.[id]?.notes || '';
+}
+
 function wireOnce(){
   if (_wired) return;
   _wired = true;
@@ -497,6 +502,9 @@ function wireOnce(){
     if (!currentSituation) return;
 
     gameActive=true; remainingTries=MAX_TRIES; updateHud(0);
+    _allTargetsCorrect = false;
+    disableTargetSelection();
+    hideTargetPanel();
     if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
     startBtn.disabled=true; if (resetBtn) resetBtn.disabled=false; if (checkBtn) checkBtn.disabled=false;
     setChipsLocked(false); syncBallToHit();
@@ -551,6 +559,24 @@ function wireOnce(){
     }
   });
 
+  // When the target dropdown changes, sync tolerance + notes
+  if (tolTargetSel) {
+    tolTargetSel.addEventListener('change', () => {
+      syncTolInputsFromModel(tolTargetSel.value);      // existing
+      syncTolNotesFromModel(tolTargetSel.value);       // NEW
+    });
+  }
+
+  // Notes typing -> save to model and re-render if same target is displayed
+  if (tolNotes) {
+    tolNotes.addEventListener('input', () => {
+      if (!currentSituation || _muteCoachInputs) return;
+      const id = tolTargetSel?.value || POS_IDS[0];
+      setTargetNotes(currentSituation.key, id, tolNotes.value);
+      if (_currentSelectedTargetId === id) renderTargetPanel(id);
+    });
+  }
+
   if (pwCancel) pwCancel.addEventListener('click', closePwModal);
   if (pwOk)     pwOk.addEventListener('click', tryUnlock);
   if (pwInput)  pwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
@@ -567,7 +593,6 @@ function wireOnce(){
   if (run2B) run2B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
   if (run3B) run3B.addEventListener('change', ()=> setRunnersOn(null, {quiet:false}));
 
-  if (tolTargetSel)  tolTargetSel.addEventListener('change', () => syncTolInputsFromModel(tolTargetSel.value));
   if (tolNum)        tolNum.addEventListener('input',   () => setTolLive(tolTargetSel.value, tolNum.value));
   if (tolRange)      tolRange.addEventListener('input', () => setTolLive(tolTargetSel.value, tolRange.value));
 
@@ -614,6 +639,8 @@ let gameActive = false;
 let remainingTries = 0;
 const MAX_TRIES = 3;
 
+let _allTargetsCorrect = false;
+
 let coachUnlocked = false;
 
 let runnerEl = null;
@@ -640,6 +667,8 @@ const Bus = (() => {
   };
 })();
 
+let _currentSelectedTargetId = null;
+
 /* =======================
    [A0.2] DOM refs
    ======================= */
@@ -659,31 +688,51 @@ const triesBadge = document.getElementById('triesBadge');
 const scoreBadge = document.getElementById('scoreBadge');
 const descHud = document.getElementById('descHud');
 
+const tolNotes = document.getElementById('tolNotes');
+
+const targetPanel      = document.getElementById('targetPanel');
+const targetPanelTitle = document.getElementById('targetPanelTitle');
+const targetPanelBody  = document.getElementById('targetPanelBody');
+
 const coachBtn=document.getElementById('coachBtn');
 // Ensure header groups exist and move elements into them for consistent layout
 
 
-const ensureHeaderGrouping = ()=>{
+const ensureHeaderGrouping = () => {
   const header = document.querySelector('header');
   if (!header) return;
-  // Move Coach Tools into actions row
-  const actions = document.querySelector('.header-actions');
-  if (actions && coachBtn && !actions.contains(coachBtn)) actions.appendChild(coachBtn);
-  // Ensure metrics row exists and contains Runners, Outs, and Score/Tries
-  let m = document.getElementById('metricsRow');
-  if (!m){
-    m = document.createElement('div');
-    m.id = 'metricsRow';
-    m.className = 'metrics-row';
-    // Insert metrics row before the actions block
-    const actionsAnchor = document.querySelector('.header-actions') || document.getElementById('startBtn') || header.lastElementChild;
-    header.insertBefore(m, actionsAnchor);
+
+  // Ensure .header-actions exists to group start/reset/check/hud/coach
+  let actions = header.querySelector('.header-actions');
+  if (!actions) {
+    actions = document.createElement('div');
+    actions.className = 'header-actions';
+    header.appendChild(actions);
   }
-  ['runnersBadge','outsHud','hud'].forEach(id=>{
-    const el = document.getElementById(id);
-    if (el && el.parentNode !== m) m.appendChild(el);
+
+  // --- Explicitly re-order children in one place ---
+  const order = [
+    document.getElementById('randomSitBtn'),
+    document.getElementById('sitSelect'),
+    document.getElementById('descHud'),
+    document.getElementById('runnersBadge'),
+    document.getElementById('outsHud'),
+    document.getElementById('startBtn'),
+    document.getElementById('resetBtn'),
+    document.getElementById('checkBtn'),
+    document.getElementById('hud'),
+    document.getElementById('coachBtn'),
+  ];
+
+  order.forEach(el => {
+    if (el) actions.appendChild(el);
   });
+
+  // Move the <h1> back to the very front of the header if it exists
+  const h1 = header.querySelector('h1');
+  if (h1) header.insertBefore(h1, header.firstChild);
 };
+
 
 const coachCard=document.getElementById('coachCard');
 const coachStatus=document.getElementById('coachStatus');
@@ -1038,6 +1087,55 @@ function makeTargetDraggable(el,id){
   }
   function onUp(){ window.removeEventListener('pointermove',onMove); drag=null; }
 }
+
+function renderTargetPanel(id){
+  if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
+  _currentSelectedTargetId = id;
+
+  // Make panel visible
+  targetPanel.classList.remove('hidden');
+
+  // Title
+  targetPanelTitle.textContent = `Selected Target: ${id}`;
+
+  // Body: show NOTES (or a hint if blank)
+  const notes = getTargetNotes(currentSituation.key, id);
+  targetPanelBody.innerHTML = notes
+    ? `<div>${String(notes).replace(/\n/g, '<br>')}</div>`
+    : `<div class="hint">No notes for ${id}.</div>`;
+}
+
+/** Enable click-to-select for rings (used only after last try) */
+function enableTargetSelection(){
+  getAllRings().forEach(ring=>{
+    ring.classList.add('selectable');           // purely visual (CSS optional)
+    ring.addEventListener('click', onRingClick);
+  });
+}
+
+/** Disable click-to-select for rings and forget the current selection */
+function disableTargetSelection(){
+  getAllRings().forEach(ring=>{
+    ring.classList.remove('selectable');
+    ring.removeEventListener('click', onRingClick);
+  });
+  _currentSelectedTargetId = null;
+}
+
+/** Click handler for a ring; shows panel only when game is over (non-coach mode) */
+function onRingClick(e){
+  // Allow selection in PLAY mode if either:
+  //  - all targets are correct, OR
+  //  - game is over due to no tries left
+  if (!coachUnlocked && (_allTargetsCorrect || (!gameActive && remainingTries === 0))){
+    const id = e.currentTarget?.dataset?.id;
+    if (id) renderTargetPanel(id);
+  }
+}
+
+/** Panel visibility helpers */
+function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
+function hideTargetPanel(){ if (targetPanel) targetPanel.classList.add('hidden'); }
 
 /* =======================
    [A5] Runners & Outs
@@ -1468,6 +1566,8 @@ function setCoachMode(enabled){
   coachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
   if (coachUnlocked) setChipsLocked(false); else setChipsLocked(!gameActive || remainingTries===0);
   buildTargets(); applyCoachVisibility(); updateHud(Number(scoreVal.textContent)||0);
+  disableTargetSelection();
+  hideTargetPanel();
 }
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
 function closePwModal(){ pwModal.style.display='none'; }
@@ -1565,7 +1665,19 @@ function normalizeStarts(obj){
 }
 function normalizeTargets(obj){
   const out={}; if (!obj || typeof obj !== 'object') return out;
-  POS_IDS.forEach(id=>{ const raw=obj[id]; if(raw){ const p=normPoint(raw); if(p){ out[id]={ x:p.x, y:p.y, tol:Number(raw.tol)||DEFAULT_TOL }; } } });
+  POS_IDS.forEach(id=>{
+    const raw = obj[id];
+    if (raw){
+      const p = normPoint(raw);
+      if (p){
+        out[id] = {
+          x:p.x, y:p.y,
+          tol: Number(raw.tol) || DEFAULT_TOL,
+          notes: typeof raw.notes === 'string' ? raw.notes : ''
+        };
+      }
+    }
+  });
   return out;
 }
 function normalizeHit(obj){ if (!obj || typeof obj !== 'object') return {}; const p=normPoint(obj); return p ? {x:p.x,y:p.y} : {}; }
@@ -1826,6 +1938,11 @@ function setSituation(key){
   currentSituation = getSituationByKey(key) || SITUATIONS[0];
   if (!currentSituation) return;
 
+  // Any time we switch situations, selection mode should be off
+  disableTargetSelection();
+  hideTargetPanel();
+  _allTargetsCorrect = false;
+
   if (!tokens || tokens.size===0) buildTokens();
   resetBallAndRunnerForSituation();
 
@@ -1867,6 +1984,12 @@ function setSituation(key){
   tolTargetSel.value=firstId;
   syncTolInputsFromModel(firstId);
 
+  // >>> NEW: sync the Notes textarea with the selected target <<<
+  if (tolTargetSel){
+    const id = tolTargetSel.value || POS_IDS[0];
+    syncTolNotesFromModel(id);
+  }
+
   // Hit + ball
   placeHitMarker();
   syncBallToHit();
@@ -1901,12 +2024,22 @@ function setSituation(key){
    ======================= */
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
-  const out={}; getAllRings().forEach(el=>{
-    const id=el.dataset.id; const left=parseFloat(el.style.left), top=parseFloat(el.style.top);
-    const native=cssToUnit(left,top); const tol=currentSituation.targets?.[id]?.tol ?? DEFAULT_TOL;
-    out[id]={x:Math.round(native.x),y:Math.round(native.y),tol:Math.round(tol)};
-  }); return out;
+  const out = {};
+  getAllRings().forEach(el=>{
+    const id   = el.dataset.id;
+    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
+    const native = cssToUnit(left, top);
+    const modelT = currentSituation.targets?.[id];
+    out[id] = {
+      x: Math.round(native.x),
+      y: Math.round(native.y),
+      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
+      notes: modelT?.notes || ''
+    };
+  });
+  return out;
 }
+
 function getHitForExport(sit){ return sit && sit.hit ? { x:Math.round(sit.hit.x), y:Math.round(sit.hit.y) } : undefined; }
 function getStartsForExport(key){
   const src=(startsMap && startsMap[key]) ? startsMap[key] : DEFAULT_STARTS;
@@ -1930,7 +2063,16 @@ function buildAllSituationsExport(){
     const isCurrent=currentSituation && (s.key===currentSituation.key);
     const starts=isCurrent?getOnscreenStarts():getStartsForExport(s.key);
     let targets=isCurrent?getRenderedTargets():{};
-    if (!isCurrent){ Object.entries(s.targets||{}).forEach(([id,pt])=>{ targets[id]={ x:Math.round(pt.x), y:Math.round(pt.y), tol:Math.round(pt.tol||DEFAULT_TOL)}; }); }
+    if (!isCurrent){
+      Object.entries(s.targets||{}).forEach(([id,pt])=>{
+        targets[id] = {
+          x: Math.round(pt.x),
+          y: Math.round(pt.y),
+          tol: Math.round(pt.tol || DEFAULT_TOL),
+          notes: pt.notes || ''
+        };
+      });
+    }
     const hit=getHitSaved(s.key) || getHitForExport(s);
     return composeSituationForExport(s,starts,targets,hit);
   });
@@ -2007,7 +2149,6 @@ function refreshSituationAll(){
   // 7) Rebuild UI pieces to reflect the saved model
   populateSituations(currentSituation.key);
 
-  if (labelEl) labelEl.textContent = currentSituation.title || '';
   if (descHud) descHud.textContent = currentSituation.desc || '';
   if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
 
@@ -2040,31 +2181,69 @@ const saveCurrentSituation = refreshSituationAll;
    ======================= */
 function checkPositions(){
   if (!coachUnlocked && !gameActive) return;
-  const t=currentSituation.targets||{}; let correct=0;
-  const isFinalTry = (!coachUnlocked && gameActive && remainingTries===1);
+
+  const t = currentSituation.targets || {};
+  let correct = 0;
+
+  const isFinalTry = (!coachUnlocked && gameActive && remainingTries === 1);
+
   getAllRings().forEach(el=>{
-    const id=el.dataset.id; const target=t[id]; if(!target) return;
-    const cur=tokens.get(id).pos; const tol=Number(target.tol)||DEFAULT_TOL;
-    const d=Math.hypot(cur.x-target.x, cur.y-target.y); const isCorrect=d<=tol;
-    el.classList.toggle('good',isCorrect); el.classList.toggle('bad',!isCorrect); el.classList.add('show-label');
-    if (coachUnlocked){ el.style.display='block'; } else { el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none'; }
+    const id = el.dataset.id;
+    const target = t[id];
+    if (!target) return;
+
+    const cur = tokens.get(id).pos;
+    const tol = Number(target.tol) || DEFAULT_TOL;
+    const d   = Math.hypot(cur.x - target.x, cur.y - target.y);
+    const isCorrect = d <= tol;
+
+    el.classList.toggle('good', isCorrect);
+    el.classList.toggle('bad', !isCorrect);
+    el.classList.add('show-label');
+
+    if (coachUnlocked){
+      el.style.display = 'block';
+    } else {
+      // In play mode: show on final try OR when that ring is correct
+      el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none';
+    }
+
     if (isCorrect) correct++;
   });
+
   updateHud(correct);
 
-  // colorize score HUD by percent correct
+  // Colorize score
   if (scoreBadge){
     const pct = correct / 9;
     const state = pct >= 2/3 ? 'green' : (pct >= 1/3 ? 'yellow' : 'red');
     setBadgeState(scoreBadge, state, 'score');
   }
 
-if (!coachUnlocked && gameActive){
+  if (!coachUnlocked && gameActive){
     remainingTries = Math.max(0, remainingTries - 1);
     updateHud(correct);
-    if (correct===9 || remainingTries===0){ checkBtn.disabled=true; setChipsLocked(true); }
+
+    // NEW: keep a flag of "all correct"
+    _allTargetsCorrect = (correct === 9);
+
+    const isOutOfTries = (remainingTries === 0);
+
+    // If either the puzzle is solved OR you're out of tries, freeze chips/check
+    if (_allTargetsCorrect || isOutOfTries){
+      checkBtn.disabled = true;
+      setChipsLocked(true);
+      gameActive = false;                    // <-- ensure play is over so clicks are allowed
+    }
+
+    // Allow ring selection in both success and out-of-tries cases
+    if ((_allTargetsCorrect || isOutOfTries) && !coachUnlocked){
+      enableTargetSelection();
+      showTargetPanel();                     // panel opens; body fills when a ring is clicked
+    }
   }
 }
+
 function resetBallAndRunnerForSituation(){
   if (animReq){ cancelAnimationFrame(animReq); animReq=null; }
   if (ballSvg) ballSvg.innerHTML='';
@@ -2073,6 +2252,9 @@ function resetBallAndRunnerForSituation(){
   hideRunner();
 }
 function resetPlayers(){
+  disableTargetSelection();
+  hideTargetPanel();
+  _allTargetsCorrect = false;
   POS_IDS.forEach(id=>{ const t=tokens.get(id); if(!t) return; t.pos=Fcopy(getStartFor(currentSituation.key,id)); placeToken(id); });
   getAllRings().forEach(el=> el.style.display=coachUnlocked ? 'block' : 'none');
   updateHud(0); gameActive=false; remainingTries=0;
@@ -2117,8 +2299,24 @@ async function init(){
 }
 
 function syncTolInputsFromModel(id){
-  const tol = Number(getTargetFor(currentSituation.key,id)?.tol) || DEFAULT_TOL;
-  tolNum.value = tolRange.value = String(tol);
+  const t = getTargetFor(currentSituation.key, id);
+  const tol = Number(t?.tol) || DEFAULT_TOL;
+  if (tolNum)   tolNum.value   = String(tol);
+  if (tolRange) tolRange.value = String(tol);
+  // keep the ring sized live if it's on-screen
+  const ring = getRingEl(id);
+  if (ring){
+    const d = tolToCssDiameter(tol, coachUnlocked);
+    ring.style.width = d+'px';
+    ring.style.height = d+'px';
+  }
+  // ALSO: sync notes
+  syncTolNotesFromModel(id);
+}
+
+function syncTolNotesFromModel(id){
+  const notes = getTargetNotes(currentSituation.key, id) || '';
+  if (tolNotes) tolNotes.value = notes;
 }
 
 function setTolLive(id,tol){
