@@ -1759,6 +1759,9 @@ function phase2UpdateScoreHud(){
 
 
   if (coachBtn) coachBtn.addEventListener('click', ()=>{
+    // Always reset the situation when the Coach Tools button is clicked
+    resetPlayers();
+
     if (coachUnlocked){
       setCoachMode(false);
       coachCard.classList.add('hidden');
@@ -1769,6 +1772,7 @@ function phase2UpdateScoreHud(){
       openPwModal();
     }
   });
+
 
   // When the target dropdown changes, sync tolerance + notes
   if (tolTargetSel) {
