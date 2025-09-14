@@ -492,7 +492,7 @@
         <!-- Ball Hit (single) -->
         <div class="subsec">
           <div class="title">Ball Hit</div>
-          <div class="hint">Drag the <b>orange</b> marker to set the ball’s landing spot and set batter advance for this situation.</div>
+          <div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div>
             <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
           <div class="row">
             <label class="hint">Hit type:</label>
@@ -1851,7 +1851,6 @@ function scaleMarkers(){
     });
   }
 
-  // Orange hit marker
   if (hitMarker){
     const d = sizePx(BASE_MARKER_SIZES.hit, 10, 28);
     hitMarker.style.width  = d + 'px';
