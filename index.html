@@ -130,6 +130,9 @@
   #targetsLayer{pointer-events:none;z-index:2}
   #ballLayer{pointer-events:none;z-index:3}
 
+  .badge-timer{background:#fff7ed;border-color:#fed7aa}
+  .badge-timer.low{background:#fee2e2;border-color:#fecaca}
+
   /* Chips */
   :root { --chip-size: 36px; --chip-font: 14px; }
   .chip{
@@ -355,6 +358,9 @@
   <div id="hud" class="hud">
     <span id="scoreBadge" class="badge badge-score" data-testid="score-badge">Score: <b><span id="scoreVal">0</span>/9</b></span>
     <span id="triesBadge" class="badge badge-tries">Tries: <b><span id="triesVal">0</span></b></span>
+    <span id="timerBadge" class="badge badge-timer" title="Time left in this phase">
+      ⏱️ <b><span id="timerVal">60</span>s</b>
+    </span>
   </div>
 
   <button id="coachBtn" class="btn-slate">Coach Tools</button>
@@ -587,6 +593,10 @@ const BASES_NATIVE = {
   home:{x:1501,y:2032}, first:{x:1903,y:1577}, second:{x:1465,y:1192}, third:{x:1101,y:1630}
 };
 
+const TIMER_START_SECS = 60;
+let _timerId = null;
+let _timerSecs = TIMER_START_SECS;
+
 const Fcopy = o => JSON.parse(JSON.stringify(o));
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const clampInt=(v,min,max)=>{v=Math.floor(Number(v)); if(Number.isNaN(v)) v=min; return clamp(v,min,max);};
@@ -724,7 +734,47 @@ function cleanupSeqThrowViz(){
   _seqBallEl = null;
 }
 
+function formatSecs(s){
+  // Show mm:ss if you'd like; spec only asks for seconds, but this reads nicer.
+  const m = Math.floor(s/60), sec = s%60;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
 
+function updateTimerHud(){
+  if (!timerVal || !timerBadge) return;
+  // Display as seconds with an "s" OR as mm:ss — choose one line below
+
+  // Option A: plain seconds with trailing 's' (matches your HTML shell)
+  timerVal.textContent = String(_timerSecs);
+
+  // Option B: mm:ss (then also change the HTML shell to not append 's'):
+  // timerVal.textContent = formatSecs(_timerSecs);
+
+  // Visual warning under 10s
+  if (_timerSecs <= 10) timerBadge.classList.add('low');
+  else timerBadge.classList.remove('low');
+}
+
+function stopTimer(){
+  if (_timerId){ clearInterval(_timerId); _timerId = null; }
+}
+
+function startTimer(seconds = TIMER_START_SECS){
+  stopTimer();
+  _timerSecs = Math.max(0, seconds|0);
+  updateTimerHud();
+  _timerId = setInterval(()=>{
+    _timerSecs = Math.max(0, _timerSecs - 1);
+    updateTimerHud();
+    if (_timerSecs === 0){
+      stopTimer(); // time’s up — just stop; no game logic change requested
+    }
+  }, 1000);
+}
+
+function resetTimer(seconds = TIMER_START_SECS){
+  startTimer(seconds);
+}
 
 /** Exact match: same length and each pick equals expected in order */
 function isExactSequenceMatch(picks, order){
@@ -942,6 +992,7 @@ function clearAllPicks(){
    ======================= */
 
 function endPhase2(success = true) {
+  stopTimer();
   // If Phase 2 was never started, just clear & hide
   if (!phase2Active) {
     phase2Active = false;
@@ -1240,6 +1291,7 @@ function wireOnce(){
 
     // --- Set game state up front ---
     gameActive = true;
+    resetTimer(TIMER_START_SECS);
     remainingTries = MAX_TRIES;
     updateHud(0);
     _allTargetsCorrect = false;
@@ -1446,6 +1498,7 @@ function phase2UpdateScoreHud(){
     clearAllPicks();     // start fresh
     updateHud();         // show 0/<seq length> in the score HUD
     phase2Active = true;
+    resetTimer(TIMER_START_SECS);
 
     // Always keep the regular ball visible in Phase 2
     if (ballEl){
@@ -1661,6 +1714,8 @@ const seqBody     = document.getElementById('seqBody');
 const seqInput    = document.getElementById('seqInput');
 const seqNoteInput = document.getElementById('seqNoteInput');
 
+const timerBadge = document.getElementById('timerBadge');
+const timerVal   = document.getElementById('timerVal');
 
 const coachBtn=document.getElementById('coachBtn');
 // Ensure header groups exist and move elements into them for consistent layout
@@ -2993,6 +3048,9 @@ function setSituation(key){
   if (!currentSituation) return;
 
   wipePhase2StateUI();
+  stopTimer();
+  _timerSecs = TIMER_START_SECS;
+  updateTimerHud();
 
   // Any time we switch situations, selection mode should be off
   disableTargetSelection();
@@ -3315,10 +3373,8 @@ function checkPositions(){
     if (isCorrect) correct++;
   });
 
-  // Update numeric score
+  // Update numeric score + colorize
   updateHud(correct);
-
-  // Colorize score HUD by percent correct
   if (scoreBadge){
     const pct = correct / 9;
     const state = pct >= 2/3 ? 'green' : (pct >= 1/3 ? 'yellow' : 'red');
@@ -3328,7 +3384,6 @@ function checkPositions(){
   // Non-coach: handle tries and end-of-round behavior
   if (!coachUnlocked){
     const allCorrectNow = (correct === POS_IDS.length);
-
     _allTargetsCorrect = allCorrectNow;
 
     if (gameActive){
@@ -3340,7 +3395,12 @@ function checkPositions(){
     const shouldEndRound = allCorrectNow || outOfTries;
 
     if (shouldEndRound){
-      checkBtn.disabled = true;
+      // ⬅️ Stop/pause the timer when Phase 1 ends
+      stopTimer();
+
+      // HIDE instead of disable the Check button
+      if (checkBtn) checkBtn.classList.add('hidden');
+
       setChipsLocked(true);
       gameActive = false;                 // freeze game state for inspection
 
@@ -3348,7 +3408,7 @@ function checkPositions(){
       enableTargetSelection();
 
       // Show the instruction card ONLY if a round had actually started
-      if (typeof _roundHasStarted === 'undefined' || _roundHasStarted){
+      if (_roundHasStarted){
         if (typeof showTargetInstruction === 'function') {
           showTargetInstruction();
         } else if (typeof showTargetPanel === 'function') {
@@ -3356,16 +3416,16 @@ function checkPositions(){
         }
       }
 
+      // Gate Phase 2 availability (button shows only if a sequence exists)
       if (_roundHasStarted && continueBtn){
         const hasSeq = getSeqForCurrent().length > 0;
-        if ((allCorrectNow || outOfTries) && hasSeq) {
+        if (hasSeq) {
           continueBtn.classList.remove('hidden');
         } else {
           continueBtn.classList.add('hidden');
         }
       }
     }
-
   }
 }
 
@@ -3379,6 +3439,10 @@ function resetBallAndRunnerForSituation(){
 
 function resetPlayers(){
   wipePhase2StateUI();
+  stopTimer();
+  _timerSecs = TIMER_START_SECS;
+  updateTimerHud();
+
   if (continueBtn) continueBtn.classList.add('hidden');
 
   // existing reset logic
@@ -3400,9 +3464,15 @@ function resetPlayers(){
   gameActive=false;
   remainingTries=0;
 
+  // Re-enable Start / Reset buttons
   startBtn.disabled=false;
   resetBtn.disabled=true;
-  checkBtn.disabled=true;
+
+  // ⬅️ Make sure Check Positions is visible and reset to its initial state
+  if (checkBtn){
+    checkBtn.classList.remove('hidden');
+    checkBtn.disabled = true;   // start disabled until "Start Situation" is pressed
+  }
 
   setChipsLocked(!coachUnlocked);
 
@@ -3416,8 +3486,6 @@ function resetPlayers(){
   scaleMarkers();
   updateRunnersHudFromLive();
 }
-
-
 
 /* =======================
    [A12] Init & events
