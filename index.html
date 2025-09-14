@@ -1354,15 +1354,21 @@ function phase2UpdateScoreHud(){
   if (scoreVal) scoreVal.textContent = `${lockedCount}/${total}`;
 }
 
+  // --- Verify Sequence (Phase 2) ---
   verifySeqBtn.addEventListener('click', ()=>{
     if (!phase2Active || !seqOrder.length) return;
 
-    const tooMany = phase2Picks.length > seqOrder.length;
+    const tooMany  = phase2Picks.length > seqOrder.length;
     const kAttempt = getCorrectPrefixLen(phase2Picks, seqOrder); // how many from the start were correct
     const kPrev    = phase2Locked.size || 0;
 
+    // ✅ Always lock the longest correct prefix (never regress),
+    // even if the player over-selected chips this attempt.
+    const newK = Math.max(kPrev, kAttempt);
+    lockCorrectPrefix(newK);
+
+    // Visual feedback for any extra, unnecessary picks
     if (tooMany){
-      // Shake any extra chips that exceeded the required length
       phase2Picks.slice(seqOrder.length).forEach(id=>{
         const el = tokens.get(id)?.el;
         if (el){
@@ -1370,15 +1376,9 @@ function phase2UpdateScoreHud(){
           setTimeout(()=> el.classList.remove('wrongShake'), 220);
         }
       });
-
-      // Do NOT increase locks on an over-pick attempt
-      lockCorrectPrefix(kPrev);
-    } else {
-      // Progressively lock the longest correct prefix; never regress
-      lockCorrectPrefix(Math.max(kPrev, kAttempt));
     }
 
-    // Only a perfect exact match (same length AND same order) is success
+    // Success requires exact match: same length AND same ordered picks.
     const exact = !tooMany && isExactSequenceMatch(phase2Picks, seqOrder);
     if (exact){
       endPhase2(true);
@@ -1394,6 +1394,7 @@ function phase2UpdateScoreHud(){
       endPhase2(false);
     }
   });
+
 
   // --- CONTINUE button: start Phase 2, snap chips, hide rings/target panel, hide Check Positions ---
   if (continueBtn) continueBtn.addEventListener('click', ()=>{
