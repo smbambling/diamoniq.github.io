@@ -145,6 +145,46 @@
   .chip.Outfield{background:#dc2626}
   .chip.locked{cursor:not-allowed;opacity:.7}
 
+  /* Phase 2 visuals */
+  .chip.selectableChip{ outline:2px solid rgba(2,132,199,.75); outline-offset:2px }
+  .chip.correctPulse{ animation:chipPulse .28s ease-in-out }
+  .chip.wrongShake{  animation:chipShake .22s ease-in-out }
+  @keyframes chipPulse{ 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.10)} 100%{transform:translate(-50%,-50%) scale(1)} }
+  @keyframes chipShake{ 0%,100%{transform:translate(-50%,-50%)} 25%{transform:translate(calc(-50% - 4px),-50%)} 75%{transform:translate(calc(-50% + 4px),-50%)} }
+
+  /* Phase 2: show the pick number on a selected chip */
+  .chip[data-pick-index]::after{
+    content: attr(data-pick-index);
+    position:absolute;
+    bottom:-8px;
+    right:-8px;
+    width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font:700 12px/1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    color:#0b1321; background:#e0f2fe; box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
+  }
+
+  /* Phase 2: show the pick number on a selected chip */
+  .chip[data-pick-index]::after{
+    content: attr(data-pick-index);
+    position:absolute;
+    bottom:-8px;
+    right:-8px;
+    width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font:700 12px/1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    color:#0b1321; background:#e0f2fe; box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
+  }
+
+  /* Locked-correct chip highlight for Phase 2 */
+  .chip.seq-locked{
+    outline: 3px solid rgba(22,163,74,.9);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.25), 0 0 0 6px rgba(22,163,74,.2);
+    cursor: default !important;
+  }
+
+
   /* Targets */
   .tgt{
     position:absolute;transform:translate(-50%,-50%);
@@ -205,6 +245,26 @@
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
   .hidden{display:none!important}
 
+  /* Phase 2: throw animation ball + trail */
+  .seqBall {
+    position:absolute;
+    width:14px;height:14px;border-radius:50%;
+    background:#fff;
+    box-shadow:0 0 0 2px #000, 0 1px 3px rgba(0,0,0,.35);
+    transform:translate(-50%,-50%);
+    z-index:4; /* above chips */
+    pointer-events:none;
+  }
+  .throwTrail {
+    position:absolute; inset:0; pointer-events:none; z-index:3;
+  }
+  .throwTrail svg path {
+    stroke:#0ea5e9; fill:none;
+    stroke-width:3;
+    stroke-linecap:round; stroke-linejoin:round;
+    opacity:.9;
+  }
+
   /* Collapsible description behavior (legacy support if used) */
   #sitDescBar.desc-collapsed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #sitDescBar.desc-expanded{white-space:pre-wrap}
@@ -218,6 +278,29 @@
   }
   #pwModal input[type="password"]:focus{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.35)}
   #pwModal .row{justify-content:flex-end !important;gap:10px;margin-top:12px !important}
+
+  /* How to play: expandable */
+  #howToCard summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  #howToCard summary::-webkit-details-marker { display: none; }
+
+  #howToCard .htp-caret {
+    transition: transform .18s ease, opacity .18s ease;
+    margin-left: 8px;
+    opacity: .7;
+  }
+  #howToCard details[open] .htp-caret {
+    transform: rotate(90deg);
+    opacity: 1;
+  }
+  #howToCard .howto-body { margin-top: 8px; }
+
 
   /* ===== Responsive tweaks ===== */
   @media (max-width:900px){
@@ -264,6 +347,7 @@
     <button id="startBtn" class="btn-green">Start Situation</button>
     <button id="resetBtn" class="btn-orange">Reset</button>
     <button id="checkBtn" class="btn-green" disabled data-testid="check-btn">Check Positions</button>
+    <button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button>
   </div>
 
   <div id="hud" class="hud">
@@ -286,21 +370,52 @@
   </section>
 
   <aside class="sideCol">
-    <div class="card">
-      <strong>How to play</strong>
-      <ol style="margin:6px 0 0 1.2em">
-        <li>Select a situation or click <em>Random</em>.</li>
-        <li>Review the displayed Description, Runners, and Outs.</li>
-        <li>Press <em>Start Situation</em>.</li>
-        <li>Drag the 9 player chips into the correct positions for the situation.</li>
-        <li>Press <em>Check Positions</em> to verify correctness (3 tries).</li>
-      </ol>
+    <div class="card" id="howToCard">
+      <details id="howToDetails">
+        <summary>
+          <strong>How to play (click to expand)</strong>
+          <span class="htp-caret" aria-hidden="true">▸</span>
+        </summary>
+
+        <div class="howto-body">
+          <ol style="margin:6px 0 0 1.2em">
+            <!-- Phase 1 -->
+            <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
+            <li>Review the Description, Runners, and Outs shown in the header.</li>
+            <li>Press <em>Start Situation</em> to begin Phase 1.</li>
+            <li>Drag the 9 player chips into the correct defensive positions.</li>
+            <li>Press <em>Check Positions</em> to verify. You have 3 tries to get them correct.</li>
+
+            <!-- Transition -->
+            <li>If you finish Phase 1 correctly (or use all tries), press <em>Continue</em> to start Phase 2 (if available for this situation).</li>
+
+            <!-- Phase 2 -->
+            <li>In Phase 2, the player chips move to their correct positions automatically.</li>
+            <li>Select the players (chips) in the correct throw order to execute the play.</li>
+            <li>Click chips to add them to your sequence; click again to unselect (unless a chip is already locked as correct).</li>
+            <li>Press <em>Verify Sequence</em> to check your picks. You have 3 tries.</li>
+            <li>Correct chips (in the proper order) will lock and remain highlighted. Phase 2 ends when all throws are correct or tries are used.</li>
+          </ol>
+
+          <div class="hint" style="margin-top:8px">
+            Note: Phase 2 appears only if a Play Sequence is configured for the situation.
+          </div>
+        </div>
+      </details>
     </div>
+
     <!-- Selected Target (appears after last try) -->
     <div id="targetPanel" class="card hidden">
       <strong id="targetPanelTitle">Selected Target</strong>
       <div id="targetPanelBody" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
     </div>
+
+    <!-- Phase 2: Sequence panel -->
+    <div id="seqPanel" class="card hidden">
+      <strong>Play Sequence</strong>
+      <div id="seqBody" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
+    </div>
+
 
     <!-- Coach Tools (hidden until unlocked) -->
     <div id="coachCard" class="card hidden">
@@ -391,6 +506,18 @@
             </select>
           </div>
         </div>
+
+        <!-- Play Sequence (Phase 2) -->
+        <div class="subsec">
+          <div class="title">Play Sequence</div>
+          <div class="hint">Order the players to be selected during Phase 2 (e.g., <b>LF, SS, 2B, C</b>).</div>
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
+            <input id="seqInput" type="text" placeholder="e.g., LF, SS, 2B, C" class="mono" style="width:100%"/>
+            <textarea id="seqNoteInput" rows="3" placeholder="Optional note shown to players on the Play Sequence card…" class="mono" style="width:100%"></textarea>
+            <span class="hint">Leave the order empty to disable for this situation</span>
+          </div>
+        </div>
+
 
         <!-- Export -->
         <div class="subsec">
@@ -497,6 +624,596 @@ function isPostRound(){
   );
 }
 
+function snapChipsToTargets(){
+  if (!currentSituation || !currentSituation.targets) return;
+  POS_IDS.forEach(id=>{
+    const t = currentSituation.targets[id];
+    if (!t) return;
+    const rec = tokens.get(id);
+    if (!rec) return;
+    rec.pos = { x: Math.round(t.x), y: Math.round(t.y) };
+    placeToken(id);
+  });
+}
+
+function getSeqForCurrent(){
+  // Returns sanitized sequence array or empty if disabled
+  const raw = (currentSituation && Array.isArray(currentSituation.playSeq))
+    ? currentSituation.playSeq
+    : [];
+  return raw
+    .map(s => String(s||'').toUpperCase().trim())
+    .filter(s => POS_IDS.includes(s));
+}
+
+function showSeqPanel(textHTML){
+  if (!seqPanel || !seqBody) return;
+
+  // Build note (if any) from the current situation
+  const note = (currentSituation && typeof currentSituation.seqNote === 'string' && currentSituation.seqNote.trim())
+    ? `<div style="margin-top:10px;padding:8px;border:1px dashed #cbd5e1;border-radius:8px;background:#f8fafc">
+         <div style="font-weight:800;color:#334155;margin-bottom:4px">Coach Note</div>
+         <div style="white-space:pre-wrap">${currentSituation.seqNote.trim().replace(/[<>&]/g, s => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[s]))}</div>
+       </div>`
+    : '';
+
+  seqPanel.classList.remove('hidden');
+  seqBody.innerHTML = (textHTML || '') + note;
+}
+
+function hideSeqPanel(){
+  if (!seqPanel) return;
+  seqPanel.classList.add('hidden');
+  if (seqBody) seqBody.innerHTML = '';
+}
+
+function setChipsSelectable(on){
+  tokens.forEach(({el}, id)=>{
+    if (!el) return;
+    if (on){
+      el.classList.add('selectableChip');
+      el.style.pointerEvents = 'auto';            // allow clicking chips in Phase 2
+    } else {
+      el.classList.remove('selectableChip','correctPulse','wrongShake');
+      el.style.pointerEvents = '';                // ← remove any inline override
+      // Dragging is still governed by canDrag() inside makeChipDraggable()
+    }
+  });
+}
+
+function phase2UpdateHud(){
+  // Only show panel if Phase 2 is active AND we allow showing it
+  if (!phase2Active || !allowSeqPanel){
+    hideSeqPanel();
+    return;
+  }
+
+  if (!seqOrder.length){
+    hideSeqPanel(); // nothing to do if no sequence
+    return;
+  }
+
+  const next  = seqOrder[seqIndex];
+  const done  = seqIndex;
+  const total = seqOrder.length;
+
+  const path = seqOrder.map((p,i)=>
+    i < done
+      ? `<span style="opacity:.5;text-decoration:line-through">${p}</span>`
+      : (i === done ? `<b>${p}</b>` : p)
+  ).join(' → ');
+
+  showSeqPanel(
+    `<div>Step ${Math.min(done+1,total)} of ${total}: select <b>${next || '—'}</b></div>
+     <div style="margin-top:6px">Sequence: ${path}</div>`
+  );
+}
+
+// Remove any in-progress Phase 2 sequence-throw visualization (ball + trail + RAF)
+function cleanupSeqThrowViz(){
+  try{ if (_seqAnimRaf){ cancelAnimationFrame(_seqAnimRaf); } }catch{}
+  _seqAnimRaf = null;
+
+  if (_seqTrail && _seqTrail.parentNode) _seqTrail.remove();
+  _seqTrail = null;
+
+  if (_seqBallEl && _seqBallEl.parentNode) _seqBallEl.remove();
+  _seqBallEl = null;
+}
+
+
+
+/** Exact match: same length and each pick equals expected in order */
+function isExactSequenceMatch(picks, order){
+  if (!Array.isArray(picks) || !Array.isArray(order)) return false;
+  if (picks.length !== order.length) return false;
+  for (let i = 0; i < order.length; i++){
+    if (picks[i] !== order[i]) return false;
+  }
+  return true;
+}
+
+function setChipPickIndex(el, n){
+  if (!el) return;
+  el.dataset.pickIndex = String(n);
+  // small pulse for feedback
+  el.classList.add('correctPulse');
+  setTimeout(()=> el.classList.remove('correctPulse'), 280);
+}
+
+function clearAllPicks(){
+  phase2Picks = [];
+  tokens.forEach(({el})=>{
+    if (!el) return;
+    delete el.dataset.pickIndex;
+    el.classList.remove('correctPulse','wrongShake');
+  });
+}
+
+function wipePhase2StateUI(){
+  // model
+  phase2Active    = false;
+  allowSeqPanel   = false;
+  seqIndex        = 0;
+  phase2TriesLeft = PHASE2_MAX_TRIES;
+  phase2Picks     = [];
+  phase2Locked    = new Set();
+
+  // UI (chips)
+  tokens.forEach(({el})=>{
+    if (!el) return;
+    el.classList.remove('seq-locked','selectableChip','correctPulse','wrongShake');
+    el.style.pointerEvents = '';        // restore default clickability
+    // remove any pick/index badges and attrs, regardless of variant
+    clearChipPickMarker?.(el);          // uses your consolidated remover
+    // belt-and-suspenders if you keep older helpers around:
+    el.removeAttribute('data-pick-index');
+    el.removeAttribute('data-pick-idx');
+  });
+
+  // UI (controls/panels/animations)
+  hideSeqPanel?.();
+  verifySeqBtn?.classList.add('hidden');
+  setChipsSelectable?.(false);
+  cleanupSeqThrowViz?.();               // remove seq ball + trail, if present
+
+  // HUD
+  updateHud?.(0);
+}
+
+/** Tiny badge on a chip showing its sequence index (1-based). */
+function setChipPickIndex(el, n){
+  if (!el) return;
+  let b = el.querySelector('.seqBadge');
+  if (!b){
+    b = document.createElement('span');
+    b.className = 'seqBadge';
+    b.style.position = 'absolute';
+    b.style.right = '-6px';
+    b.style.top = '-6px';
+    b.style.minWidth = '18px';
+    b.style.height = '18px';
+    b.style.borderRadius = '999px';
+    b.style.display = 'flex';
+    b.style.alignItems = 'center';
+    b.style.justifyContent = 'center';
+    b.style.fontWeight = '900';
+    b.style.fontSize = '11px';
+    b.style.background = '#0ea5e9';
+    b.style.color = '#fff';
+    b.style.boxShadow = '0 1px 3px rgba(0,0,0,.35)';
+    el.appendChild(b);
+  }
+  b.textContent = String(n);
+}
+
+/** Remove all badges + selection styles from chips. */
+function clearAllPicks(){
+  phase2Picks = [];
+  tokens.forEach(({el})=>{
+    if (!el) return;
+    el.classList.remove('correctPulse','wrongShake');
+    const b = el.querySelector('.seqBadge');
+    if (b) b.remove();
+  });
+}
+
+// NEW: count how many picks are correct in order, consecutively from the start
+function getPhase2ConsecutiveCorrect(){
+  if (!phase2Active || !Array.isArray(seqOrder) || !seqOrder.length) return 0;
+  let i = 0;
+  while (i < phase2Picks.length && i < seqOrder.length && phase2Picks[i] === seqOrder[i]) i++;
+  return i; // number of correct-in-order picks from the beginning
+}
+
+// ----- Phase 2 hygiene: clear all UI + state -----
+function phase2ClearAllUI(){
+  // data
+  phase2Picks = [];
+  phase2Locked = new Set();
+
+  // chip visuals (numbers + highlight)
+  tokens.forEach(({el})=>{
+    if (!el) return;
+    clearChipPickIndex(el);     // remove any sequence badge/attr
+    el.classList.remove('seq-locked','correctPulse','wrongShake');
+  });
+
+  // controls / panel
+  if (verifySeqBtn) verifySeqBtn.classList.add('hidden');
+  setChipsSelectable(false);
+  hideSeqPanel();
+
+  // state flags
+  phase2Active = false;
+  allowSeqPanel = false;
+
+  // ensure HUD reflects non-phase-2 state (score visible again)
+  updateHud(Number(scoreVal?.textContent) || 0);
+}
+
+// ===== Sequence marker helpers (consolidated – single source of truth) =====
+
+/** Remove any/all visual sequence markers from one chip element. */
+function clearChipPickMarker(el){
+  if (!el) return;
+  // Remove known attrs
+  el.removeAttribute('data-pick');
+  el.removeAttribute('data-pick-idx');
+  el.removeAttribute('data-pick-index');
+  el.removeAttribute('data-seq');
+  // Remove known badge nodes
+  el.querySelectorAll('.seq-badge, .seqBadge, .pick-badge, .chip-index, [data-role="seq-badge"]').forEach(n => n.remove());
+}
+
+function clearChipPickIndex(el){
+  if (!el) return;
+
+  // Remove attributes we may have used
+  el.removeAttribute('data-pick');
+  el.removeAttribute('data-pick-idx');
+  if (el.dataset) delete el.dataset.pickIndex;
+
+  // Remove any badge variants we've ever attached
+  el.querySelectorAll('.seqBadge, .seq-badge, .pick-badge, .chip-index, [data-role="seq-badge"]')
+    .forEach(n => n.remove());
+}
+
+/** Add/update a small numeric badge at top-right of chip (1-based). */
+function setChipPickIndex(el, n){
+  if (!el) return;
+  // Start clean
+  clearChipPickMarker(el);
+  if (!Number.isFinite(n) || n <= 0) return;
+
+  const badge = document.createElement('span');
+  badge.className = 'seq-badge';
+  badge.setAttribute('data-role', 'seq-badge');
+  badge.textContent = String(n);
+  Object.assign(badge.style, {
+    position: 'absolute',
+    right: '-6px',
+    top: '-6px',
+    minWidth: '16px',
+    height: '16px',
+    padding: '0 4px',
+    borderRadius: '999px',
+    fontWeight: '900',
+    fontSize: '11px',
+    lineHeight: '16px',
+    textAlign: 'center',
+    color: '#0b1321',
+    background: '#f1f5f9',
+    border: '1px solid rgba(0,0,0,.25)',
+    boxShadow: '0 1px 2px rgba(0,0,0,.25)',
+    pointerEvents: 'none',
+    userSelect: 'none',
+    zIndex: 2
+  });
+
+  el.appendChild(badge);
+  el.setAttribute('data-pick-idx', String(n));
+}
+
+/** Full re-render: wipe all markers, then number 1..N from phase2Picks */
+function rerenderPickMarkers(){
+  tokens.forEach(({el}) => clearChipPickMarker(el));
+  (phase2Picks || []).forEach((pid, i)=>{
+    const rec = tokens.get(pid);
+    if (rec?.el) setChipPickIndex(rec.el, i + 1);
+  });
+}
+
+/** Clear the model & visuals of all picks. */
+function clearAllPicks(){
+  phase2Picks = [];
+  tokens.forEach(({el})=>{
+    if (!el) return;
+    clearChipPickMarker(el);
+    el.classList.remove('correctPulse','wrongShake');
+  });
+}
+
+/* =======================
+   [Phase 2: End & Result Panels]
+   ======================= */
+
+function endPhase2(success = true) {
+  // If Phase 2 was never started, just clear & hide
+  if (!phase2Active) {
+    phase2Active = false;
+    allowSeqPanel = false;
+    hideSeqPanel();
+    if (verifySeqBtn) verifySeqBtn.classList.add('hidden');
+    setChipsSelectable(false);
+    phase2Locked = new Set();
+    phase2Picks  = [];
+    tokens.forEach(({el})=>{
+      if (!el) return;
+      clearChipPickIndex(el);
+      el.classList.remove('seq-locked','correctPulse','wrongShake');
+      el.style.pointerEvents = '';
+    });
+    cleanupSeqThrowViz?.();
+    return;
+  }
+
+  // Stop interaction
+  phase2Active = false;
+  setChipsSelectable(false);
+
+  if (continueBtn) continueBtn.classList.add('hidden');
+  if (verifySeqBtn) verifySeqBtn.classList.add('hidden');
+
+  // Now allow the sequence panel to appear with result info
+  allowSeqPanel = true;
+
+  if (success) {
+    showSeqSuccessPanel();
+  } else {
+    phase2TriesLeft = 0;
+    showSeqFailPanel();
+  }
+
+  // Chips that were locked-in as correct remain highlighted & marked.
+  // Everything else should not be clickable anymore.
+  tokens.forEach(({el}, id)=>{
+    if (!el) return;
+    const locked = phase2Locked.has(id);
+    if (!locked){
+      // non-locked picks lose their marker
+      clearChipPickIndex(el);
+      el.classList.remove('seq-locked');
+    }
+  });
+
+  // === NEW: After the panel shows, animate the intended relay path ===
+  // We always animate the *intended* sequence (full playSeq), as a teaching moment.
+  if (Array.isArray(seqOrder) && seqOrder.length >= 2) {
+    setTimeout(() => {
+      animateSequenceThrows(seqOrder);
+    }, 350);
+  }
+}
+
+// Treat any badge/attr as "marked"
+function chipIsMarked(el){
+  return !!(el && (el.hasAttribute('data-pick') || el.querySelector('.seq-badge')));
+}
+
+let _seqBallEl = null;
+let _seqTrail = null;
+let _seqAnimRaf = null;
+
+/** Build (or reuse) the tiny ball used for throw animations */
+function ensureSeqBall(){
+  if (_seqBallEl && _seqBallEl.parentNode) return _seqBallEl;
+  _seqBallEl = document.createElement('div');
+  _seqBallEl.className = 'seqBall';
+  wrap.appendChild(_seqBallEl);
+  return _seqBallEl;
+}
+
+/** Build (or reuse) an SVG overlay to draw throw lines */
+function ensureSeqTrail(){
+  if (_seqTrail && _seqTrail.parentNode) return _seqTrail;
+  _seqTrail = document.createElement('div');
+  _seqTrail.className = 'throwTrail';
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox', `0 0 ${imgRect.width} ${imgRect.height}`);
+  _seqTrail.appendChild(svg);
+  wrap.appendChild(_seqTrail);
+  return _seqTrail;
+}
+
+/** Remove temporary ball + trail */
+function sizeOverlays(){
+  if (!wrap) return;
+
+  // 1) Snapshot new container rect
+  const r = wrap.getBoundingClientRect();
+  imgRect = { width:r.width, height:r.height, left:r.left, top:r.top };
+
+  // 2) Scale chip size + fonts and scale markers (ball/runner/hit marker)
+  updateChipScale();
+
+  // 3) Re-position all chips from native coords
+  POS_IDS.forEach(id => placeToken(id));
+
+  // 4) Reposition + resize target rings from model
+  if (currentSituation && currentSituation.targets){
+    getAllRings().forEach(el => {
+      const id  = el.dataset.id;
+      const tgt = currentSituation.targets[id];
+      if (!tgt) return;
+      const css = unitToCss(tgt);
+      el.style.left = css.left + 'px';
+      el.style.top  = css.top  + 'px';
+      const dpx = tolToCssDiameter(Number(tgt.tol) || DEFAULT_TOL, /*allowTiny*/ coachUnlocked);
+      el.style.width  = dpx + 'px';
+      el.style.height = dpx + 'px';
+    });
+  }
+
+  // 5) Ball graphics: reset and rebuild SVG to match new viewBox
+  if (animReq){ cancelAnimationFrame(animReq); animReq = null; }
+  if (ballSvg) ballSvg.innerHTML = '';
+  buildBallGraphics(); // also calls syncBallToHit()
+
+  // 6) Reposition coach hit marker (if visible)
+  if (hitMarker && currentSituation && currentSituation.hit){
+    const css = unitToCss(currentSituation.hit);
+    hitMarker.style.left = css.left + 'px';
+    hitMarker.style.top  = css.top  + 'px';
+  }
+
+  // 7) Repaint static base-runner dots and snap animated runner to base
+  renderBaseRunners();
+  if (runnerEl && runnerEl.style.display !== 'none'){
+    placeRunnerAtBase(runnerLastBase);
+  }
+
+  scaleMarkers();
+
+  // Clear any in-progress Phase 2 throw animation after a resize/layout change
+  cleanupSeqThrowViz();
+
+  if (phase2Active && ballEl){
+    ballEl.style.display = 'none';
+  }
+}
+
+
+/** Get CSS-space point for a position id, using target (snap) locations */
+/** Get CSS-space point for a position id, using the chip’s actual DOM left/top if present. */
+function getCssPointForPosId(posId){
+  const rec = tokens.get(posId);
+  if (rec?.el){
+    const x = parseFloat(rec.el.style.left)  || 0;
+    const y = parseFloat(rec.el.style.top)   || 0;
+    return { x, y };
+  }
+  // Fallback to target location if the chip isn't built yet
+  const tgt = currentSituation?.targets?.[posId];
+  return tgt ? nativeToCssPoint({ x: tgt.x, y: tgt.y }) : null;
+}
+
+
+/** Small chip pulse for feedback */
+function pulseChip(id){
+  const rec = tokens.get(id);
+  if (!rec?.el) return;
+  rec.el.classList.add('correctPulse');
+  setTimeout(()=> rec.el?.classList?.remove('correctPulse'), 260);
+}
+
+/** Animate the ball along a straight line from A to B.
+ *  Always snaps to the exact destination at completion. */
+function animateThrowLeg(fromPt, toPt){
+  return new Promise(resolve=>{
+    const ball = ensureSeqBall();
+    const trail = ensureSeqTrail();
+    const svg = trail.querySelector('svg');
+
+    // draw line for this leg (optional visual)
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', `M ${fromPt.x},${fromPt.y} L ${toPt.x},${toPt.y}`);
+    svg.appendChild(path);
+
+    // start position
+    ball.style.left = fromPt.x + 'px';
+    ball.style.top  = fromPt.y + 'px';
+    ball.style.display = 'block';
+
+    const dist = Math.hypot(toPt.x - fromPt.x, toPt.y - fromPt.y);
+    const duration = clamp(420 + dist * 0.45, 380, 1100);
+
+    let t0 = performance.now();
+    const step = (now)=>{
+      const t = clamp((now - t0) / duration, 0, 1);
+      const e = 1 - Math.pow(1 - t, 3); // ease-out
+      if (t < 1){
+        const x = lerp(fromPt.x, toPt.x, e);
+        const y = lerp(fromPt.y, toPt.y, e);
+        ball.style.left = x + 'px';
+        ball.style.top  = y + 'px';
+        _seqAnimRaf = requestAnimationFrame(step);
+      } else {
+        // 🔒 hard-snap to the exact destination
+        ball.style.left = toPt.x + 'px';
+        ball.style.top  = toPt.y + 'px';
+        resolve();
+      }
+    };
+    _seqAnimRaf = requestAnimationFrame(step);
+  });
+}
+
+/** Animate throws along the provided order of POS_IDS (e.g., ['LF','SS','2B','C']) */
+async function animateSequenceThrows(order){
+  try{
+    // nuke any prior seq viz
+    cleanupSeqThrowViz?.();
+
+    // build CSS points
+    const pts = order
+      .map(id => ({ id, pt: getCssPointForPosId(id) }))
+      .filter(x => !!x.pt);
+    if (pts.length < 2) return;
+
+    // hide the regular hit ball while we animate with the seq ball
+    if (ballEl){ ballEl.style.display = 'none'; }
+
+    const ball = ensureSeqBall();   // seq-ball
+    ensureSeqTrail();               // seq trail svg
+
+    pulseChip(pts[0].id);
+
+    for (let i = 0; i < pts.length - 1; i++){
+      const a = pts[i];
+      const b = pts[i + 1];
+
+      pulseChip(a.id);
+      await animateThrowLeg(a.pt, b.pt);
+      pulseChip(b.id);
+      await new Promise(r => setTimeout(r, 120));
+    }
+
+    // Final hand-off: move the regular ball to the exact DOM center of last receiver
+    const lastId = pts[pts.length - 1].id;
+    const lastPt = getCssPointForPosId(lastId);
+    if (ballEl && lastPt){
+      ballEl.style.left = Math.round(lastPt.x) + 'px';
+      ballEl.style.top  = Math.round(lastPt.y) + 'px';
+      ballEl.style.display = 'block';
+    }
+
+  } finally {
+    // remove seq ball + trail so only the regular ball remains
+    cleanupSeqThrowViz?.();
+  }
+}
+
+/** Show a simple "success" message inside the Play Sequence card */
+function showSeqSuccessPanel() {
+  showSeqPanel(`
+    <div style="color:#16a34a;font-weight:700">✅ Correct sequence!</div>
+    <div class="hint" style="margin-top:6px">Well done — you executed the play correctly.</div>
+  `);
+}
+
+/** Show a "failure" message inside the Play Sequence card */
+function showSeqFailPanel() {
+  const seqStr = seqOrder.join(' → ') || '—';
+  showSeqPanel(`
+    <div style="color:#dc2626;font-weight:700">❌ Incorrect sequence</div>
+    <div class="hint" style="margin-top:6px">Expected: <b>${seqStr}</b></div>
+  `);
+}
+
+
 function wireOnce(){
   if (_wired) return;
   _wired = true;
@@ -510,22 +1227,37 @@ function wireOnce(){
 
   if (startBtn)  startBtn.addEventListener('click', ()=>{
     if (!currentSituation) return;
-    _roundHasStarted = true;
 
-    gameActive=true; remainingTries=MAX_TRIES; updateHud(0);
+    _roundHasStarted = true;
+    allowSeqPanel = false;
+
+    // --- Set game state up front ---
+    gameActive = true;
+    remainingTries = MAX_TRIES;
+    updateHud(0);
     _allTargetsCorrect = false;
+
+    wipePhase2StateUI();
+    if (continueBtn) continueBtn.classList.add('hidden');
+
+    // --- Reset round UI ---
     disableTargetSelection();
     hideTargetPanel();
     if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
-    startBtn.disabled=true; if (resetBtn) resetBtn.disabled=false; if (checkBtn) checkBtn.disabled=false;
-    setChipsLocked(false); syncBallToHit();
+    startBtn.disabled = true;
+    if (resetBtn) resetBtn.disabled = false;
+    if (checkBtn) checkBtn.disabled = false;
+    if (checkBtn){ checkBtn.classList.remove('hidden'); }
+    setChipsLocked(false);
+    syncBallToHit();
 
+    // --- Animate hit + runners ---
     const ht = (currentSituation.hitType) || (hitTypeSel && hitTypeSel.value) || 'line';
     animateHit(ht);
 
-    const advFromSit=(typeof currentSituation.batterAdvance==='number') ? currentSituation.batterAdvance : null;
-    const advFromUI = advanceSel ? clampInt(advanceSel.value,0,4) : null;
-    const advance   = (advFromSit ?? advFromUI ?? mapHitTypeToAdvance(ht));
+    const advFromSit = (typeof currentSituation.batterAdvance === 'number') ? currentSituation.batterAdvance : null;
+    const advFromUI  = advanceSel ? clampInt(advanceSel.value,0,4) : null;
+    const advance    = (advFromSit ?? advFromUI ?? mapHitTypeToAdvance(ht));
 
     liveRunners = normalizeRunnersOn(currentSituation.runnersOn);
 
@@ -537,7 +1269,7 @@ function wireOnce(){
       finalExisting = finalState;
       existingDone = true;
       maybeFinish();
-    });
+   });
 
     animateBatterAdvance(advance, (destBase)=>{
       batterDest = destBase;
@@ -557,6 +1289,192 @@ function wireOnce(){
       updateRunnersHudFromLive();
     }
   });
+
+  // --- Create a Verify Sequence button in the header row (once) ---
+  const actionsRow = document.querySelector('header .header-actions');
+  if (!verifySeqBtn){
+    verifySeqBtn = document.createElement('button');
+    verifySeqBtn.id = 'verifySeqBtn';
+    verifySeqBtn.className = 'btn-green hidden';
+    verifySeqBtn.textContent = 'Verify Sequence';
+    actionsRow.insertBefore(verifySeqBtn, document.getElementById('hud'));
+  }
+
+// ===== Add near your other Phase 2 globals (once) =====
+let phase2Locked = new Set(); // chips that are locked in as correct prefix
+
+// ===== Small helpers (add once anywhere in <script>) =====
+function getCorrectPrefixLen(picks, order){
+  const n = Math.min(picks.length, order.length);
+  let k = 0;
+  for (; k < n; k++){
+    if (picks[k] !== order[k]) break;
+  }
+  return k; // number of leading chips correct & in order
+}
+
+// Replace the old lockCorrectPrefix with this:
+function lockCorrectPrefix(k){
+  // Never reduce already-locked count
+  const prev = phase2Locked.size || 0;
+  const want = Math.max(prev, Math.max(0, Math.min(k, seqOrder.length)));
+
+  const lockIds = seqOrder.slice(0, want);       // ← lock by the expected order only
+  phase2Locked = new Set(lockIds);
+
+  // Update visuals for ALL chips
+  tokens.forEach(({el}, id)=>{
+    if (!el) return;
+    const locked = phase2Locked.has(id);
+    clearChipPickIndex(el);
+    el.classList.remove('seq-locked','correctPulse','wrongShake');
+
+    if (locked){
+      setChipPickIndex(el, lockIds.indexOf(id) + 1);
+      el.classList.add('seq-locked');
+      el.classList.remove('selectableChip');
+      el.style.pointerEvents = 'none';
+    } else {
+      el.style.pointerEvents = ''; // keep them clickable
+    }
+  });
+
+  // Keep the model picks trimmed to the locked prefix (helps re-numbering)
+  phase2Picks = lockIds.slice();
+  rerenderPickMarkers();
+}
+
+function phase2UpdateScoreHud(){
+  // Show "locked correct prefix / total" during Phase 2
+  const lockedCount = phase2Locked.size;
+  const total = seqOrder.length || 0;
+  // We reuse updateHud's score spot but pass only the prefix count
+  // (updateHud reads phase2Active to render tries separately)
+  updateHud(lockedCount);
+  if (scoreVal) scoreVal.textContent = `${lockedCount}/${total}`;
+}
+
+  verifySeqBtn.addEventListener('click', ()=>{
+    if (!phase2Active || !seqOrder.length) return;
+
+    const tooMany = phase2Picks.length > seqOrder.length;
+    const kAttempt = getCorrectPrefixLen(phase2Picks, seqOrder); // how many from the start were correct
+    const kPrev    = phase2Locked.size || 0;
+
+    if (tooMany){
+      // Shake any extra chips that exceeded the required length
+      phase2Picks.slice(seqOrder.length).forEach(id=>{
+        const el = tokens.get(id)?.el;
+        if (el){
+          el.classList.add('wrongShake');
+          setTimeout(()=> el.classList.remove('wrongShake'), 220);
+        }
+      });
+
+      // Do NOT increase locks on an over-pick attempt
+      lockCorrectPrefix(kPrev);
+    } else {
+      // Progressively lock the longest correct prefix; never regress
+      lockCorrectPrefix(Math.max(kPrev, kAttempt));
+    }
+
+    // Only a perfect exact match (same length AND same order) is success
+    const exact = !tooMany && isExactSequenceMatch(phase2Picks, seqOrder);
+    if (exact){
+      endPhase2(true);
+      return;
+    }
+
+    // Not exact → consume a try (keep the panel hidden during attempts)
+    phase2TriesLeft = Math.max(0, phase2TriesLeft - 1);
+    updateHud();
+    hideSeqPanel();
+
+    if (phase2TriesLeft === 0){
+      endPhase2(false);
+    }
+  });
+
+  // --- CONTINUE button: start Phase 2, snap chips, hide rings/target panel, hide Check Positions ---
+  if (continueBtn) continueBtn.addEventListener('click', ()=>{
+    if (!isPostRound()) return;
+
+    phase2Locked = new Set();
+    phase2Picks  = [];
+    tokens.forEach(({el})=>{
+      if (!el) return;
+      clearChipPickIndex(el);
+      el.classList.remove('seq-locked','correctPulse','wrongShake','selectableChip');
+      el.style.pointerEvents = '';
+    });
+
+    const seq = getSeqForCurrent();
+    if (!seq.length){
+      // No play sequence configured → never run Phase 2; hide the button and panel
+      continueBtn.classList.add('hidden');
+      hideSeqPanel();
+      return;
+    }
+
+    // Phase 2 setup
+    hideTargetPanel();             // hide Selected Target card immediately
+    disableTargetSelection();      // stop ring selection in post-round view
+    allowSeqPanel = false;         // keep the Play Sequence card hidden during attempts
+
+    // Move chips to their correct targets, then hide the rings (non-coach)
+    snapChipsToTargets();
+    if (!coachUnlocked) getAllRings().forEach(el => el.style.display = 'none');
+
+    // Hide "Check Positions" during Phase 2
+    if (checkBtn){
+      checkBtn.classList.add('hidden');
+      checkBtn.disabled = true;
+    }
+
+    // Start Phase 2 state
+    seqOrder = seq;
+    seqIndex = 0; // not used in the new "pick then verify" flow, kept for compatibility
+    phase2TriesLeft = PHASE2_MAX_TRIES;
+    clearAllPicks();     // start fresh
+    updateHud();         // show 0/<seq length> in the score HUD
+    phase2Active = true;
+
+    if (ballEl){
+      ballEl.style.display = 'none';  
+    }
+
+    clearAllPicks();
+    setChipsSelectable(true);
+    updateHud();
+
+    // Show Verify button; keep Play Sequence panel hidden until success/exhaustion
+    verifySeqBtn.classList.remove('hidden');
+    hideSeqPanel();
+
+    continueBtn.classList.add('hidden');
+  });
+
+  if (seqInput){
+    const syncSeq = () => {
+      if (!currentSituation) return;
+      currentSituation.playSeq = String(seqInput.value || '')
+        .split(',')
+        .map(s => s.toUpperCase().trim())
+        .filter(s => POS_IDS.includes(s));
+    };
+    seqInput.addEventListener('input',  syncSeq);
+    seqInput.addEventListener('change', syncSeq);
+  }
+
+  if (seqNoteInput){
+    const syncSeqNote = () => {
+      if (!currentSituation) return;
+      currentSituation.seqNote = String(seqNoteInput.value || '');
+    };
+    seqNoteInput.addEventListener('input',  syncSeqNote);
+    seqNoteInput.addEventListener('change', syncSeqNote);
+  }
+
 
   if (coachBtn) coachBtn.addEventListener('click', ()=>{
     if (coachUnlocked){
@@ -631,9 +1549,18 @@ function wireOnce(){
     });
   }
 
-  if (downloadCurrentBtn) downloadCurrentBtn.addEventListener('click', ()=> download('situation-current.json', buildCurrentSituationExport()));
-  if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=> download('situations-all.json', buildAllSituationsExport()));
-  if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{} });
+  if (downloadCurrentBtn) downloadCurrentBtn.addEventListener('click', ()=>{
+    refreshSituationAll(); // ensure UI → model before exporting
+    download('situation-current.json', buildCurrentSituationExport());
+  });
+  if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
+    refreshSituationAll();
+    download('situations-all.json', buildAllSituationsExport());
+  });
+  if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
+    refreshSituationAll();
+    try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
+  });
 }
 
 /* =======================
@@ -671,6 +1598,16 @@ let _wired = false;
 
 let _roundHasStarted = false;
 
+let phase2Active = false;
+let seqOrder = [];     // array of POS_IDS e.g. ['LF','SS','2B','C']
+let seqIndex = 0;      // current expected index
+
+const PHASE2_MAX_TRIES = 3;
+let phase2TriesLeft = 0;
+let allowSeqPanel = false;
+let phase2Picks = [];         // array of POS_IDS in the order the user picked
+let verifySeqBtn = null;      // created in wireOnce
+
 const Bus = (() => {
   /** @type {Record<string, Set<Function>>} */ const map = {};
   return {
@@ -707,9 +1644,15 @@ const targetPanel      = document.getElementById('targetPanel');
 const targetPanelTitle = document.getElementById('targetPanelTitle');
 const targetPanelBody  = document.getElementById('targetPanelBody');
 
+const continueBtn = document.getElementById('continueBtn');
+const seqPanel    = document.getElementById('seqPanel');
+const seqBody     = document.getElementById('seqBody');
+const seqInput    = document.getElementById('seqInput');
+const seqNoteInput = document.getElementById('seqNoteInput');
+
+
 const coachBtn=document.getElementById('coachBtn');
 // Ensure header groups exist and move elements into them for consistent layout
-
 
 const ensureHeaderGrouping = () => {
   const header = document.querySelector('header');
@@ -723,7 +1666,7 @@ const ensureHeaderGrouping = () => {
     header.appendChild(actions);
   }
 
-  // --- Explicitly re-order children in one place ---
+  // Explicit order inside the actions row
   const order = [
     document.getElementById('randomSitBtn'),
     document.getElementById('sitSelect'),
@@ -733,18 +1676,18 @@ const ensureHeaderGrouping = () => {
     document.getElementById('startBtn'),
     document.getElementById('resetBtn'),
     document.getElementById('checkBtn'),
+    document.getElementById('continueBtn'),
     document.getElementById('hud'),
     document.getElementById('coachBtn'),
   ];
 
-  order.forEach(el => {
-    if (el) actions.appendChild(el);
-  });
+  order.forEach(el => { if (el) actions.appendChild(el); });
 
-  // Move the <h1> back to the very front of the header if it exists
+  // Keep <h1> at the very front
   const h1 = header.querySelector('h1');
   if (h1) header.insertBefore(h1, header.firstChild);
 };
+
 
 
 const coachCard=document.getElementById('coachCard');
@@ -811,54 +1754,6 @@ function tolToCssDiameter(tol, allowTiny=false){
 /* =======================
    [A1] Resize & Layout (single source of truth)
    ======================= */
-function sizeOverlays(){
-  if (!wrap) return;
-
-  // 1) Snapshot new container rect
-  const r = wrap.getBoundingClientRect();
-  imgRect = { width:r.width, height:r.height, left:r.left, top:r.top };
-
-  // 2) Scale chip size + fonts and scale markers (ball/runner/hit marker)
-  updateChipScale();
-
-  // 3) Re-position all chips from native coords
-  POS_IDS.forEach(id => placeToken(id));
-
-  // 4) Reposition + resize target rings from model
-  if (currentSituation && currentSituation.targets){
-    getAllRings().forEach(el => {
-      const id  = el.dataset.id;
-      const tgt = currentSituation.targets[id];
-      if (!tgt) return;
-      const css = unitToCss(tgt);
-      el.style.left = css.left + 'px';
-      el.style.top  = css.top  + 'px';
-      const dpx = tolToCssDiameter(Number(tgt.tol) || DEFAULT_TOL, /*allowTiny*/ coachUnlocked);
-      el.style.width  = dpx + 'px';
-      el.style.height = dpx + 'px';
-    });
-  }
-
-  // 5) Ball graphics: reset and rebuild SVG to match new viewBox
-  if (animReq){ cancelAnimationFrame(animReq); animReq = null; }
-  if (ballSvg) ballSvg.innerHTML = '';
-  buildBallGraphics(); // also calls syncBallToHit()
-
-  // 6) Reposition coach hit marker (if visible)
-  if (hitMarker && currentSituation && currentSituation.hit){
-    const css = unitToCss(currentSituation.hit);
-    hitMarker.style.left = css.left + 'px';
-    hitMarker.style.top  = css.top  + 'px';
-  }
-
-  // 7) Repaint static base-runner dots and snap animated runner to base
-  renderBaseRunners();
-  if (runnerEl && runnerEl.style.display !== 'none'){
-    placeRunnerAtBase(runnerLastBase);
-  }
-
-  scaleMarkers();
-}
 
 /* schedule layout on next frame (avoid resize jank) */
 let _resizeRaf = null;
@@ -953,15 +1848,6 @@ function scaleMarkers(){
   }
 }
 
-/* Optional: wrap animateHit to force scaling at animation start */
-const _origAnimateHit = typeof animateHit === 'function' ? animateHit : null;
-if (_origAnimateHit){
-  window.animateHit = function(style){
-    scaleMarkers();
-    _origAnimateHit(style);
-  };
-}
-
 /* =======================
    [A3] Chips (tokens) — core drag/drop
    ======================= */
@@ -1018,6 +1904,7 @@ function canDrag(){
 function makeChipDraggable(el,id){
   let drag=null;
 
+  // --- drag for Phase 1 / coach ---
   el.addEventListener('pointerdown', e=>{
     if (!canDrag()) return;
     e.preventDefault();
@@ -1034,7 +1921,6 @@ function makeChipDraggable(el,id){
       const top  = drag.top  + (e2.clientY - drag.cy);
       el.style.left = left + 'px';
       el.style.top  = top  + 'px';
-      // save as native coords so layout rescales cleanly
       const native = cssToUnit(left, top);
       tokens.get(id).pos = { x: native.x, y: native.y };
     };
@@ -1047,6 +1933,32 @@ function makeChipDraggable(el,id){
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp, { once:true });
   });
+
+  el.addEventListener('click', ()=>{
+    if (!phase2Active) return;
+    if (!seqOrder || !seqOrder.length) return;
+
+    // Don’t allow toggling locked (already-correct) chips
+    if (phase2Locked.has(id)) return;
+
+    const idx = phase2Picks.indexOf(id);
+
+    if (idx === -1){
+      // ✅ Allow selecting beyond required count; verification will fail if length mismatches
+      phase2Picks.push(id);
+      setChipPickIndex(el, phase2Picks.length);
+    } else {
+      // Deselect this chip and renumber visible badges
+      phase2Picks.splice(idx, 1);
+      clearChipPickIndex(el);
+      rerenderPickMarkers();
+    }
+
+    // Keep the Play Sequence panel hidden until success/exhaustion
+    hideSeqPanel();
+  });
+
+
 }
 
 /* =======================
@@ -1575,14 +2487,77 @@ function applyCoachVisibility(){
 }
 function setChipsLocked(locked){ tokens.forEach(({el})=> el.classList.toggle('locked', locked && !coachUnlocked)); }
 function updateHud(scoreCount){
-  scoreVal.textContent = String(scoreCount ?? 0);
-  const triesLeft = coachUnlocked ? Infinity : (gameActive ? remainingTries : MAX_TRIES);
-  if (triesVal) triesVal.textContent = coachUnlocked ? '∞' : `${triesLeft}/${MAX_TRIES}`;
-  if (triesBadge){
-    const state = (coachUnlocked || triesLeft >= 2) ? 'green' : (triesLeft === 1 ? 'yellow' : 'red');
-    setBadgeState(triesBadge, state, 'tries');
+  // --- helper: "Score: <b><span id='scoreVal'>n</span>/<den></b>" ---
+  function setScoreDisplay(n, den){
+    if (scoreVal) scoreVal.textContent = String(n);
+    if (scoreBadge){
+      const b = scoreBadge.querySelector('b');
+      if (!b) return;
+      const sv = b.querySelector('#scoreVal');
+      if (!sv) return;
+
+      // ensure the text node immediately after #scoreVal is "/<den>"
+      let node = sv.nextSibling;
+      if (!node || node.nodeType !== Node.TEXT_NODE){
+        while (node){ const next = node.nextSibling; b.removeChild(node); node = next; }
+        b.appendChild(document.createTextNode('/' + den));
+      } else {
+        node.textContent = '/' + den;
+      }
+    }
   }
+
+  // --- Phase 2 visibility rule for SCORE (hide for players) ---
+  const hideScoreForPhase2 = (phase2Active && !coachUnlocked);
+  if (scoreBadge) scoreBadge.style.display = hideScoreForPhase2 ? 'none' : '';
+
+  if (!hideScoreForPhase2){
+    // Show score in Phase 1 (9 positions) OR in Coach mode during Phase 2
+    if (phase2Active){
+      // Coach can see Phase 2 progress (consecutive-correct prefix)
+      const total = Array.isArray(seqOrder) ? seqOrder.length : 0;
+      const good  = (typeof getPhase2ConsecutiveCorrect === 'function')
+        ? getPhase2ConsecutiveCorrect()
+        : 0;
+      setScoreDisplay(good, total);
+
+      if (scoreBadge){
+        const pct = total ? (good / total) : 0;
+        const state = pct >= 2/3 ? 'green' : (pct >= 1/3 ? 'yellow' : 'red');
+        setBadgeState(scoreBadge, state, 'score');
+      }
+    } else {
+      // Phase 1 score (0..9)
+      const n = (typeof scoreCount === 'number') ? scoreCount : (Number(scoreVal?.textContent) || 0);
+      setScoreDisplay(n, 9);
+      if (scoreBadge){
+        const pct = n / 9;
+        const state = pct >= 2/3 ? 'green' : (pct >= 1/3 ? 'yellow' : 'red');
+        setBadgeState(scoreBadge, state, 'score');
+      }
+    }
+  }
+
+  // --- Tries HUD (unchanged semantics) ---
+  let triesLabel = '';
+  let triesState = 'green';
+
+  if (coachUnlocked) {
+    triesLabel = '∞';
+  } else if (phase2Active) {
+    const t = Math.max(0, phase2TriesLeft);
+    triesLabel = `${t}/${PHASE2_MAX_TRIES}`;
+    triesState = (t >= 2) ? 'green' : (t === 1 ? 'yellow' : 'red');
+  } else {
+    const t = gameActive ? remainingTries : MAX_TRIES;
+    triesLabel = `${t}/${MAX_TRIES}`;
+    triesState = (t >= 2) ? 'green' : (t === 1 ? 'yellow' : 'red');
+  }
+
+  if (triesVal) triesVal.textContent = triesLabel;
+  if (triesBadge) setBadgeState(triesBadge, triesState, 'tries');
 }
+
 
 function setBadgeState(el, state /* 'green'|'yellow'|'red' */, base){
   if (!el) return;
@@ -1598,6 +2573,8 @@ function setCoachMode(enabled){
   buildTargets(); applyCoachVisibility(); updateHud(Number(scoreVal.textContent)||0);
   disableTargetSelection();
   hideTargetPanel();
+  endPhase2(false);
+  if (continueBtn) continueBtn.classList.add('hidden');
 }
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
 function closePwModal(){ pwModal.style.display='none'; }
@@ -1633,8 +2610,17 @@ function normalizeSituation(sRaw, i){
   // runners
   safe.runnersOn = normalizeRunnersOn(safe.runnersOn);
 
+  // Phase 2: sequence + note
+  const rawSeq = Array.isArray(safe.playSeq) ? safe.playSeq : String(safe.playSeq || '')
+                    .split(',')
+                    .map(s => s.toUpperCase().trim())
+                    .filter(Boolean);
+  safe.playSeq = rawSeq.filter(s => POS_IDS.includes(s));
+  safe.seqNote = (typeof safe.seqNote === 'string') ? safe.seqNote : '';
+
   return /** @type {Situation} */ (safe);
 }
+
 
 function defaultStartsMap(){
   const map = {};
@@ -1777,14 +2763,6 @@ function startsToTargets(starts, tol=DEFAULT_TOL){
   const out={}; POS_IDS.forEach(id=>{ const p=starts[id]; if(p) out[id]={ x:Math.round(p.x), y:Math.round(p.y), tol:Number(tol)||DEFAULT_TOL }; });
   return out;
 }
-function seedTargetsFromStarts(){
-  if (!currentSituation) return;
-  const onscreenStarts = getOnscreenStarts();
-  currentSituation.targets = startsToTargets(onscreenStarts, DEFAULT_TOL);
-  buildTargets(); if (!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
-  if (situationMsg){ situationMsg.textContent='Targets seeded from starts.'; setTimeout(()=> situationMsg.textContent='', 1400); }
-}
-function genSlug(s){return String(s||'S').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,24)||'s';}
 
 // Generates a unique, title-independent key. Keys never change when you edit titles.
 let __NEW_KEY_SEQ = 0;
@@ -1965,6 +2943,8 @@ function setSituation(key){
   currentSituation = getSituationByKey(key) || SITUATIONS[0];
   if (!currentSituation) return;
 
+  wipePhase2StateUI();
+
   // Any time we switch situations, selection mode should be off
   disableTargetSelection();
   hideTargetPanel();
@@ -2012,7 +2992,7 @@ function setSituation(key){
   tolTargetSel.value=firstId;
   syncTolInputsFromModel(firstId);
 
-  // >>> NEW: sync the Notes textarea with the selected target <<<
+  // >>> sync the Notes textarea with the selected target <<<
   if (tolTargetSel){
     const id = tolTargetSel.value || POS_IDS[0];
     syncTolNotesFromModel(id);
@@ -2045,6 +3025,15 @@ function setSituation(key){
   renderBaseRunners();
   scaleMarkers();
   updateRunnersHudFromLive();
+
+  if (continueBtn) continueBtn.classList.add('hidden');
+  endPhase2(false); // ensure phase state is cleared
+  phase2ClearAllUI();
+
+  if (seqInput){
+    const seq = (currentSituation.playSeq || []).join(', ');
+    withInputMute(()=> { seqInput.value = seq; });
+  }
 }
 
 /* =======================
@@ -2074,13 +3063,31 @@ function getStartsForExport(key){
   const out={}; POS_IDS.forEach(id=>{ const p=src[id] || DEFAULT_STARTS[id]; out[id]={ x:Math.round(p.x), y:Math.round(p.y) }; });
   return out;
 }
-function composeSituationForExport(base,starts,targets,hit){
-  const extra={...base}; delete extra.starts; delete extra.targets; delete extra.hit; delete extra.hitType; delete extra.batterAdvance;
-  const payload={...extra, starts, targets}; if (hit) payload.hit=hit;
-  if (base.hitType) payload.hitType=base.hitType;
-  if (typeof base.batterAdvance==='number') payload.batterAdvance=clampInt(base.batterAdvance,0,4);
+function composeSituationForExport(base, starts, targets, hit){
+  const extra = { ...base };
+  delete extra.starts;
+  delete extra.targets;
+  delete extra.hit;
+
+  const payload = { ...extra, starts, targets };
+  if (hit) payload.hit = hit;
+
+  if (base.hitType) payload.hitType = base.hitType;
+  if (typeof base.batterAdvance === 'number') {
+    payload.batterAdvance = clampInt(base.batterAdvance, 0, 4);
+  }
+
+  if (Array.isArray(base.playSeq) && base.playSeq.length) {
+    payload.playSeq = base.playSeq.slice();
+  }
+  if (typeof base.seqNote === 'string' && base.seqNote.trim()) {
+    payload.seqNote = base.seqNote;
+  }
+
   return payload;
 }
+
+
 function buildCurrentSituationExport(){
   const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
   const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
@@ -2199,6 +3206,19 @@ function refreshSituationAll(){
     situationMsg.textContent='Situation refreshed.';
     setTimeout(()=> situationMsg.textContent='', 1400);
   }
+
+  if (seqInput){
+    const parts = String(seqInput.value || '')
+      .split(',')
+      .map(s => s.toUpperCase().trim())
+      .filter(s => POS_IDS.includes(s));
+    currentSituation.playSeq = parts; // [] disables Phase 2
+  }
+
+  if (seqNoteInput){
+    currentSituation.seqNote = String(seqNoteInput.value || '');
+  }
+
 }
 
 // Use one canonical saver; keep alias for any internal callers.
@@ -2254,7 +3274,8 @@ function checkPositions(){
   // Non-coach: handle tries and end-of-round behavior
   if (!coachUnlocked){
     const allCorrectNow = (correct === POS_IDS.length);
-    try { window._allTargetsCorrect = allCorrectNow; } catch {}
+
+    _allTargetsCorrect = allCorrectNow;
 
     if (gameActive){
       remainingTries = Math.max(0, remainingTries - 1);
@@ -2280,7 +3301,17 @@ function checkPositions(){
           showTargetPanel();
         }
       }
+
+      if (_roundHasStarted && continueBtn){
+        const hasSeq = getSeqForCurrent().length > 0;
+        if ((allCorrectNow || outOfTries) && hasSeq) {
+          continueBtn.classList.remove('hidden');
+        } else {
+          continueBtn.classList.add('hidden');
+        }
+      }
     }
+
   }
 }
 
@@ -2291,23 +3322,48 @@ function resetBallAndRunnerForSituation(){
   if (runnerAnimId){ cancelAnimationFrame(runnerAnimId); runnerAnimId=null; }
   hideRunner();
 }
+
 function resetPlayers(){
+  wipePhase2StateUI();
+  if (continueBtn) continueBtn.classList.add('hidden');
+
+  // existing reset logic
+  allowSeqPanel = false;
   disableTargetSelection();
   hideTargetPanel();
   _allTargetsCorrect = false;
   _roundHasStarted = false;
-  POS_IDS.forEach(id=>{ const t=tokens.get(id); if(!t) return; t.pos=Fcopy(getStartFor(currentSituation.key,id)); placeToken(id); });
+
+  POS_IDS.forEach(id=>{
+    const t=tokens.get(id);
+    if(!t) return;
+    t.pos=Fcopy(getStartFor(currentSituation.key,id));
+    placeToken(id);
+  });
+
   getAllRings().forEach(el=> el.style.display=coachUnlocked ? 'block' : 'none');
-  updateHud(0); gameActive=false; remainingTries=0;
-  startBtn.disabled=false; resetBtn.disabled=true; checkBtn.disabled=true;
+  updateHud(0);
+  gameActive=false;
+  remainingTries=0;
+
+  startBtn.disabled=false;
+  resetBtn.disabled=true;
+  checkBtn.disabled=true;
+
   setChipsLocked(!coachUnlocked);
-  if (ballSvg) ballSvg.innerHTML=''; if (ballEl) syncBallToHit();
+
+  if (ballSvg) ballSvg.innerHTML='';
+  if (ballEl) syncBallToHit();
+
   hideRunner();
+
   liveRunners = normalizeRunnersOn(currentSituation.runnersOn);
   renderBaseRunners();
   scaleMarkers();
   updateRunnersHudFromLive();
 }
+
+
 
 /* =======================
    [A12] Init & events
