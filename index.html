@@ -167,18 +167,6 @@
     color:#0b1321; background:#e0f2fe; box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
   }
 
-  /* Phase 2: show the pick number on a selected chip */
-  .chip[data-pick-index]::after{
-    content: attr(data-pick-index);
-    position:absolute;
-    bottom:-8px;
-    right:-8px;
-    width:18px;height:18px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font:700 12px/1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    color:#0b1321; background:#e0f2fe; box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
-  }
-
   /* Locked-correct chip highlight for Phase 2 */
   .chip.seq-locked{
     outline: 3px solid rgba(22,163,74,.9);
@@ -246,6 +234,46 @@
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
   .subsec{border:1px dashed #e5e7eb;border-radius:10px;padding:8px;margin-top:6px}
   .subsec > .title{font-weight:800;color:#334155;margin-bottom:6px;font-size:13px}
+  /* === Play Sequence Builder (Coach) === */
+  .pos-grid{
+    display:grid;
+    grid-template-columns: repeat(5, minmax(44px, 1fr)); /* max 5 across */
+    gap:6px;
+  }
+  .pos-btn{
+    padding:6px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer;font-weight:800;
+    text-align:center; user-select:none; transition:transform .06s ease;
+  }
+  .pos-btn:active{ transform:scale(.98) }
+  .pos-btn[data-group="Battery"]{ background:#fff7ed; border-color:#fed7aa }
+  .pos-btn[data-group="Infield"]{ background:#eef2ff; border-color:#c7d2fe }
+  .pos-btn[data-group="Outfield"]{ background:#fee2e2; border-color:#fecaca }
+
+  .seq-list{
+    display:flex; flex-direction:column; gap:6px; margin-top:6px;
+    min-height:38px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:10px; padding:8px;
+  }
+  .seq-item{
+    display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #e5e7eb;
+    border-radius:10px; padding:6px 8px; cursor:grab; user-select:none;
+  }
+  .seq-item.dragging{ opacity:.6 }
+  .seq-num{
+    width:22px;height:22px;border-radius:999px;background:#e0f2fe;border:1px solid #bae6fd;
+    font-weight:900; display:flex;align-items:center;justify-content:center;color:#0b1321
+  }
+  .seq-tag{
+    font-weight:800; padding:2px 6px; border-radius:6px; background:#f1f5f9; border:1px solid #e5e7eb;
+  }
+  .seq-remove{
+    margin-left:auto;
+    padding:4px 8px;font-size:12px;border:1px solid #fecaca;border-radius:8px;background:#fff;cursor:pointer;color:#dc2626;
+  }
+  .seq-ghost{
+    height:34px; border:2px dashed #94a3b8; border-radius:10px; background:transparent;
+  }
+  .seq-toolbar{ display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap }
+
   .hint{font-size:12px;color:#64748b;font-weight:700}
   .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
   .hidden{display:none!important}
@@ -306,6 +334,11 @@
   }
   #howToCard .howto-body { margin-top: 8px; }
 
+  @media (max-width:420px){
+    .pos-grid{
+      grid-template-columns: repeat(3, minmax(44px, 1fr));
+    }
+  }
 
   /* ===== Responsive tweaks ===== */
   @media (max-width:900px){
@@ -516,14 +549,36 @@
           </div>
         </div>
 
-        <!-- Play Sequence (Phase 2) -->
-        <div class="subsec">
+        <!-- Play Sequence (Phase 2) — Click + Drag Builder -->
+        <div class="subsec" id="seqSubsec">
           <div class="title">Play Sequence</div>
-          <span style="color: red;" class="hint">Leave the order empty to disable for this situation</span>
-          <div class="hint">Order the players to be selected during Phase 2 (e.g., <b>LF, SS, 2B, C</b>).</div>
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
-            <input id="seqInput" type="text" placeholder="e.g., LF, SS, 2B, C" class="mono" style="width:100%"/>
-            <textarea id="seqNoteInput" rows="3" placeholder="Optional note shown to players on the Play Sequence card…" class="mono" style="width:100%"></textarea>
+          <span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span>
+          <div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div>
+
+          <!-- Click-to-add grid -->
+          <div id="seqPosGrid" class="pos-grid" style="margin-top:6px"></div>
+
+          <!-- Sequence list (draggable items) -->
+          <div id="seqList" class="seq-list" aria-live="polite"></div>
+
+          <!-- Toolbar: templates / clear -->
+          <div class="seq-toolbar">
+            <select id="seqTemplateSel" title="Load a common relay">
+              <option value="">Template…</option>
+              <option value="LF,SS,2B,C">LF → SS → 2B → C (relay home)</option>
+              <option value="CF,SS,3B">CF → SS → 3B (hold runner)</option>
+              <option value="RF,1B">RF → 1B (hold at first)</option>
+              <option value="SS,2B,1B">SS → 2B → 1B (6-4-3 DP)</option>
+            </select>
+            <button id="seqClearBtn" class="btn-slate btn-small">Clear sequence</button>
+            <span class="hint">Total steps: <b id="seqCountHud">0</b></span>
+          </div>
+
+          <!-- Optional overall coach note (keeps the same id you already use) -->
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
+            <textarea id="seqNoteInput" rows="3"
+              placeholder="Optional coach note shown to players on the Play Sequence card…"
+              class="mono" style="width:100%"></textarea>
           </div>
         </div>
 
@@ -722,6 +777,210 @@ function phase2UpdateHud(){
   );
 }
 
+/* =======================
+   Play Sequence Builder (Coach)
+   ======================= */
+
+/** Ensures array is valid POS_IDS only, uppercased */
+function sanitizeSeq(arr){
+  return (arr || [])
+    .map(s => String(s||'').toUpperCase().trim())
+    .filter(s => POS_IDS.includes(s));
+}
+
+/** Write to model + repaint builder */
+function setPlaySeq(next){
+  if (!currentSituation) return;
+  currentSituation.playSeq = sanitizeSeq(next);
+  renderSeqBuilder();
+}
+
+/** Clickable grid for adding steps */
+function buildSeqPosGrid(){
+  if (!seqPosGrid) return;
+  seqPosGrid.innerHTML = '';
+  POS_IDS.forEach(id=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pos-btn';
+    btn.textContent = id;
+    const group = (['P','C'].includes(id) ? 'Battery' : (['1B','2B','SS','3B'].includes(id) ? 'Infield' : 'Outfield'));
+    btn.dataset.group = group;
+    btn.addEventListener('click', ()=>{
+      const next = (currentSituation.playSeq || []).slice();
+      next.push(id);
+      setPlaySeq(next);
+    });
+    seqPosGrid.appendChild(btn);
+  });
+}
+
+/** Draggable list item (no per-item dragover/drop — handled at list level) */
+function makeSeqItem(id, index){
+  const li = document.createElement('div');
+  li.className = 'seq-item';
+  li.draggable = true;
+  li.dataset.index = String(index);
+
+  const num = document.createElement('div');
+  num.className = 'seq-num';
+  num.textContent = String(index + 1);
+
+  const tag = document.createElement('div');
+  tag.className = 'seq-tag';
+  tag.textContent = id;
+
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'seq-remove';
+  del.textContent = '❌';
+  del.title = 'Remove this step';
+  del.addEventListener('click', ()=>{
+    const next = (currentSituation.playSeq || []).slice();
+    next.splice(index, 1);
+    setPlaySeq(next);
+  });
+
+  li.appendChild(num);
+  li.appendChild(tag);
+  li.appendChild(del);
+
+  // Only start/end here; list container handles positioning
+  li.addEventListener('dragstart', ()=>{
+    li.classList.add('dragging');
+  });
+  li.addEventListener('dragend', ()=>{
+    li.classList.remove('dragging');
+  });
+
+  return li;
+}
+
+/** Re-render the sequence list and count */
+function renderSeqBuilder(){
+  if (!seqList || !currentSituation) return;
+  const seq = sanitizeSeq(currentSituation.playSeq);
+  seqList.innerHTML = '';
+  seq.forEach((id, i)=> seqList.appendChild(makeSeqItem(id, i)));
+  if (seqCountHud) seqCountHud.textContent = String(seq.length);
+
+  // Keep Phase 2 HUD in sync
+  if (typeof updateHud === 'function'){
+    if (phase2Active){
+      updateHud();
+    } else {
+      updateHud(Number(scoreVal?.textContent) || 0);
+    }
+  }
+}
+
+/** Enable drag-reorder at the LIST level (robust across browsers) */
+function wireSeqListDnDOnce(){
+  if (!seqList || seqList._dndWired) return;
+  seqList._dndWired = true;
+
+  let ghost = null;
+
+  function ensureGhost(){
+    if (!ghost){
+      ghost = document.createElement('div');
+      ghost.className = 'seq-ghost';
+    }
+    return ghost;
+  }
+
+  function getAfterElement(container, y){
+    const items = [...container.querySelectorAll('.seq-item:not(.dragging)')];
+    let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+    for (const el of items){
+      const rect = el.getBoundingClientRect();
+      const offset = y - (rect.top + rect.height / 2);
+      if (offset < 0 && offset > closest.offset){
+        closest = { offset, element: el };
+      }
+    }
+    return closest.element; // null means append at end
+  }
+
+  seqList.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    const g = ensureGhost();
+    const after = getAfterElement(seqList, e.clientY);
+    if (after) seqList.insertBefore(g, after);
+    else seqList.appendChild(g);
+  });
+
+  seqList.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    const dragging = seqList.querySelector('.seq-item.dragging');
+    if (!dragging) return;
+
+    // Compute new index from ghost position
+    const children = [...seqList.children];
+    const newIndex = children.indexOf(ghost);
+    const oldIndex = Number(dragging.dataset.index);
+
+    // Clean up early so renderSeqBuilder paints a clean list
+    if (ghost && ghost.parentNode) ghost.remove();
+
+    if (Number.isInteger(oldIndex) && newIndex >= 0 && oldIndex !== newIndex){
+      const next = (currentSituation.playSeq || []).slice();
+      const [moved] = next.splice(oldIndex, 1);
+      next.splice(newIndex, 0, moved);
+      setPlaySeq(next); // re-renders list and renumbers
+    } else {
+      // No change — just re-render to refresh indices
+      renderSeqBuilder();
+    }
+  });
+
+  seqList.addEventListener('dragend', ()=>{
+    if (ghost && ghost.parentNode) ghost.remove();
+  });
+}
+
+
+/** Templates */
+function applySeqTemplate(val){
+  if (!val) return;
+  const arr = String(val).split(',').map(s=>s.trim());
+  setPlaySeq(arr);
+}
+
+/** Wire up builder controls once */
+function wireSeqBuilderOnce(){
+  if (!seqSubsec) return;
+  if (seqSubsec._wired) return;
+  seqSubsec._wired = true;
+
+  buildSeqPosGrid();
+  renderSeqBuilder();
+  wireSeqListDnDOnce();
+
+  if (seqTemplateSel){
+    seqTemplateSel.addEventListener('change', ()=>{
+      applySeqTemplate(seqTemplateSel.value);
+      // reset to placeholder
+      seqTemplateSel.value = '';
+    });
+  }
+  if (seqClearBtn){
+    seqClearBtn.addEventListener('click', ()=>{
+      setPlaySeq([]);
+    });
+  }
+
+  // Keep the existing overall note behavior
+  if (seqNoteInput){
+    const syncSeqNote = () => {
+      if (!currentSituation) return;
+      currentSituation.seqNote = String(seqNoteInput.value || '');
+    };
+    seqNoteInput.addEventListener('input',  syncSeqNote);
+    seqNoteInput.addEventListener('change', syncSeqNote);
+  }
+}
+
 // Remove any in-progress Phase 2 sequence-throw visualization (ball + trail + RAF)
 function cleanupSeqThrowViz(){
   try{ if (_seqAnimRaf){ cancelAnimationFrame(_seqAnimRaf); } }catch{}
@@ -786,23 +1045,6 @@ function isExactSequenceMatch(picks, order){
   return true;
 }
 
-function setChipPickIndex(el, n){
-  if (!el) return;
-  el.dataset.pickIndex = String(n);
-  // small pulse for feedback
-  el.classList.add('correctPulse');
-  setTimeout(()=> el.classList.remove('correctPulse'), 280);
-}
-
-function clearAllPicks(){
-  phase2Picks = [];
-  tokens.forEach(({el})=>{
-    if (!el) return;
-    delete el.dataset.pickIndex;
-    el.classList.remove('correctPulse','wrongShake');
-  });
-}
-
 function wipePhase2StateUI(){
   // model
   phase2Active    = false;
@@ -832,32 +1074,6 @@ function wipePhase2StateUI(){
 
   // HUD
   updateHud?.(0);
-}
-
-/** Tiny badge on a chip showing its sequence index (1-based). */
-function setChipPickIndex(el, n){
-  if (!el) return;
-  let b = el.querySelector('.seqBadge');
-  if (!b){
-    b = document.createElement('span');
-    b.className = 'seqBadge';
-    b.style.position = 'absolute';
-    b.style.right = '-6px';
-    b.style.top = '-6px';
-    b.style.minWidth = '18px';
-    b.style.height = '18px';
-    b.style.borderRadius = '999px';
-    b.style.display = 'flex';
-    b.style.alignItems = 'center';
-    b.style.justifyContent = 'center';
-    b.style.fontWeight = '900';
-    b.style.fontSize = '11px';
-    b.style.background = '#0ea5e9';
-    b.style.color = '#fff';
-    b.style.boxShadow = '0 1px 3px rgba(0,0,0,.35)';
-    el.appendChild(b);
-  }
-  b.textContent = String(n);
 }
 
 /** Remove all badges + selection styles from chips. */
@@ -1401,6 +1617,8 @@ function lockCorrectPrefix(k){
   // Keep the model picks trimmed to the locked prefix (helps re-numbering)
   phase2Picks = lockIds.slice();
   rerenderPickMarkers();
+
+  wireSeqBuilderOnce();
 }
 
 function phase2UpdateScoreHud(){
@@ -1625,6 +1843,8 @@ function phase2UpdateScoreHud(){
     refreshSituationAll();
     try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
   });
+
+  wireSeqBuilderOnce();
 }
 
 /* =======================
@@ -1713,6 +1933,14 @@ const seqPanel    = document.getElementById('seqPanel');
 const seqBody     = document.getElementById('seqBody');
 const seqInput    = document.getElementById('seqInput');
 const seqNoteInput = document.getElementById('seqNoteInput');
+
+/* Play Sequence Builder refs */
+const seqSubsec      = document.getElementById('seqSubsec');
+const seqPosGrid     = document.getElementById('seqPosGrid');
+const seqList        = document.getElementById('seqList');
+const seqTemplateSel = document.getElementById('seqTemplateSel');
+const seqClearBtn    = document.getElementById('seqClearBtn');
+const seqCountHud    = document.getElementById('seqCountHud');
 
 const timerBadge = document.getElementById('timerBadge');
 const timerVal   = document.getElementById('timerVal');
@@ -3046,6 +3274,8 @@ function populateSituations(selectedKey){
 function setSituation(key){
   currentSituation = getSituationByKey(key) || SITUATIONS[0];
   if (!currentSituation) return;
+
+  renderSeqBuilder();
 
   wipePhase2StateUI();
   stopTimer();
