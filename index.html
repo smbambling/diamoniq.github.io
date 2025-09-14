@@ -155,18 +155,6 @@
   @keyframes chipPulse{ 0%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.10)} 100%{transform:translate(-50%,-50%) scale(1)} }
   @keyframes chipShake{ 0%,100%{transform:translate(-50%,-50%)} 25%{transform:translate(calc(-50% - 4px),-50%)} 75%{transform:translate(calc(-50% + 4px),-50%)} }
 
-  /* Phase 2: show the pick number on a selected chip */
-  .chip[data-pick-index]::after{
-    content: attr(data-pick-index);
-    position:absolute;
-    bottom:-8px;
-    right:-8px;
-    width:18px;height:18px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    font:700 12px/1 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    color:#0b1321; background:#e0f2fe; box-shadow:0 0 0 2px #fff, 0 1px 2px rgba(0,0,0,.25);
-  }
-
   /* Locked-correct chip highlight for Phase 2 */
   .chip.seq-locked{
     outline: 3px solid rgba(22,163,74,.9);
@@ -382,10 +370,13 @@
     Outs: <b><span id="outsVal">0</span></b>
   </span>
   <div class="header-actions">
-    <button id="startBtn" class="btn-green">Start Situation</button>
+    <!-- @diq:begin control:startBtn -->
+<button id="startBtn" class="btn-green">Start Situation</button>
     <button id="resetBtn" class="btn-orange">Reset</button>
-    <button id="checkBtn" class="btn-green" disabled data-testid="check-btn">Check Positions</button>
-    <button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button>
+    <!-- @diq:begin control:checkBtn -->
+<button id="checkBtn" class="btn-green" disabled data-testid="check-btn">Check Positions</button>
+    <!-- @diq:begin control:continueBtn -->
+<button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button>
   </div>
 
   <div id="hud" class="hud">
@@ -446,15 +437,19 @@
     </div>
 
     <!-- Selected Target (appears after last try) -->
-    <div id="targetPanel" class="card hidden">
+    <!-- @diq:begin panel:targetPanel -->
+<div id="targetPanel" class="card hidden">
       <strong id="targetPanelTitle">Selected Target</strong>
       <div id="targetPanelBody" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
     </div>
 
     <!-- Phase 2: Sequence panel -->
-    <div id="seqPanel" class="card hidden">
+    <!-- @diq:begin panel:seqPanel -->
+<div id="seqPanel" class="card hidden">
       <strong>Play Sequence</strong>
-      <div id="seqBody" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
+      <!-- @diq:begin panel:seqBody -->
+<div id="seqBody" aria-live="polite" style="margin-top:6px; font-size:13px; line-height:1.45"></div>
+
     </div>
 
 
@@ -611,9 +606,7 @@
 </div>
 
 <script>
-/* =======================
-   [A0] Constants & pure helpers
-   ======================= */
+/// @diq:begin [A0] Constants & pure helpers
 /** @typedef {{ x:number, y:number }} Pt */
 /** @typedef {{ [posId:string]: Pt }} Starts */
 /** @typedef {{ [posId:string]: {x:number,y:number,tol:number} }} Targets */
@@ -777,10 +770,7 @@ function phase2UpdateHud(){
   );
 }
 
-/* =======================
-   Play Sequence Builder (Coach)
-   ======================= */
-
+/// @diq:begin Play Sequence Builder (Coach)
 /** Ensures array is valid POS_IDS only, uppercased */
 function sanitizeSeq(arr){
   return (arr || [])
@@ -1076,17 +1066,6 @@ function wipePhase2StateUI(){
   updateHud?.(0);
 }
 
-/** Remove all badges + selection styles from chips. */
-function clearAllPicks(){
-  phase2Picks = [];
-  tokens.forEach(({el})=>{
-    if (!el) return;
-    el.classList.remove('correctPulse','wrongShake');
-    const b = el.querySelector('.seqBadge');
-    if (b) b.remove();
-  });
-}
-
 // NEW: count how many picks are correct in order, consecutively from the start
 function getPhase2ConsecutiveCorrect(){
   if (!phase2Active || !Array.isArray(seqOrder) || !seqOrder.length) return 0;
@@ -1104,7 +1083,7 @@ function phase2ClearAllUI(){
   // chip visuals (numbers + highlight)
   tokens.forEach(({el})=>{
     if (!el) return;
-    clearChipPickIndex(el);     // remove any sequence badge/attr
+    clearChipPickMarker(el);     // remove any sequence badge/attr
     el.classList.remove('seq-locked','correctPulse','wrongShake');
   });
 
@@ -1135,18 +1114,7 @@ function clearChipPickMarker(el){
   el.querySelectorAll('.seq-badge, .seqBadge, .pick-badge, .chip-index, [data-role="seq-badge"]').forEach(n => n.remove());
 }
 
-function clearChipPickIndex(el){
-  if (!el) return;
 
-  // Remove attributes we may have used
-  el.removeAttribute('data-pick');
-  el.removeAttribute('data-pick-idx');
-  if (el.dataset) delete el.dataset.pickIndex;
-
-  // Remove any badge variants we've ever attached
-  el.querySelectorAll('.seqBadge, .seq-badge, .pick-badge, .chip-index, [data-role="seq-badge"]')
-    .forEach(n => n.remove());
-}
 
 /** Add/update a small numeric badge at top-right of chip (1-based). */
 function setChipPickIndex(el, n){
@@ -1184,6 +1152,9 @@ function setChipPickIndex(el, n){
   el.setAttribute('data-pick-idx', String(n));
 }
 
+
+
+
 /** Full re-render: wipe all markers, then number 1..N from phase2Picks */
 function rerenderPickMarkers(){
   tokens.forEach(({el}) => clearChipPickMarker(el));
@@ -1192,6 +1163,9 @@ function rerenderPickMarkers(){
     if (rec?.el) setChipPickIndex(rec.el, i + 1);
   });
 }
+
+
+
 
 /** Clear the model & visuals of all picks. */
 function clearAllPicks(){
@@ -1203,10 +1177,10 @@ function clearAllPicks(){
   });
 }
 
-/* =======================
-   [Phase 2: End & Result Panels]
-   ======================= */
 
+
+
+/// @diq:begin [Phase 2: End & Result Panels]
 function endPhase2(success = true) {
   stopTimer();
   // If Phase 2 was never started, just clear & hide
@@ -1220,7 +1194,7 @@ function endPhase2(success = true) {
     phase2Picks  = [];
     tokens.forEach(({el})=>{
       if (!el) return;
-      clearChipPickIndex(el);
+      clearChipPickMarker(el);
       el.classList.remove('seq-locked','correctPulse','wrongShake');
       el.style.pointerEvents = '';
     });
@@ -1252,7 +1226,7 @@ function endPhase2(success = true) {
     const locked = phase2Locked.has(id);
     if (!locked){
       // non-locked picks lose their marker
-      clearChipPickIndex(el);
+      clearChipPickMarker(el);
       el.classList.remove('seq-locked');
     }
   });
@@ -1575,9 +1549,6 @@ function wireOnce(){
     actionsRow.insertBefore(verifySeqBtn, document.getElementById('hud'));
   }
 
-// ===== Add near your other Phase 2 globals (once) =====
-let phase2Locked = new Set(); // chips that are locked in as correct prefix
-
 // ===== Small helpers (add once anywhere in <script>) =====
 function getCorrectPrefixLen(picks, order){
   const n = Math.min(picks.length, order.length);
@@ -1601,7 +1572,7 @@ function lockCorrectPrefix(k){
   tokens.forEach(({el}, id)=>{
     if (!el) return;
     const locked = phase2Locked.has(id);
-    clearChipPickIndex(el);
+    clearChipPickMarker(el);
     el.classList.remove('seq-locked','correctPulse','wrongShake');
 
     if (locked){
@@ -1619,16 +1590,6 @@ function lockCorrectPrefix(k){
   rerenderPickMarkers();
 
   wireSeqBuilderOnce();
-}
-
-function phase2UpdateScoreHud(){
-  // Show "locked correct prefix / total" during Phase 2
-  const lockedCount = phase2Locked.size;
-  const total = seqOrder.length || 0;
-  // We reuse updateHud's score spot but pass only the prefix count
-  // (updateHud reads phase2Active to render tries separately)
-  updateHud(lockedCount);
-  if (scoreVal) scoreVal.textContent = `${lockedCount}/${total}`;
 }
 
   // --- Verify Sequence (Phase 2) ---
@@ -1681,7 +1642,7 @@ function phase2UpdateScoreHud(){
     phase2Picks  = [];
     tokens.forEach(({el})=>{
       if (!el) return;
-      clearChipPickIndex(el);
+      clearChipPickMarker(el);
       el.classList.remove('seq-locked','correctPulse','wrongShake','selectableChip');
       el.style.pointerEvents = '';
     });
@@ -1724,8 +1685,6 @@ function phase2UpdateScoreHud(){
       ballEl.style.zIndex = '10';
     }
 
-
-    clearAllPicks();
     setChipsSelectable(true);
     updateHud();
 
@@ -1851,9 +1810,7 @@ function phase2UpdateScoreHud(){
   wireSeqBuilderOnce();
 }
 
-/* =======================
-   [A0.1] App state (mutable)
-   ======================= */
+/// @diq:begin [A0.1] App state (mutable)
 let SITUATIONS = [];
 const SITUATIONS_FALLBACK = [];
 let currentSituation = null;
@@ -1895,6 +1852,7 @@ let phase2TriesLeft = 0;
 let allowSeqPanel = false;
 let phase2Picks = [];         // array of POS_IDS in the order the user picked
 let verifySeqBtn = null;      // created in wireOnce
+let phase2Locked = new Set(); // chips locked as correct prefix (GLOBAL)
 
 const Bus = (() => {
   /** @type {Record<string, Set<Function>>} */ const map = {};
@@ -1907,9 +1865,7 @@ const Bus = (() => {
 
 let _currentSelectedTargetId = null;
 
-/* =======================
-   [A0.2] DOM refs
-   ======================= */
+/// @diq:begin [A0.2] DOM refs
 const img=document.getElementById('fieldImg');
 const wrap=document.getElementById('wrap');
 const targetsLayer=document.getElementById('targetsLayer');
@@ -2025,9 +1981,7 @@ const run1B = document.getElementById('run1B');
 const run2B = document.getElementById('run2B');
 const run3B = document.getElementById('run3B');
 
-/* =======================
-   [A0.3] Geometry & scaling (deduped)
-   ======================= */
+/// @diq:begin [A0.3] Geometry & scaling (deduped)
 function unitToCss(native){ return { left:native.x*(imgRect.width/IMG_W), top:native.y*(imgRect.height/IMG_H) }; }
 function cssToUnit(left,top){ return { x:left*(IMG_W/imgRect.width), y:top*(IMG_H/imgRect.height) }; }
 function nativeToCssPoint(pt){ const css=unitToCss(pt); return { x:css.left, y:css.top }; }
@@ -2049,10 +2003,7 @@ function tolToCssDiameter(tol, allowTiny=false){
   return Math.round(Math.max(dCss, minByChip));
 }
 
-/* =======================
-   [A1] Resize & Layout (single source of truth)
-   ======================= */
-
+/// @diq:begin [A1] Resize & Layout (single source of truth)
 /* schedule layout on next frame (avoid resize jank) */
 let _resizeRaf = null;
 function scheduleLayout(){
@@ -2082,10 +2033,7 @@ window.addEventListener('resize', updateDescriptionHudText);
 window.addEventListener('orientationchange', updateDescriptionHudText);
 
 
-/* =======================
-   [A2] Marker Scaling (single copy)
-   Scales: .ball, .runner, .baseRunner, .hitTarget + SVG stroke width
-   ======================= */
+/// @diq:begin [A2] Marker Scaling (single copy)
 // Increased starting sizes; still scale down/up responsively
 const BASE_MARKER_SIZES = {
   ball:40,
@@ -2145,9 +2093,7 @@ function scaleMarkers(){
   }
 }
 
-/* =======================
-   [A3] Chips (tokens) — core drag/drop
-   ======================= */
+/// @diq:begin [A3] Chips (tokens) — core drag/drop
 /* Token registry: id -> { el, pos:{x,y} } */
 const tokens = new Map();
 
@@ -2247,7 +2193,7 @@ function makeChipDraggable(el,id){
     } else {
       // Deselect this chip and renumber visible badges
       phase2Picks.splice(idx, 1);
-      clearChipPickIndex(el);
+      clearChipPickMarker(el);
       rerenderPickMarkers();
     }
 
@@ -2258,9 +2204,7 @@ function makeChipDraggable(el,id){
 
 }
 
-/* =======================
-   [A4] Targets (rings)
-   ======================= */
+/// @diq:begin [A4] Targets (rings)
 function getRingEl(id){ return wrap.querySelector(`.tgt[data-id="${id}"]`); }
 function getAllRings(){ return Array.from(wrap.querySelectorAll('.tgt')); }
 function buildTargets(){
@@ -2376,9 +2320,7 @@ function onRingClick(e){
 function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
 function hideTargetPanel(){ if (targetPanel) targetPanel.classList.add('hidden'); }
 
-/* =======================
-   [A5] Runners & Outs
-   ======================= */
+/// @diq:begin [A5] Runners & Outs
 function normalizeRunnersOn(obj){ const src=obj||{}; return { first:!!src.first, second:!!src.second, third:!!src.third }; }
 function runnersStateToArray(r){ const out=[]; if(r.first)out.push('1B'); if(r.second)out.push('2B'); if(r.third)out.push('3B'); return out; }
 function getRunnersFromCheckboxes(){ return { first:!!(run1B&&run1B.checked), second:!!(run2B&&run2B.checked), third:!!(run3B&&run3B.checked) }; }
@@ -2449,9 +2391,7 @@ function advanceRunnersState(state,bases){
   return { first:!!dest[1], second:!!dest[2], third:!!dest[3] };
 }
 
-/* =======================
-   [A6] Ball & Hit
-   ======================= */
+/// @diq:begin [A6] Ball & Hit
 function buildBallGraphics(){
   ballLayer.innerHTML = '';
   const svgNS='http://www.w3.org/2000/svg';
@@ -2800,9 +2740,7 @@ function animateExistingRunnersAdvance(advance, onDone){
     });
 }
 
-/* =======================
-   [A7] Coach tools & visibility
-   ======================= */
+/// @diq:begin [A7] Coach tools & visibility
 const CALIB_PASSWORD='coach';
 function applyCoachVisibility(){
   coachCard.classList.toggle('hidden', !coachUnlocked);
@@ -2916,9 +2854,7 @@ function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwIn
 function closePwModal(){ pwModal.style.display='none'; }
 function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
 
-/* =======================
-   [A8] Situations I/O & helpers
-   ======================= */
+/// @diq:begin [A8] Situations I/O & helpers
 const STORAGE_VERSION = 1;
 const STORAGE_STARTS = `bb_iq_starts_v${STORAGE_VERSION}`;
 const STORAGE_HITS   = `bb_iq_hits_v${STORAGE_VERSION}`;
@@ -3071,9 +3007,7 @@ document.addEventListener('click', (e)=>{
   }
 });
 
-/* =======================
-   [A9] Situation lifecycle
-   ======================= */
+/// @diq:begin [A9] Situation lifecycle
 function updateCurrentOptionLabel(){
   if (!sitSelect || !currentSituation) return;
   const opt = sitSelect.querySelector(`option[value="${currentSituation.key}"]`);
@@ -3382,9 +3316,7 @@ function setSituation(key){
   }
 }
 
-/* =======================
-   [A10] Export helpers
-   ======================= */
+/// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
   const out = {};
@@ -3466,9 +3398,7 @@ function download(filename,content){
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
-/* ===============================================
-   [A10.1] One-button refresh (saves Coach Tools + rebuilds UI)
-   =============================================== */
+/// @diq:begin [A10.1] One-button refresh (saves Coach Tools + rebuilds UI)
 function refreshSituationAll(){
   if (!currentSituation) return;
 
@@ -3570,9 +3500,7 @@ function refreshSituationAll(){
 // Use one canonical saver; keep alias for any internal callers.
 const saveCurrentSituation = refreshSituationAll;
 
-/* =======================
-   [A11] Game flow
-   ======================= */
+/// @diq:begin [A11] Game flow
 function checkPositions(){
   if (!coachUnlocked && !gameActive) return;
 
@@ -3721,9 +3649,7 @@ function resetPlayers(){
   updateRunnersHudFromLive();
 }
 
-/* =======================
-   [A12] Init & events
-   ======================= */
+/// @diq:begin [A12] Init & events
 async function init(){
   try{
     sizeOverlays();
@@ -3792,6 +3718,7 @@ function setTolLive(id,tol){
 /* Kickoff */
 if (img && img.complete) init();
 else if (img){ img.addEventListener('load', init, { once:true }); window.addEventListener('load', ()=>{ if (!SITUATIONS.length) init(); }, { once:true }); }
+/// @diq:end [A12] Init & events
 else { window.addEventListener('load', init, { once:true }); }
 </script>
 
