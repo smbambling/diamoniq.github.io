@@ -214,7 +214,9 @@
   #ballLayer svg{width:100%;height:100%;display:block}
   .ball{
     position:absolute;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;
-    background:#fff;box-shadow:0 0 0 2px #000, 0 1px 3px rgba(0,0,0,.35);z-index:3;pointer-events:auto;cursor:grab;
+    background:#fff;box-shadow:0 0 0 2px #000, 0 1px 3px rgba(0,0,0,.35);
+    z-index:10; /* ⬅️ higher than chips (1), runners (3), trails (3), seqBall (4) */
+    pointer-events:auto;cursor:grab;
   }
   .ball.locked{pointer-events:none;cursor:default;opacity:.95}
 
@@ -1080,8 +1082,10 @@ function sizeOverlays(){
   cleanupSeqThrowViz();
 
   if (phase2Active && ballEl){
-    ballEl.style.display = 'none';
+    ballEl.style.display = 'block';
+    ballEl.style.zIndex = '10';
   }
+
 }
 
 
@@ -1110,10 +1114,10 @@ function pulseChip(id){
 
 /** Animate the ball along a straight line from A to B.
  *  Always snaps to the exact destination at completion. */
+/** Animate the REAL ball (ballEl) along a straight line from A to B. */
 function animateThrowLeg(fromPt, toPt){
   return new Promise(resolve=>{
-    const ball = ensureSeqBall();
-    const trail = ensureSeqTrail();
+    const trail = ensureSeqTrail();              // keeps the SVG lines
     const svg = trail.querySelector('svg');
 
     // draw line for this leg (optional visual)
@@ -1122,10 +1126,13 @@ function animateThrowLeg(fromPt, toPt){
     path.setAttribute('d', `M ${fromPt.x},${fromPt.y} L ${toPt.x},${toPt.y}`);
     svg.appendChild(path);
 
-    // start position
-    ball.style.left = fromPt.x + 'px';
-    ball.style.top  = fromPt.y + 'px';
-    ball.style.display = 'block';
+    // ensure the real ball is visible and on top
+    if (ballEl){
+      ballEl.style.display = 'block';
+      ballEl.style.left = fromPt.x + 'px';
+      ballEl.style.top  = fromPt.y + 'px';
+      ballEl.style.zIndex = '10';
+    }
 
     const dist = Math.hypot(toPt.x - fromPt.x, toPt.y - fromPt.y);
     const duration = clamp(420 + dist * 0.45, 380, 1100);
@@ -1137,13 +1144,17 @@ function animateThrowLeg(fromPt, toPt){
       if (t < 1){
         const x = lerp(fromPt.x, toPt.x, e);
         const y = lerp(fromPt.y, toPt.y, e);
-        ball.style.left = x + 'px';
-        ball.style.top  = y + 'px';
+        if (ballEl){
+          ballEl.style.left = x + 'px';
+          ballEl.style.top  = y + 'px';
+        }
         _seqAnimRaf = requestAnimationFrame(step);
       } else {
-        // 🔒 hard-snap to the exact destination
-        ball.style.left = toPt.x + 'px';
-        ball.style.top  = toPt.y + 'px';
+        // snap to exact destination
+        if (ballEl){
+          ballEl.style.left = toPt.x + 'px';
+          ballEl.style.top  = toPt.y + 'px';
+        }
         resolve();
       }
     };
@@ -1154,20 +1165,21 @@ function animateThrowLeg(fromPt, toPt){
 /** Animate throws along the provided order of POS_IDS (e.g., ['LF','SS','2B','C']) */
 async function animateSequenceThrows(order){
   try{
-    // nuke any prior seq viz
+    // clear prior trail; keep the real ball
     cleanupSeqThrowViz?.();
 
-    // build CSS points
     const pts = order
       .map(id => ({ id, pt: getCssPointForPosId(id) }))
       .filter(x => !!x.pt);
     if (pts.length < 2) return;
 
-    // hide the regular hit ball while we animate with the seq ball
-    if (ballEl){ ballEl.style.display = 'none'; }
-
-    const ball = ensureSeqBall();   // seq-ball
-    ensureSeqTrail();               // seq trail svg
+    ensureSeqTrail();
+    if (ballEl){
+      ballEl.style.display = 'block';
+      ballEl.style.zIndex = '10';
+      ballEl.style.left = pts[0].pt.x + 'px';
+      ballEl.style.top  = pts[0].pt.y + 'px';
+    }
 
     pulseChip(pts[0].id);
 
@@ -1176,23 +1188,17 @@ async function animateSequenceThrows(order){
       const b = pts[i + 1];
 
       pulseChip(a.id);
-      await animateThrowLeg(a.pt, b.pt);
+      await animateThrowLeg(a.pt, b.pt); // moves ballEl
       pulseChip(b.id);
       await new Promise(r => setTimeout(r, 120));
     }
 
-    // Final hand-off: move the regular ball to the exact DOM center of last receiver
-    const lastId = pts[pts.length - 1].id;
-    const lastPt = getCssPointForPosId(lastId);
-    if (ballEl && lastPt){
-      ballEl.style.left = Math.round(lastPt.x) + 'px';
-      ballEl.style.top  = Math.round(lastPt.y) + 'px';
-      ballEl.style.display = 'block';
-    }
-
   } finally {
-    // remove seq ball + trail so only the regular ball remains
-    cleanupSeqThrowViz?.();
+    // remove only the trail; keep the ball visible where it stopped
+    if (_seqTrail && _seqTrail.parentNode) _seqTrail.remove();
+    _seqTrail = null;
+    try{ if (_seqAnimRaf){ cancelAnimationFrame(_seqAnimRaf); } }catch{}
+    _seqAnimRaf = null;
   }
 }
 
@@ -1440,9 +1446,12 @@ function phase2UpdateScoreHud(){
     updateHud();         // show 0/<seq length> in the score HUD
     phase2Active = true;
 
+    // Always keep the regular ball visible in Phase 2
     if (ballEl){
-      ballEl.style.display = 'none';  
+      ballEl.style.display = 'block';
+      ballEl.style.zIndex = '10';
     }
+
 
     clearAllPicks();
     setChipsSelectable(true);
@@ -2181,7 +2190,7 @@ function syncBallToHit(){
   ensureDefaultHit();
   const css=unitToCss(currentSituation.hit);
   ballEl.style.left=css.left+'px'; ballEl.style.top=css.top+'px';
-  ballEl.style.display = (coachUnlocked || gameActive) ? 'block' : 'none';
+  ballEl.style.display = (coachUnlocked || gameActive || phase2Active) ? 'block' : 'none';
   ballEl.classList.toggle('locked', !coachUnlocked);
 }
 function makeBallDraggable(el){
