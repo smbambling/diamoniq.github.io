@@ -1445,12 +1445,20 @@ async function animateSequenceThrows(order){
 }
 
 /** Show a simple "success" message inside the Play Sequence card */
-function showSeqSuccessPanel() {
+function showSeqSuccessPanel(){
+  // Prefer the active order; fall back to the situation's playSeq
+  const seqArr = (Array.isArray(seqOrder) && seqOrder.length)
+    ? seqOrder
+    : (currentSituation && Array.isArray(currentSituation.playSeq) ? currentSituation.playSeq : []);
+  const seqStr = seqArr.length ? seqArr.join(' \u2192 ') : '—';
+
   showSeqPanel(`
     <div style="color:#16a34a;font-weight:700">✅ Correct sequence!</div>
-    <div class="hint" style="margin-top:6px">Well done — you executed the play correctly.</div>
+    <div class="hint" style="margin-top:6px">Expected: <b>${seqStr}</b></div>
   `);
 }
+
+
 
 /** Show a "failure" message inside the Play Sequence card */
 function showSeqFailPanel() {
