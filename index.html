@@ -663,6 +663,45 @@ function safeSetValue(el, val){ if (el) el.value = String(val ?? ''); }
 const lerp=(a,b,t)=>a+(b-a)*t;
 function quadBezier(p0,p1,p2,t){return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2.x,y:(1-t)*(1-t)*p0.y+2*(1-t)*t*p1.y+t*t*p2.y};}
 
+// --- How To Play templates + renderer ---
+const HOWTO_PHASE1_HTML = `
+  <ol style="margin:6px 0 0 1.2em">
+    <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
+    <li>Review the Description, Runners, and Outs shown in the header.</li>
+    <li>Press <em>Start Situation</em> to begin</li>
+    <li>Drag the 9 player chips into the correct defensive positions.</li>
+    <li>Press <em>Check Positions</em> to verify. You have 3 tries to get them correct.</li>
+  </ol>
+  <div class="hint" style="margin-top:8px">
+    Note: Correct chips will display within a highlighted target ring
+  </div>
+`;
+
+const HOWTO_PHASE2_HTML = `
+  <ol style="margin:6px 0 0 1.2em">
+    <li>Select <em>Continue</em> to begin</li>
+    <li>Select the players (chips) in the correct throw order to execute the play.</li>
+    <li>Click chips to add them to your sequence; click again to unselect (unless a chip is already locked as correct).</li>
+    <li>Press <em>Verify Sequence</em> to check your picks. You have 3 tries.</li>
+  </ol>
+  <div class="hint" style="margin-top:8px">
+    Note: Correct chips (in the proper order) will lock and remain highlighted.
+  </div>
+`;
+
+// Cache refs once
+const howToDetails = document.getElementById('howToDetails');
+const howToBody    = document.querySelector('#howToCard .howto-body');
+
+function setHowToPhase(phase /* 'p1' | 'p2' */){
+  if (!howToBody) return;
+  // preserve open/closed state
+  const wasOpen = !!(howToDetails && howToDetails.open);
+  howToBody.innerHTML = (phase === 'p2') ? HOWTO_PHASE2_HTML : HOWTO_PHASE1_HTML;
+  if (howToDetails && wasOpen) howToDetails.open = true;
+}
+
+
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
 function setTargetNotes(sKey, id, text){
@@ -3454,6 +3493,8 @@ function setSituation(key){
     const seq = (currentSituation.playSeq || []).join(', ');
     withInputMute(()=> { seqInput.value = seq; });
   }
+
+  setHowToPhase('p1');
 }
 
 /// @diq:begin [A10] Export helpers
@@ -3644,21 +3685,22 @@ const saveCurrentSituation = refreshSituationAll;
 function checkPositions(){
   if (!coachUnlocked && !gameActive) return;
 
-  const t = currentSituation.targets || {};
+  const t = currentSituation?.targets || {};
   let correct = 0;
 
-  // Determine if this is the last available try BEFORE decrementing
+  // Before decrementing tries, determine if this is the last available try
   const isFinalTry = (!coachUnlocked && gameActive && remainingTries === 1);
 
-  // Evaluate each position vs target
+  // Evaluate each position vs its target ring
   getAllRings().forEach(el => {
     const id = el.dataset.id;
     const target = t[id];
     if (!target) return;
 
-    const cur = tokens.get(id).pos;
+    const cur = tokens.get(id)?.pos;
     const tol = Number(target.tol) || DEFAULT_TOL;
-    const d = Math.hypot(cur.x - target.x, cur.y - target.y);
+
+    const d = Math.hypot((cur?.x ?? 0) - target.x, (cur?.y ?? 0) - target.y);
     const isCorrect = d <= tol;
 
     el.classList.toggle('good', isCorrect);
@@ -3666,16 +3708,17 @@ function checkPositions(){
     el.classList.add('show-label');
 
     if (coachUnlocked) {
+      // Coach sees all rings
       el.style.display = 'block';
     } else {
-      // Before the final try, reveal only correct rings; on the final try reveal all
+      // Players: show only correct rings until final try; on final try show all
       el.style.display = (isFinalTry || isCorrect) ? 'block' : 'none';
     }
 
     if (isCorrect) correct++;
   });
 
-  // Update numeric score + colorize
+  // Update numeric score + badge color
   updateHud(correct);
   if (scoreBadge){
     const pct = correct / 9;
@@ -3683,12 +3726,13 @@ function checkPositions(){
     setBadgeState(scoreBadge, state, 'score');
   }
 
-  // Non-coach: handle tries and end-of-round behavior
+  // Non-coach: handle tries, end-of-round, and Phase-2 handoff
   if (!coachUnlocked){
     const allCorrectNow = (correct === POS_IDS.length);
     _allTargetsCorrect = allCorrectNow;
 
     if (gameActive){
+      // Consume a try after showing rings
       remainingTries = Math.max(0, remainingTries - 1);
       updateHud(correct);
     }
@@ -3697,19 +3741,18 @@ function checkPositions(){
     const shouldEndRound = allCorrectNow || outOfTries;
 
     if (shouldEndRound){
-      // ⬅️ Stop/pause the timer when Phase 1 ends
+      // Stop timer and hide the Check button
       stopTimer();
-
-      // HIDE instead of disable the Check button
       if (checkBtn) checkBtn.classList.add('hidden');
 
+      // Lock chips; keep round open for inspection
       setChipsLocked(true);
-      gameActive = false;                 // freeze game state for inspection
+      gameActive = false;
 
-      // Enable selecting rings to view notes (always allowed at round end)
+      // Allow clicking target rings to view notes (post-round)
       enableTargetSelection();
 
-      // Show the instruction card ONLY if a round had actually started
+      // Show the instruction card once a round actually started
       if (_roundHasStarted){
         if (typeof showTargetInstruction === 'function') {
           showTargetInstruction();
@@ -3718,18 +3761,22 @@ function checkPositions(){
         }
       }
 
-      // Gate Phase 2 availability (button shows only if a sequence exists)
+      // If a sequence exists, reveal Continue and switch How-to to Phase 2
+      const hasSeq = (typeof getSeqForCurrent === 'function') && getSeqForCurrent().length > 0;
+
       if (_roundHasStarted && continueBtn){
-        const hasSeq = getSeqForCurrent().length > 0;
-        if (hasSeq) {
-          continueBtn.classList.remove('hidden');
-        } else {
-          continueBtn.classList.add('hidden');
-        }
+        if (hasSeq) continueBtn.classList.remove('hidden');
+        else        continueBtn.classList.add('hidden');
+      }
+
+      // Swap the How-to card contents to Phase 2 rules when applicable
+      if (hasSeq && typeof setHowToPhase === 'function'){
+        setHowToPhase('p2');
       }
     }
   }
 }
+
 
 function resetBallAndRunnerForSituation(){
   if (animReq){ cancelAnimationFrame(animReq); animReq=null; }
@@ -3787,6 +3834,8 @@ function resetPlayers(){
   renderBaseRunners();
   scaleMarkers();
   updateRunnersHudFromLive();
+
+  setHowToPhase('p1');
 }
 
 /// @diq:begin [A12] Init & events
@@ -3810,6 +3859,7 @@ async function init(){
 
     updateDescriptionHudText();
     wireOnce();
+    setHowToPhase('p1');
 
   } catch (err){
     console.error('[Init] fatal error:', err && (err.stack||err.message||err));
