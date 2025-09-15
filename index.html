@@ -280,10 +280,12 @@
     position:absolute; inset:0; pointer-events:none; z-index:3;
   }
   .throwTrail svg path {
-    stroke:#0ea5e9; fill:none;
-    stroke-width:3;
-    stroke-linecap:round; stroke-linejoin:round;
-    opacity:.9;
+    stroke:#334155;            /* darker fallback if no color is set */
+    fill:none;
+    stroke-width:4;            /* thicker for visibility */
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:.95;
   }
 
   /* Collapsible description behavior (legacy support if used) */
@@ -1278,7 +1280,8 @@ function ensureSeqBall(){
   return _seqBallEl;
 }
 
-/** Build (or reuse) an SVG overlay to draw throw lines */
+/** Build (or reuse) an SVG overlay to draw throw lines, with arrowhead marker */
+/** Build (or reuse) an SVG overlay to draw throw lines, with a small arrowhead marker */
 function ensureSeqTrail(){
   if (_seqTrail && _seqTrail.parentNode) return _seqTrail;
   _seqTrail = document.createElement('div');
@@ -1286,10 +1289,34 @@ function ensureSeqTrail(){
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS,'svg');
   svg.setAttribute('viewBox', `0 0 ${imgRect.width} ${imgRect.height}`);
+
+  // Define a smaller arrowhead marker once (scaled by stroke width)
+  const defs = document.createElementNS(svgNS, 'defs');
+  const marker = document.createElementNS(svgNS, 'marker');
+  marker.setAttribute('id', 'arrowHead');
+  marker.setAttribute('markerUnits', 'strokeWidth'); // scale with stroke width
+  marker.setAttribute('markerWidth', '4.5');         // smaller base
+  marker.setAttribute('markerHeight', '4.5');
+  marker.setAttribute('refX', '4.2');                // positions tip at end of path
+  marker.setAttribute('refY', '2.25');
+  marker.setAttribute('orient', 'auto');
+
+  const arrowPath = document.createElementNS(svgNS, 'path');
+  // small triangle; fill inherits line color via currentColor
+  arrowPath.setAttribute('d', 'M0,0 L0,4.5 L4.5,2.25 z');
+  arrowPath.setAttribute('fill', 'currentColor');
+  arrowPath.setAttribute('stroke', 'none');
+  marker.appendChild(arrowPath);
+
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
   _seqTrail.appendChild(svg);
   wrap.appendChild(_seqTrail);
   return _seqTrail;
 }
+
+
 
 /** Remove temporary ball + trail */
 function sizeOverlays(){
@@ -1374,95 +1401,169 @@ function pulseChip(id){
   setTimeout(()=> rec.el?.classList?.remove('correctPulse'), 260);
 }
 
-/** Animate the ball along a straight line from A to B.
- *  Always snaps to the exact destination at completion. */
-/** Animate the REAL ball (ballEl) along a straight line from A to B. */
-function animateThrowLeg(fromPt, toPt){
-  return new Promise(resolve=>{
-    const trail = ensureSeqTrail();              // keeps the SVG lines
-    const svg = trail.querySelector('svg');
+/** Animate the REAL ball (ballEl) along a straight, optionally offset line from A to B.
+ *  Leaves a colored path with a proper triangular arrowhead showing direction. */
+function animateThrowLeg(fromPt, toPt, color, visualOffset){
+  return new Promise(function(resolve){
+    var trail = ensureSeqTrail();
+    var svg = trail.querySelector('svg');
+    var svgNS = 'http://www.w3.org/2000/svg';
 
-    // draw line for this leg (optional visual)
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const path = document.createElementNS(svgNS, 'path');
-    path.setAttribute('d', `M ${fromPt.x},${fromPt.y} L ${toPt.x},${toPt.y}`);
+    // ------- per-color arrowhead (inline styles beat the CSS rule) -------
+    function getOrMakeMarker(colorStr){
+      var safe = String(colorStr || '#111827').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+      var id = 'arrowHead_' + safe;
+      var m = svg.querySelector('marker#' + id);
+      if (m) return m;
+
+      var defs = svg.querySelector('defs') || document.createElementNS(svgNS, 'defs');
+      if (!svg.querySelector('defs')) svg.appendChild(defs);
+
+      m = document.createElementNS(svgNS, 'marker');
+      m.setAttribute('id', id);
+      m.setAttribute('markerUnits', 'strokeWidth'); // scale with stroke
+      m.setAttribute('markerWidth', '6');
+      m.setAttribute('markerHeight', '6');
+      m.setAttribute('refX', '6');                  // tip sits at end
+      m.setAttribute('refY', '3');
+      m.setAttribute('orient', 'auto');
+      // triangle path
+      var tri = document.createElementNS(svgNS, 'path');
+      tri.setAttribute('d', 'M0,0 L6,3 L0,6 Z');
+      tri.style.fill = colorStr;        // INLINE style defeats .throwTrail svg path { fill:none }
+      tri.style.stroke = 'none';
+      m.appendChild(tri);
+
+      defs.appendChild(m);
+      return m;
+    }
+
+    var c = color || '#111827';
+    var marker = getOrMakeMarker(c);
+
+    // ------- optional perpendicular offset -------
+    var off = visualOffset || { x:0, y:0 };
+    var A = { x: fromPt.x + off.x, y: fromPt.y + off.y };
+    var B = { x: toPt.x   + off.x, y: toPt.y   + off.y };
+
+    // ------- draw leg -------
+    var path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', 'M ' + A.x + ',' + A.y + ' L ' + B.x + ',' + B.y);
+    path.setAttribute('marker-end', 'url(#' + marker.id + ')');
+
+    // Inline styles so global CSS can't override
+    path.style.stroke = c;
+    path.style.fill = 'none';
+    path.style.strokeWidth = '3.5';
+    path.style.strokeLinecap = 'butt';   // avoid a rounded cap covering the arrow tip
+    path.style.strokeLinejoin = 'round';
+    path.style.opacity = '.95';
+
     svg.appendChild(path);
 
-    // ensure the real ball is visible and on top
+    // ------- animate the ball along the leg -------
     if (ballEl){
       ballEl.style.display = 'block';
-      ballEl.style.left = fromPt.x + 'px';
-      ballEl.style.top  = fromPt.y + 'px';
+      ballEl.style.left = A.x + 'px';
+      ballEl.style.top  = A.y + 'px';
       ballEl.style.zIndex = '10';
     }
 
-    const dist = Math.hypot(toPt.x - fromPt.x, toPt.y - fromPt.y);
-    const duration = clamp(420 + dist * 0.45, 380, 1100);
+    var dist = Math.hypot(B.x - A.x, B.y - A.y);
+    var duration = clamp(420 + dist * 0.45, 380, 1100);
 
-    let t0 = performance.now();
-    const step = (now)=>{
-      const t = clamp((now - t0) / duration, 0, 1);
-      const e = 1 - Math.pow(1 - t, 3); // ease-out
+    var t0 = performance.now();
+    function step(now){
+      var t = clamp((now - t0) / duration, 0, 1);
+      var e = 1 - Math.pow(1 - t, 3);
       if (t < 1){
-        const x = lerp(fromPt.x, toPt.x, e);
-        const y = lerp(fromPt.y, toPt.y, e);
         if (ballEl){
-          ballEl.style.left = x + 'px';
-          ballEl.style.top  = y + 'px';
+          ballEl.style.left = (A.x + (B.x - A.x) * e) + 'px';
+          ballEl.style.top  = (A.y + (B.y - A.y) * e) + 'px';
         }
         _seqAnimRaf = requestAnimationFrame(step);
       } else {
-        // snap to exact destination
         if (ballEl){
-          ballEl.style.left = toPt.x + 'px';
-          ballEl.style.top  = toPt.y + 'px';
+          ballEl.style.left = B.x + 'px';
+          ballEl.style.top  = B.y + 'px';
         }
         resolve();
       }
-    };
+    }
     _seqAnimRaf = requestAnimationFrame(step);
   });
 }
 
-/** Animate throws along the provided order of POS_IDS (e.g., ['LF','SS','2B','C']) */
+
+/** Animate throws along the provided order of POS_IDS.
+ *  Uses distinct colors and offsets duplicate legs to avoid stacking. */
 async function animateSequenceThrows(order){
-  try{
-    // clear prior trail; keep the real ball
-    cleanupSeqThrowViz?.();
+  try{ if (_seqAnimRaf){ cancelAnimationFrame(_seqAnimRaf); } }catch{}
+  _seqAnimRaf = null;
 
-    const pts = order
-      .map(id => ({ id, pt: getCssPointForPosId(id) }))
-      .filter(x => !!x.pt);
-    if (pts.length < 2) return;
+  var pts = (order || [])
+    .map(function(id){ return { id:id, pt:getCssPointForPosId(id) }; })
+    .filter(function(x){ return !!x.pt; });
+  if (pts.length < 2) return;
 
-    ensureSeqTrail();
-    if (ballEl){
-      ballEl.style.display = 'block';
-      ballEl.style.zIndex = '10';
-      ballEl.style.left = pts[0].pt.x + 'px';
-      ballEl.style.top  = pts[0].pt.y + 'px';
-    }
+  var trail = ensureSeqTrail();
+  var svg = trail.querySelector('svg');
+  svg.setAttribute('viewBox', '0 0 ' + imgRect.width + ' ' + imgRect.height);
 
-    pulseChip(pts[0].id);
+  if (ballEl){
+    ballEl.style.display = 'block';
+    ballEl.style.zIndex = '10';
+    ballEl.style.left = pts[0].pt.x + 'px';
+    ballEl.style.top  = pts[0].pt.y + 'px';
+  }
 
-    for (let i = 0; i < pts.length - 1; i++){
-      const a = pts[i];
-      const b = pts[i + 1];
+  var COLORS = [
+    '#FF3B30', // bright red
+    '#FFCC00', // strong yellow
+    '#AF52DE', // purple
+    '#5856D6', // indigo
+    '#FF2D55', // hot pink/magenta
+    '#8E8E93',  // medium-light gray (neutral)
+    '#FF9500' // vivid orange
+  ];
+  var seenPairs = {}; // track duplicates
 
-      pulseChip(a.id);
-      await animateThrowLeg(a.pt, b.pt); // moves ballEl
-      pulseChip(b.id);
-      await new Promise(r => setTimeout(r, 120));
-    }
+  pulseChip(pts[0].id);
 
-  } finally {
-    // remove only the trail; keep the ball visible where it stopped
-    if (_seqTrail && _seqTrail.parentNode) _seqTrail.remove();
-    _seqTrail = null;
+  var chain = Promise.resolve();
+  for (var i = 0; i < pts.length - 1; i++){
+    (function(i){
+      var a = pts[i];
+      var b = pts[i + 1];
+      var color = COLORS[i % COLORS.length];
+
+      // Key is undirected pair so A→B and B→A share
+      var key = [a.id, b.id].sort().join('|');
+      var count = seenPairs[key] || 0;
+      seenPairs[key] = count + 1;
+
+      // Compute perpendicular offset
+      var dx = b.pt.x - a.pt.x;
+      var dy = b.pt.y - a.pt.y;
+      var len = Math.sqrt(dx*dx + dy*dy) || 1;
+      var nx = -dy / len;
+      var ny =  dx / len;
+      var offsetPx = 8 * count; // 8px per duplicate
+      var vOff = { x: nx * offsetPx, y: ny * offsetPx };
+
+      chain = chain
+        .then(function(){ pulseChip(a.id); return animateThrowLeg(a.pt, b.pt, color, vOff); })
+        .then(function(){ pulseChip(b.id); return new Promise(r => setTimeout(r, 120)); });
+    })(i);
+  }
+
+  chain.finally(function(){
     try{ if (_seqAnimRaf){ cancelAnimationFrame(_seqAnimRaf); } }catch{}
     _seqAnimRaf = null;
-  }
+  });
 }
+
+
 
 /** Show a simple "success" message inside the Play Sequence card */
 function showSeqSuccessPanel(){
