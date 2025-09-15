@@ -1403,65 +1403,75 @@ function pulseChip(id){
 
 /** Animate the REAL ball (ballEl) along a straight, optionally offset line from A to B.
  *  Leaves a colored path with a proper triangular arrowhead showing direction. */
+/** Animate the REAL ball from A→B and leave a colored line + small arrowhead. */
 function animateThrowLeg(fromPt, toPt, color, visualOffset){
   return new Promise(function(resolve){
-    var trail = ensureSeqTrail();
-    var svg = trail.querySelector('svg');
-    var svgNS = 'http://www.w3.org/2000/svg';
+    const trail = ensureSeqTrail();
+    const svg   = trail.querySelector('svg');
+    const svgNS = 'http://www.w3.org/2000/svg';
 
-    // ------- per-color arrowhead (inline styles beat the CSS rule) -------
+    // === match Phase 1 line width exactly ===
+    const LINE_WIDTH = (typeof getBallStrokeWidth === 'function')
+      ? getBallStrokeWidth()
+      : 3; // safe fallback
+
+    // --- per-color, width-aware arrowhead ---
     function getOrMakeMarker(colorStr){
-      var safe = String(colorStr || '#111827').toLowerCase().replace(/[^a-z0-9]+/g,'_');
-      var id = 'arrowHead_' + safe;
-      var m = svg.querySelector('marker#' + id);
+      const safe = String(colorStr || '#111827').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+      const id   = `arrowHead_${safe}_w${LINE_WIDTH}`;
+      let m = svg.querySelector(`#${id}`);
       if (m) return m;
 
-      var defs = svg.querySelector('defs') || document.createElementNS(svgNS, 'defs');
-      if (!svg.querySelector('defs')) svg.appendChild(defs);
+      let defs = svg.querySelector('defs');
+      if (!defs){
+        defs = document.createElementNS(svgNS, 'defs');
+        svg.appendChild(defs);
+      }
+
+      // smaller head that scales with stroke
+      const aw  = Math.max(LINE_WIDTH * 2.2, 4);   // width/height of marker box
+      const ah  = aw;
+      const mid = ah / 2;
 
       m = document.createElementNS(svgNS, 'marker');
       m.setAttribute('id', id);
-      m.setAttribute('markerUnits', 'strokeWidth'); // scale with stroke
-      m.setAttribute('markerWidth', '6');
-      m.setAttribute('markerHeight', '6');
-      m.setAttribute('refX', '6');                  // tip sits at end
-      m.setAttribute('refY', '3');
+      m.setAttribute('markerUnits', 'strokeWidth'); // scale with line width
+      m.setAttribute('markerWidth',  String(aw));
+      m.setAttribute('markerHeight', String(ah));
+      m.setAttribute('refX', String(aw));           // tip sits at end of path
+      m.setAttribute('refY', String(mid));
       m.setAttribute('orient', 'auto');
-      // triangle path
-      var tri = document.createElementNS(svgNS, 'path');
-      tri.setAttribute('d', 'M0,0 L6,3 L0,6 Z');
-      tri.style.fill = colorStr;        // INLINE style defeats .throwTrail svg path { fill:none }
+
+      const tri = document.createElementNS(svgNS, 'path');
+      tri.setAttribute('d', `M0,0 L${aw},${mid} L0,${ah} Z`);
+      tri.style.fill   = colorStr || '#111827';     // explicit color (no currentColor)
       tri.style.stroke = 'none';
       m.appendChild(tri);
-
       defs.appendChild(m);
       return m;
     }
 
-    var c = color || '#111827';
-    var marker = getOrMakeMarker(c);
+    const c      = color || '#111827';
+    const marker = getOrMakeMarker(c);
 
-    // ------- optional perpendicular offset -------
-    var off = visualOffset || { x:0, y:0 };
-    var A = { x: fromPt.x + off.x, y: fromPt.y + off.y };
-    var B = { x: toPt.x   + off.x, y: toPt.y   + off.y };
+    // optional perpendicular offset to unstack duplicate legs
+    const off = visualOffset || { x:0, y:0 };
+    const A = { x: fromPt.x + off.x, y: fromPt.y + off.y };
+    const B = { x: toPt.x   + off.x, y: toPt.y   + off.y };
 
-    // ------- draw leg -------
-    var path = document.createElementNS(svgNS, 'path');
-    path.setAttribute('d', 'M ' + A.x + ',' + A.y + ' L ' + B.x + ',' + B.y);
-    path.setAttribute('marker-end', 'url(#' + marker.id + ')');
-
-    // Inline styles so global CSS can't override
-    path.style.stroke = c;
-    path.style.fill = 'none';
-    path.style.strokeWidth = '3.5';
-    path.style.strokeLinecap = 'butt';   // avoid a rounded cap covering the arrow tip
+    // draw the leg (thin + clean, like Phase 1)
+    const path = document.createElementNS(svgNS, 'path');
+    path.setAttribute('d', `M ${A.x},${A.y} L ${B.x},${B.y}`);
+    path.setAttribute('marker-end', `url(#${marker.id})`);
+    path.style.stroke         = c;
+    path.style.fill           = 'none';
+    path.style.strokeWidth    = String(LINE_WIDTH); // ← match Phase 1
+    path.style.strokeLinecap  = 'butt';             // keep arrow tip crisp
     path.style.strokeLinejoin = 'round';
-    path.style.opacity = '.95';
-
+    path.style.opacity        = '.95';
     svg.appendChild(path);
 
-    // ------- animate the ball along the leg -------
+    // move the actual ball
     if (ballEl){
       ballEl.style.display = 'block';
       ballEl.style.left = A.x + 'px';
@@ -1469,13 +1479,13 @@ function animateThrowLeg(fromPt, toPt, color, visualOffset){
       ballEl.style.zIndex = '10';
     }
 
-    var dist = Math.hypot(B.x - A.x, B.y - A.y);
-    var duration = clamp(420 + dist * 0.45, 380, 1100);
+    const dist = Math.hypot(B.x - A.x, B.y - A.y);
+    const duration = clamp(420 + dist * 0.45, 380, 1100);
 
-    var t0 = performance.now();
+    const t0 = performance.now();
     function step(now){
-      var t = clamp((now - t0) / duration, 0, 1);
-      var e = 1 - Math.pow(1 - t, 3);
+      const t = clamp((now - t0) / duration, 0, 1);
+      const e = 1 - Math.pow(1 - t, 3);
       if (t < 1){
         if (ballEl){
           ballEl.style.left = (A.x + (B.x - A.x) * e) + 'px';
@@ -1493,6 +1503,7 @@ function animateThrowLeg(fromPt, toPt, color, visualOffset){
     _seqAnimRaf = requestAnimationFrame(step);
   });
 }
+
 
 
 /** Animate throws along the provided order of POS_IDS.
