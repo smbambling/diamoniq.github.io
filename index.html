@@ -718,11 +718,12 @@ function getTargetNotes(sKey, id){
 
 // Add this helper near your other small helpers
 function isPostRound(){
-  // Only between Phase 1 end and Phase 2 start
+  // Only between Phase 1 end and Phase 2 start — not after Phase 2 has ended
   return (
     !coachUnlocked &&
     _roundHasStarted === true &&
     !phase2Active &&
+    !_phase2Ended &&
     ( _allTargetsCorrect || (!gameActive && remainingTries === 0) )
   );
 }
@@ -1244,18 +1245,24 @@ function clearAllPicks(){
 /// @diq:begin [Phase 2: End & Result Panels]
 function endPhase2(success = true) {
   stopTimer();
-  // If Phase 2 was never started, just clear & hide
+
+  // Mark Phase 2 as finished and ensure rings/panel don't reappear
+  _phase2Ended = true;
+  disableTargetSelection?.();
+  hideTargetPanel?.();
+
+  // If Phase 2 was never actually started, just clear & return
   if (!phase2Active) {
     phase2Active = false;
     allowSeqPanel = false;
-    hideSeqPanel();
+    hideSeqPanel?.();
     if (verifySeqBtn) verifySeqBtn.classList.add('hidden');
-    setChipsSelectable(false);
+    setChipsSelectable?.(false);
     phase2Locked = new Set();
     phase2Picks  = [];
     tokens.forEach(({el})=>{
       if (!el) return;
-      clearChipPickMarker(el);
+      clearChipPickMarker?.(el);
       el.classList.remove('seq-locked','correctPulse','wrongShake');
       el.style.pointerEvents = '';
     });
@@ -1263,7 +1270,7 @@ function endPhase2(success = true) {
     return;
   }
 
-  // Stop interaction
+  // Stop interaction for a real Phase 2 end
   phase2Active = false;
   setChipsSelectable(false);
 
@@ -1274,10 +1281,10 @@ function endPhase2(success = true) {
   allowSeqPanel = true;
 
   if (success) {
-    showSeqSuccessPanel();
+    showSeqSuccessPanel?.();
   } else {
     phase2TriesLeft = 0;
-    showSeqFailPanel();
+    showSeqFailPanel?.();
   }
 
   // Chips that were locked-in as correct remain highlighted & marked.
@@ -1286,17 +1293,18 @@ function endPhase2(success = true) {
     if (!el) return;
     const locked = phase2Locked.has(id);
     if (!locked){
-      // non-locked picks lose their marker
-      clearChipPickMarker(el);
+      clearChipPickMarker?.(el);
       el.classList.remove('seq-locked');
+      el.style.pointerEvents = '';
+    } else {
+      el.style.pointerEvents = 'none';
     }
   });
 
-  // === NEW: After the panel shows, animate the intended relay path ===
-  // We always animate the *intended* sequence (full playSeq), as a teaching moment.
+  // === Teaching moment: animate the intended relay path ===
   if (Array.isArray(seqOrder) && seqOrder.length >= 2) {
     setTimeout(() => {
-      animateSequenceThrows(seqOrder);
+      try { animateSequenceThrows(seqOrder); } catch {}
     }, 350);
   }
 }
@@ -1656,6 +1664,7 @@ function wireOnce(){
     if (!currentSituation) return;
 
     _roundHasStarted = true;
+    _phase2Ended = false;
     allowSeqPanel = false;
 
     // --- Set game state up front ---
@@ -1816,6 +1825,7 @@ function lockCorrectPrefix(k){
   // --- CONTINUE button: start Phase 2, snap chips, hide rings/target panel, hide Check Positions ---
   if (continueBtn) continueBtn.addEventListener('click', ()=>{
     if (!isPostRound()) return;
+    _phase2Ended = false;
 
     phase2Locked = new Set();
     phase2Picks  = [];
@@ -2025,6 +2035,7 @@ let _roundHasStarted = false;
 let phase2Active = false;
 let seqOrder = [];     // array of POS_IDS e.g. ['LF','SS','2B','C']
 let seqIndex = 0;      // current expected index
+let _phase2Ended = false;   // prevents target panel from showing after Phase 2
 
 const PHASE2_MAX_TRIES = 3;
 let phase2TriesLeft = 0;
@@ -3177,14 +3188,19 @@ function updateDescriptionHudText(){
 
 document.addEventListener('click', (e)=>{
   if (!targetPanel || coachUnlocked) return;
-  const clickedRing = e.target.closest('.tgt');
-  // Only re-show the instruction if we're truly in post-round state
+  if (_phase2Ended) return; // never reshow after Phase 2 has finished
+
+  const clickedRing = e.target.closest?.('.tgt');
+  // Only re-show the instruction if we're truly in post-Phase-1, pre-Phase-2 state
   if (!clickedRing &&
+      targetPanelBody &&
       targetPanelBody.classList.contains('show-instruction') === false &&
+      typeof isPostRound === 'function' &&
       isPostRound()) {
-    showTargetInstruction();
+    showTargetInstruction?.();
   }
 });
+
 
 /// @diq:begin [A9] Situation lifecycle
 function updateCurrentOptionLabel(){
@@ -3404,6 +3420,7 @@ function setSituation(key){
   hideTargetPanel();
   _allTargetsCorrect = false;
   _roundHasStarted = false;
+  _phase2Ended = false;
 
   if (!tokens || tokens.size===0) buildTokens();
   resetBallAndRunnerForSituation();
@@ -3788,6 +3805,7 @@ function resetBallAndRunnerForSituation(){
 
 function resetPlayers(){
   wipePhase2StateUI();
+  _phase2Ended = false;
   stopTimer();
   _timerSecs = TIMER_START_SECS;
   updateTimerHud();
