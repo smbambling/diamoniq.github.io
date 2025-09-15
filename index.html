@@ -677,13 +677,15 @@ function getTargetNotes(sKey, id){
 
 // Add this helper near your other small helpers
 function isPostRound(){
-  // Only after a round was started AND is now over (either out of tries or all correct)
+  // Only between Phase 1 end and Phase 2 start
   return (
     !coachUnlocked &&
     _roundHasStarted === true &&
+    !phase2Active &&
     ( _allTargetsCorrect || (!gameActive && remainingTries === 0) )
   );
 }
+
 
 function snapChipsToTargets(){
   if (!currentSituation || !currentSituation.targets) return;
@@ -1016,10 +1018,28 @@ function startTimer(seconds = TIMER_START_SECS){
     _timerSecs = Math.max(0, _timerSecs - 1);
     updateTimerHud();
     if (_timerSecs === 0){
-      stopTimer(); // time’s up — just stop; no game logic change requested
+      // Time's up → behave like tries are exhausted
+      if (!coachUnlocked && _roundHasStarted){
+        if (phase2Active){
+          try{
+            // Phase 2: out of time = out of tries → show fail card + animate sequence
+            phase2TriesLeft = 0;
+            endPhase2(false);
+          }catch{}
+        } else if (gameActive){
+          try{
+            // Phase 1: force a final check so rings reveal and round ends
+            remainingTries = 1; // makes isFinalTry true inside checkPositions()
+            checkPositions();   // will decrement to 0 and run end-of-round logic
+          }catch{}
+        }
+      }
+      stopTimer();
     }
   }, 1000);
 }
+
+
 
 function resetTimer(seconds = TIMER_START_SECS){
   startTimer(seconds);
