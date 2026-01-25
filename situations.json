@@ -529,5 +529,339 @@
       "x": 2088,
       "y": 569
     }
+  },
+  {
+    "key": "BD-13",
+    "title": "Situation #13",
+    "desc": "Hit Down the LF Line",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "LF",
+      "SS",
+      "2B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P": { "x": 1350, "y": 1750, "tol": 90, "notes": "Move into a position to back up 3B." },
+      "C": { "x": 1501, "y": 2032, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1750, "y": 1350, "tol": 90, "notes": "Watch the runner touch 1B, then trail the runner to 2B. If 2B vacates, cover 2B." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65, "notes": "Cover 2B. If ball gets by LF to the wall, move into a trailer cut/relay position." },
+      "SS": { "x": 1115, "y": 1043, "tol": 80, "notes": "Read the ball and adjust your cut/relay. Line up with 2B or 3B. Stay in fair territory if lined up to 3B." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65, "notes": "Cover 3B, be ready for throw. Tag play." },
+      "LF": { "x": 350, "y": 520, "tol": 95, "notes": "Make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 700, "y": 520, "tol": 120, "notes": "Sprint to back up LF." },
+      "RF": { "x": 1980, "y": 1200, "tol": 110, "notes": "Move into back up position behind 2B." }
+    },
+    "hit": { "x": 350, "y": 520 }
+  },
+  {
+    "key": "BD-14",
+    "title": "Situation #14",
+    "desc": "Hit to Left-Center Field",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "CF",
+      "SS",
+      "2B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P": { "x": 1505, "y": 1447, "tol": 96, "notes": "Read the play. Move into a position to back up 2B or 3B." },
+      "C": { "x": 1501, "y": 2032, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1800, "y": 1400, "tol": 90, "notes": "Watch the runner touch 1B, then trail to 2B. Be ready if the runner rounds too far." },
+      "2B": { "x": 1501, "y": 1165, "tol": 70, "notes": "Cover 2B, then watch for the ball to pass the OF and move into a trailer cut/relay position behind SS in line with 3B." },
+      "SS": { "x": 1300, "y": 1120, "tol": 85, "notes": "Read the ball. Line up for throw to 2B if cut off. Line up with 3B if it gets to the wall." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65, "notes": "Cover 3B, be ready for throw. Tag play." },
+      "LF": { "x": 900, "y": 420, "tol": 140, "notes": "If you’re the fielder: make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay." },
+      "CF": { "x": 1100, "y": 380, "tol": 120, "notes": "If you’re the fielder: make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay." },
+      "RF": { "x": 2060, "y": 1105, "tol": 110, "notes": "Move into back up position towards the infield." }
+    },
+    "hit": { "x": 1100, "y": 380 }
+  },
+  {
+    "key": "BD-15",
+    "title": "Situation #15",
+    "desc": "Hit to Right-Center Field",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "2B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P": { "x": 1505, "y": 1447, "tol": 96, "notes": "Read the play. Move into a position to back up 2B or 3B." },
+      "C": { "x": 1501, "y": 2032, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1800, "y": 1400, "tol": 90, "notes": "Watch the runner touch 1B, then trail to 2B. Be ready if the runner rounds too far." },
+      "2B": { "x": 1700, "y": 1050, "tol": 85, "notes": "Read the ball, line for throw to 2B. If ball gets to wall, move to relay position (don’t go out too far) and make a good hard low throw to 3B." },
+      "SS": { "x": 1600, "y": 1000, "tol": 85, "notes": "Cover 2B, then if ball passes OF move into trailer cut/relay behind 2B in line with 3B." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65, "notes": "Cover 3B, be ready for throw. Tag play." },
+      "LF": { "x": 836, "y": 1397, "tol": 90, "notes": "Sprint to back up position behind 3B." },
+      "CF": { "x": 1950, "y": 420, "tol": 140, "notes": "If you’re the fielder: make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay." },
+      "RF": { "x": 1950, "y": 380, "tol": 120, "notes": "If you’re the fielder: make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay." }
+    },
+    "hit": { "x": 1950, "y": 380 }
+  },
+  {
+    "key": "BD-16",
+    "title": "Situation #16",
+    "desc": "Hit down RF Line",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "2B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P": { "x": 1505, "y": 1447, "tol": 96, "notes": "Read the play. Move into a position to back up 2B or 3B." },
+      "C": { "x": 1501, "y": 2032, "tol": 65, "notes": "Protect home plate." },
+      "1B": { "x": 2100, "y": 1450, "tol": 90, "notes": "Become trailer cut/relay man 20–30 feet back. Stay out of runners lane." },
+      "2B": { "x": 1501, "y": 1165, "tol": 80, "notes": "Read the play to determine positioning. If cut off, line up to 2B. If to the wall, line up to 3B." },
+      "SS": { "x": 1600, "y": 1050, "tol": 85, "notes": "Read for possible play at 2B. If no play, wait until ball gets past RF and become second cut/relay to 3B." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65, "notes": "Cover 3B, be ready for throw. Tag play." },
+      "LF": { "x": 836, "y": 1397, "tol": 90, "notes": "Sprint to back up 3B." },
+      "CF": { "x": 2200, "y": 520, "tol": 120, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2650, "y": 520, "tol": 95, "notes": "Make a good, hard, low throw toward either 2B or 3B. Keep it low enough for the cut/relay to handle." }
+    },
+    "hit": { "x": 2650, "y": 520 }
+  },
+  {
+    "key": "BD-17",
+    "title": "Situation #17",
+    "desc": "Hit Down LF Line",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "LF",
+      "3B",
+      "C"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": { "x": 1500, "y": 1850, "tol": 95, "notes": "Move into a position to back up home plate." },
+      "C": { "x": 1501, "y": 2037, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1350, "y": 1900, "tol": 95, "notes": "Become cut/relay between 3B and home." },
+      "2B": { "x": 1507, "y": 1213, "tol": 80, "notes": "Read the play. Look for play at 2B. Become trailer to SS if ball gets by LF." },
+      "SS": { "x": 1468, "y": 1151, "tol": 80, "notes": "Begin lining up as cut/relay to 2B. Hold until sure it’s a double, then line up to home." },
+      "3B": { "x": 1300, "y": 1400, "tol": 80, "notes": "Possible cut/relay to home. Be ready for play at 3B too." },
+      "LF": { "x": 350, "y": 520, "tol": 95, "notes": "Make a good, hard, low throw toward either 3B or home. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 700, "y": 520, "tol": 120, "notes": "Sprint to back up LF." },
+      "RF": { "x": 1935, "y": 1589, "tol": 110, "notes": "Move into position to back up or possibly cover 2B." }
+    },
+    "hit": { "x": 350, "y": 520 }
+  },
+  {
+    "key": "BD-18",
+    "title": "Situation #18",
+    "desc": "Hit to Left-Center Field",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "CF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": { "x": 1350, "y": 1750, "tol": 90, "notes": "Move into a position between 3B and home. Read the play to determine where you will back up." },
+      "C": { "x": 1501, "y": 2037, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1350, "y": 1900, "tol": 95, "notes": "Become cut/relay between 3B and home if needed." },
+      "2B": { "x": 1507, "y": 1213, "tol": 80, "notes": "Read the play. Look for play at 2B. Become trailer to SS if ball gets by the OF." },
+      "SS": { "x": 1300, "y": 1120, "tol": 85, "notes": "Move into cut/relay position in line with 3B. If ball gets by OF, then line up to home. Make a good hard throw to 3B or home." },
+      "3B": { "x": 1075, "y": 1591, "tol": 65, "notes": "Cover 3B but be ready to become cut/relay to home if needed." },
+      "LF": { "x": 900, "y": 420, "tol": 140, "notes": "If you’re the fielder: make a good, hard, low throw toward either 3B or home. Keep it low enough for the cut/relay." },
+      "CF": { "x": 1100, "y": 380, "tol": 120, "notes": "If you’re the fielder: make a good, hard, low throw toward either 3B or home. Keep it low enough for the cut/relay." },
+      "RF": { "x": 1935, "y": 1589, "tol": 110, "notes": "Move into position to possibly cover 2B." }
+    },
+    "hit": { "x": 1100, "y": 380 }
+  },
+  {
+    "key": "BD-19",
+    "title": "Situation #19",
+    "desc": "Hit to Right-Center Field",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": { "x": 1350, "y": 1750, "tol": 90, "notes": "Move into a position between 3B and home. Read the play to determine where you will back up." },
+      "C": { "x": 1501, "y": 2037, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1600, "y": 1800, "tol": 95, "notes": "See runner touch base and then act as third cut/relay for play at the plate." },
+      "2B": { "x": 1507, "y": 1213, "tol": 80, "notes": "Read the play. If ball is cut off, line up for play at 3B. If ball gets to wall, line up to home." },
+      "SS": { "x": 1600, "y": 1120, "tol": 85, "notes": "Move into relay position in line with 3B. If ball gets by OF, line up to home. Make a good hard throw to 3B or home." },
+      "3B": { "x": 1075, "y": 1591, "tol": 65, "notes": "Cover 3B but be ready to become cut/relay to home if needed." },
+      "LF": { "x": 836, "y": 1397, "tol": 90, "notes": "Sprint to backup position behind 3B." },
+      "CF": { "x": 1992, "y": 243, "tol": 149, "notes": "Sprint to back up the fielder in right-center." },
+      "RF": { "x": 1950, "y": 380, "tol": 120, "notes": "If you’re the fielder: make a good, hard, low throw toward either 3B or home. Keep it low enough for the cut/relay." }
+    },
+    "hit": { "x": 1950, "y": 380 }
+  },
+  {
+    "key": "BD-20",
+    "title": "Situation #20",
+    "desc": "Hit Down Right Field Line",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "2B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": { "x": 1350, "y": 1750, "tol": 90, "notes": "Move into a position between 3B and home. Read the play to determine where you will back up." },
+      "C": { "x": 1501, "y": 2037, "tol": 65, "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 2050, "y": 1650, "tol": 95, "notes": "Become a deep secondary trailer." },
+      "2B": { "x": 1650, "y": 1200, "tol": 85, "notes": "Begin lining up as the cut/relay to 2B. Hold until sure double, then line up as relay man to home. Stay in fair territory." },
+      "SS": { "x": 1507, "y": 1213, "tol": 75, "notes": "Head towards 2B and read play. If play at 2B, cover and be ready for throw. If sure double and possible play at home, head towards 1B line in case of errant throw." },
+      "3B": { "x": 1075, "y": 1591, "tol": 65, "notes": "Cover 3B, be ready for throw." },
+      "LF": { "x": 836, "y": 1397, "tol": 90, "notes": "Sprint to back up 3B." },
+      "CF": { "x": 1992, "y": 243, "tol": 149, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2650, "y": 520, "tol": 95, "notes": "Make a good, hard, low throw through your cut/relay. If throwing to 2B, get it there as quickly as possible to beat runner trying to score." }
+    },
+    "hit": { "x": 2650, "y": 520 }
   }
 ]
