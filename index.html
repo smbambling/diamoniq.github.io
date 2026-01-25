@@ -3132,10 +3132,18 @@ function getHitSaved(sKey){ const v=hitsMap[sKey]; return (v && !isNaN(v.x) && !
 function setHitSaved(sKey, pt){ if (!pt || isNaN(pt.x) || isNaN(pt.y)) return; hitsMap[sKey] = { x:Math.round(pt.x), y:Math.round(pt.y) }; }
 
 function setTargetFor(sKey,id,pt,tol=DEFAULT_TOL){
-  const s = SITUATIONS.find(x=>x.key===sKey); if(!s) return;
-  if(!s.targets) s.targets={};
-  const prevTol = s.targets[id]?.tol;
-  s.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(tol||prevTol||DEFAULT_TOL) };
+  const s = findSituationByKey(sKey); if(!s) return;
+  if(!s.targets) s.targets = {};
+  const prev = s.targets[id] || {};
+  const prevTol = (typeof prev.tol === 'number') ? prev.tol : null;
+
+  // Preserve any additional per-target fields (e.g., notes) while updating coords/tolerance.
+  s.targets[id] = {
+    ...prev,
+    x: Math.round(pt.x),
+    y: Math.round(pt.y),
+    tol: Number(tol || prevTol || DEFAULT_TOL)
+  };
 }
 function getTargetFor(sKey,id){
   const s = SITUATIONS.find(x=>x.key===sKey);
@@ -3529,17 +3537,23 @@ function setSituation(key){
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
+  // Targets are used for tolerance/placement visualization; for exports we keep them schema-clean (no notes).
   const out = {};
-  getAllRings().forEach(el=>{
-    const id   = el.dataset.id;
-    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
-    const native = cssToUnit(left, top);
-    const modelT = currentSituation.targets?.[id];
+  const rings = getAllRings();
+  rings.forEach(r=>{
+    const id = r.dataset.id;
+    if(!id) return;
+
+    // Prefer the model's tolerance for this target (so exports remain stable), fallback to ring dataset.
+    const modelT = (currentSituation && currentSituation.targets) ? currentSituation.targets[id] : null;
+
+    // Convert on-screen ring location into internal units for persistence/export.
+    const native = cssToUnit(r);
+
     out[id] = {
       x: Math.round(native.x),
       y: Math.round(native.y),
-      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
-      notes: modelT?.notes || ''
+      tol: Math.round((modelT && typeof modelT.tol === "number") ? modelT.tol : (Number(r.dataset.tol) || DEFAULT_TOL))
     };
   });
   return out;
@@ -3552,55 +3566,91 @@ function getStartsForExport(key){
   return out;
 }
 function composeSituationForExport(base, starts, targets, hit){
-  const extra = { ...base };
-  delete extra.starts;
-  delete extra.targets;
-  delete extra.hit;
+  // Build a stable, fully-populated payload (keep any future/unknown fields too)
+  const payload = { ...base };
 
-  const payload = { ...extra, starts, targets };
+  // Normalize core fields
+  payload.key = String(base.key || '');
+  payload.title = String(base.title || '');
+  payload.desc = String(base.desc || '');
+  payload.outs = clampInt(base.outs ?? 0, 0, 2);
+  payload.runnersOn = {
+    first: !!(base.runnersOn && base.runnersOn.first),
+    second: !!(base.runnersOn && base.runnersOn.second),
+    third: !!(base.runnersOn && base.runnersOn.third),
+  };
+
+  payload.hitType = String(base.hitType || 'ground');
+  payload.batterAdvance = clampInt(
+    (typeof base.batterAdvance === 'number') ? base.batterAdvance : 1,
+    0, 4
+  );
+
+  payload.playSeq = Array.isArray(base.playSeq) ? base.playSeq.slice() : [];
+  payload.seqNote = (typeof base.seqNote === 'string') ? base.seqNote : '';
+
+  // Always export starts + targets (even if partially null)
+  payload.starts = starts || {};
+  payload.targets = targets || {};
   if (hit) payload.hit = hit;
-
-  if (base.hitType) payload.hitType = base.hitType;
-  if (typeof base.batterAdvance === 'number') {
-    payload.batterAdvance = clampInt(base.batterAdvance, 0, 4);
-  }
-
-  if (Array.isArray(base.playSeq) && base.playSeq.length) {
-    payload.playSeq = base.playSeq.slice();
-  }
-  if (typeof base.seqNote === 'string' && base.seqNote.trim()) {
-    payload.seqNote = base.seqNote;
-  }
 
   return payload;
 }
 
+function mergedTargetsForExport(s){
+  const saved = (s && s.targets) ? s.targets : {};
+  const rendered = (s === currentSituation) ? getRenderedTargets() : null;
+
+  const out = {};
+  for (const pos of POS_LIST){
+    const r  = (rendered && rendered[pos]) ? rendered[pos] : null;
+    const sv = (saved && saved[pos]) ? saved[pos] : null;
+
+    const tol =
+      (r && Number.isFinite(r.tol)) ? r.tol :
+      (sv && Number.isFinite(sv.tol)) ? sv.tol :
+      (DEFAULT_TOL[pos] ?? 65);
+
+    const x =
+      (r && Number.isFinite(r.x)) ? Math.round(r.x) :
+      (sv && Number.isFinite(sv.x)) ? Math.round(sv.x) :
+      null;
+
+    const y =
+      (r && Number.isFinite(r.y)) ? Math.round(r.y) :
+      (sv && Number.isFinite(sv.y)) ? Math.round(sv.y) :
+      null;
+
+    // Notes are stored on the situation model (not the rings), so we always source from saved.
+    const notes = (sv && typeof sv.notes === 'string') ? sv.notes : '';
+
+    out[pos] = { x, y, tol, notes };
+  }
+  return out;
+}
 
 function buildCurrentSituationExport(){
-  const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
-  const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
-  return JSON.stringify([one],null,2);
+  const s = currentSituation || SITUATIONS[0];
+  if(!s) return '[]';
+  const one = composeSituationForExport(
+    s,
+    getOnscreenStarts(),
+    mergedTargetsForExport(s),
+    getHitForExport(s)
+  );
+  return JSON.stringify([one], null, 2);
 }
+
 function buildAllSituationsExport(){
-  const arr=(SITUATIONS||[]).map(s=>{
-    const isCurrent=currentSituation && (s.key===currentSituation.key);
-    const starts=isCurrent?getOnscreenStarts():getStartsForExport(s.key);
-    let targets=isCurrent?getRenderedTargets():{};
-    if (!isCurrent){
-      Object.entries(s.targets||{}).forEach(([id,pt])=>{
-        targets[id] = {
-          x: Math.round(pt.x),
-          y: Math.round(pt.y),
-          tol: Math.round(pt.tol || DEFAULT_TOL),
-          notes: pt.notes || ''
-        };
-      });
-    }
-    const hit=getHitSaved(s.key) || getHitForExport(s);
-    return composeSituationForExport(s,starts,targets,hit);
+  const exported = SITUATIONS.map(s=>{
+    const starts = (s===currentSituation) ? getOnscreenStarts() : (s.starts||{});
+    const targets = mergedTargetsForExport(s);
+    const hit = getHitForExport(s);
+    return composeSituationForExport(s, starts, targets, hit);
   });
-  return JSON.stringify(arr,null,2);
+  return JSON.stringify(exported,null,2);
 }
+
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
