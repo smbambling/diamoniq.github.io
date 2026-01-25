@@ -3665,37 +3665,46 @@ function composeSituationForExport(base, starts, targets, hit){
 }
 
 function mergedTargetsForExport(s){
-  // Export targets reliably (including notes) without relying on POS_LIST/POS_IDS init order.
-  const saved = (s && s.targets) ? s.targets : {};
-  const rendered = (s === currentSituation) ? getRenderedTargets() : null;
-
-  const POS_EXPORT = ["P","C","1B","2B","SS","3B","LF","CF","RF"];
+  // Export targets reliably (including notes). For the currently loaded situation,
+  // prefer DOM-rendered target coordinates so the export matches what you see
+  // on the field even if the in-memory situation object is a clone.
   const out = {};
-  for (const pos of POS_EXPORT){
-    const r  = (rendered && rendered[pos]) ? rendered[pos] : null;
-    const sv = (saved && saved[pos]) ? saved[pos] : null;
+  const currentKey = (window.currentSituation && window.currentSituation.key) ? window.currentSituation.key : null;
 
-    // Prefer onscreen tolerance/coords, then saved model, then defaults.
-    const tol =
-      (r && Number.isFinite(r.tol)) ? r.tol :
-      (sv && Number.isFinite(sv.tol)) ? sv.tol :
-      ((typeof DEFAULT_TOL !== "undefined" && DEFAULT_TOL && DEFAULT_TOL[pos] != null) ? DEFAULT_TOL[pos] : 65);
+  // 1) If this is the current situation, use the rendered target positions from the DOM.
+  // getRenderedTargets() returns native IMG_W/IMG_H units (via cssToUnit()).
+  const useDOM = !!(currentKey && s && s.key === currentKey && typeof getRenderedTargets === 'function');
+  const domTargets = useDOM ? getRenderedTargets() : null;
 
-    const x =
-      (r && Number.isFinite(r.x)) ? Math.round(r.x) :
-      (sv && Number.isFinite(sv.x)) ? Math.round(sv.x) :
-      null;
+  // 2) Notes may live either on the situation object in the list OR on currentSituation.
+  const noteSourceTargets = (useDOM && window.currentSituation && window.currentSituation.targets) ? window.currentSituation.targets : (s && s.targets ? s.targets : {});
 
-    const y =
-      (r && Number.isFinite(r.y)) ? Math.round(r.y) :
-      (sv && Number.isFinite(sv.y)) ? Math.round(sv.y) :
-      null;
+  // 3) Ensure we have a position list; fall back to a safe default if POS_IDS is missing.
+  const ids = (typeof POS_IDS !== 'undefined' && Array.isArray(POS_IDS) && POS_IDS.length) ? POS_IDS
+            : ['P','C','1B','2B','SS','3B','LF','CF','RF'];
 
-    const notes = (sv && typeof sv.notes === "string") ? sv.notes : "";
-    out[pos] = { x, y, tol, notes };
-  }
+  ids.forEach(id=>{
+    const srcRec = (domTargets && domTargets[id]) ? domTargets[id]
+                  : (s && s.targets && s.targets[id]) ? s.targets[id]
+                  : null;
+
+    const noteRec = (noteSourceTargets && noteSourceTargets[id]) ? noteSourceTargets[id] : null;
+    const notes = (noteRec && typeof noteRec.notes === 'string') ? noteRec.notes : '';
+
+    const x = (srcRec && srcRec.x != null) ? srcRec.x : null;
+    const y = (srcRec && srcRec.y != null) ? srcRec.y : null;
+
+    // Tolerance: prefer DOM's tol if present, else stored tol, else a reasonable default.
+    const tol = (srcRec && srcRec.tol != null) ? srcRec.tol
+             : (s && s.targets && s.targets[id] && s.targets[id].tol != null) ? s.targets[id].tol
+             : 65;
+
+    out[id] = { x, y, tol, notes };
+  });
+
   return out;
 }
+
 
 function buildCurrentSituationExport(){
   const s = currentSituation || SITUATIONS[0];
