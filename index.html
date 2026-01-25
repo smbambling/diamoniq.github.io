@@ -1984,16 +1984,19 @@ function lockCorrectPrefix(k){
   }
 
   if (downloadCurrentBtn) downloadCurrentBtn.addEventListener('click', ()=>{
+    if (typeof refreshSituationAll === 'function') refreshSituationAll();
     refreshSituationAll(); // ensure UI → model before exporting
     download('situation-current.json', buildCurrentSituationExport());
   });
   if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
+    if (typeof refreshSituationAll === 'function') refreshSituationAll();
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
   if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
+    if (typeof refreshSituationAll === 'function') refreshSituationAll();
     refreshSituationAll();
-    try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
+    try{ await copyToClipboard(buildAllSituationsExport()); }catch{}
   });
 
   wireSeqBuilderOnce();
@@ -3517,22 +3520,28 @@ function setSituation(key){
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
+  // Export includes x/y, tolerance, AND per-target notes.
   const out = {};
-  getAllRings().forEach(el=>{
-    const id   = el.dataset.id;
-    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
-    const native = cssToUnit(left, top);
-    const modelT = currentSituation.targets?.[id];
+  const rings = getAllRings();
+  rings.forEach(r=>{
+    const id = r.dataset.id;
+    if(!id) return;
+
+    // Prefer model values (tol/notes) so exports are stable.
+    const modelT = (currentSituation && currentSituation.targets) ? currentSituation.targets[id] : null;
+
+    // Convert on-screen ring location into internal units for persistence/export.
+    const native = cssToUnit(r);
+
     out[id] = {
       x: Math.round(native.x),
       y: Math.round(native.y),
-      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
-      notes: modelT?.notes || ''
+      tol: Math.round((modelT && typeof modelT.tol === "number") ? modelT.tol : (Number(r.dataset.tol) || DEFAULT_TOL)),
+      notes: (modelT && typeof modelT.notes === "string") ? modelT.notes : ""
     };
   });
   return out;
 }
-
 function getHitForExport(sit){ return sit && sit.hit ? { x:Math.round(sit.hit.x), y:Math.round(sit.hit.y) } : undefined; }
 function getStartsForExport(key){
   const src=(startsMap && startsMap[key]) ? startsMap[key] : DEFAULT_STARTS;
@@ -3540,7 +3549,44 @@ function getStartsForExport(key){
   return out;
 }
 function composeSituationForExport(base, starts, targets, hit){
-  const extra = { ...base };
+  const extra = { ...base }
+
+function mergedTargetsForExport(s){
+  const saved = (s && s.targets) ? s.targets : {};
+  const rendered = (s === currentSituation) ? getRenderedTargets() : null;
+
+  const out = {};
+  const list = (typeof POS_IDS !== 'undefined' && Array.isArray(POS_IDS)) ? POS_IDS : Object.keys(saved);
+  for (const pos of list){
+    const r  = (rendered && rendered[pos]) ? rendered[pos] : null;
+    const sv = (saved && saved[pos]) ? saved[pos] : null;
+
+    const tol =
+      (r && Number.isFinite(r.tol)) ? r.tol :
+      (sv && Number.isFinite(sv.tol)) ? sv.tol :
+      ((typeof DEFAULT_TOL === 'object' && DEFAULT_TOL && DEFAULT_TOL[pos] != null) ? DEFAULT_TOL[pos] : 65);
+
+    const x =
+      (r && Number.isFinite(r.x)) ? Math.round(r.x) :
+      (sv && Number.isFinite(sv.x)) ? Math.round(sv.x) :
+      null;
+
+    const y =
+      (r && Number.isFinite(r.y)) ? Math.round(r.y) :
+      (sv && Number.isFinite(sv.y)) ? Math.round(sv.y) :
+      null;
+
+    const notes =
+      (sv && typeof sv.notes === 'string') ? sv.notes :
+      (r && typeof r.notes === 'string') ? r.notes :
+      '';
+
+    out[pos] = { x, y, tol, notes };
+  }
+  return out;
+}
+
+;
   delete extra.starts;
   delete extra.targets;
   delete extra.hit;
@@ -3565,9 +3611,16 @@ function composeSituationForExport(base, starts, targets, hit){
 
 
 function buildCurrentSituationExport(){
-  const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
-  const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
-  return JSON.stringify([one],null,2);
+  const s = currentSituation || (typeof SITUATIONS !== 'undefined' ? SITUATIONS[0] : null);
+  if(!s) return '[]';
+  const targets = (typeof mergedTargetsForExport === 'function') ? mergedTargetsForExport(s) : getRenderedTargets();
+  const one = composeSituationForExport(
+    s,
+    getOnscreenStarts(),
+    targets,
+    getHitForExport(s)
+  );
+  return JSON.stringify([one], null, 2);
 }
 function buildAllSituationsExport(){
   const arr=(SITUATIONS||[]).map(s=>{
@@ -3590,7 +3643,37 @@ function buildAllSituationsExport(){
   return JSON.stringify(arr,null,2);
 }
 function download(filename,content){
-  const blob=new Blob([content], {type:'application/json'});
+  const blob=new Blob([content], {type:'application/json'}
+
+async function copyToClipboard(text){
+  // Prefer modern Clipboard API in secure contexts.
+  try{
+    if (navigator.clipboard && window.isSecureContext){
+      await copyToClipboard(text);
+      return true;
+    }
+  }catch(e){ /* fall through */ }
+
+  // Fallback: hidden textarea + execCommand (works in more browsers / contexts).
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly','');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.top = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, ta.value.length);
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return !!ok;
+  }catch(e){
+    return false;
+  }
+}
+
+);
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
