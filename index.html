@@ -3529,23 +3529,17 @@ function setSituation(key){
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
-  // Targets are used for tolerance/placement visualization; for exports we keep them schema-clean (no notes).
   const out = {};
-  const rings = getAllRings();
-  rings.forEach(r=>{
-    const id = r.dataset.id;
-    if(!id) return;
-
-    // Prefer the model's tolerance for this target (so exports remain stable), fallback to ring dataset.
-    const modelT = (currentSituation && currentSituation.targets) ? currentSituation.targets[id] : null;
-
-    // Convert on-screen ring location into internal units for persistence/export.
-    const native = cssToUnit(r);
-
+  getAllRings().forEach(el=>{
+    const id   = el.dataset.id;
+    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
+    const native = cssToUnit(left, top);
+    const modelT = currentSituation.targets?.[id];
     out[id] = {
       x: Math.round(native.x),
       y: Math.round(native.y),
-      tol: Math.round((modelT && typeof modelT.tol === "number") ? modelT.tol : (Number(r.dataset.tol) || DEFAULT_TOL))
+      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
+      notes: modelT?.notes || ''
     };
   });
   return out;
@@ -3598,6 +3592,7 @@ function buildAllSituationsExport(){
           x: Math.round(pt.x),
           y: Math.round(pt.y),
           tol: Math.round(pt.tol || DEFAULT_TOL),
+          notes: pt.notes || ''
         };
       });
     }
