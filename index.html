@@ -2172,36 +2172,57 @@ const advanceSel=document.getElementById('advanceSel');
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
 
   // Clipboard helper: works on HTTPS *and* local file/http (falls back to execCommand)
-  async function copyTextToClipboard(text){
-    // Modern API (requires secure context in most browsers)
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch (e) {
-        // fall through to legacy
-      }
-    }
-    // Legacy fallback
-    try {
-      const ta = document.createElement('textarea');
+  function downloadTextAsFile(filename, text){
+    const blob = new Blob([text], {type:"application/json;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+
+function showCopyFallback(text, filename){
+    // Fallback UI when clipboard APIs are blocked (non-HTTPS, permissions, etc.)
+    // 1) Try legacy execCommand copy (works in more contexts)
+    try{
+      const ta = document.createElement("textarea");
       ta.value = text;
-      ta.setAttribute('readonly', '');
-      ta.style.position = 'fixed';
-      ta.style.top = '-9999px';
-      ta.style.left = '-9999px';
-      ta.style.opacity = '0';
+      ta.setAttribute("readonly","");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      ta.style.top = "0";
       document.body.appendChild(ta);
       ta.focus();
       ta.select();
-      ta.setSelectionRange(0, ta.value.length);
-      const ok = document.execCommand('copy');
+      const ok = document.execCommand("copy");
       document.body.removeChild(ta);
-      return !!ok;
-    } catch (e) {
-      return false;
+      if(ok){
+        toast("Copied to clipboard (fallback).");
+        return true;
+      }
+    }catch(e){/* ignore */}
+    // 2) If copy fails, download the JSON file instead
+    downloadTextAsFile(filename, text);
+    toast("Clipboard blocked — downloaded JSON instead.");
+    return false;
+}
+
+async function copyTextToClipboard(text, filenameForFallback="diamondiq.json"){
+    // Primary: Clipboard API (requires secure context in most browsers)
+    try{
+      if(navigator.clipboard && window.isSecureContext){
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    }catch(e){
+      // fall through
     }
-  }
+    // Fallback: legacy copy / download
+    return showCopyFallback(text, filenameForFallback);
+}
 
 const copyCurrentBtn=document.getElementById('copyCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
@@ -3644,18 +3665,21 @@ function composeSituationForExport(base, starts, targets, hit){
 }
 
 function mergedTargetsForExport(s){
+  // Export targets reliably (including notes) without relying on POS_LIST/POS_IDS init order.
   const saved = (s && s.targets) ? s.targets : {};
   const rendered = (s === currentSituation) ? getRenderedTargets() : null;
 
+  const POS_EXPORT = ["P","C","1B","2B","SS","3B","LF","CF","RF"];
   const out = {};
-  for (const pos of POS_LIST){
+  for (const pos of POS_EXPORT){
     const r  = (rendered && rendered[pos]) ? rendered[pos] : null;
     const sv = (saved && saved[pos]) ? saved[pos] : null;
 
+    // Prefer onscreen tolerance/coords, then saved model, then defaults.
     const tol =
       (r && Number.isFinite(r.tol)) ? r.tol :
       (sv && Number.isFinite(sv.tol)) ? sv.tol :
-      (DEFAULT_TOL[pos] ?? 65);
+      ((typeof DEFAULT_TOL !== "undefined" && DEFAULT_TOL && DEFAULT_TOL[pos] != null) ? DEFAULT_TOL[pos] : 65);
 
     const x =
       (r && Number.isFinite(r.x)) ? Math.round(r.x) :
@@ -3667,9 +3691,7 @@ function mergedTargetsForExport(s){
       (sv && Number.isFinite(sv.y)) ? Math.round(sv.y) :
       null;
 
-    // Notes are stored on the situation model (not the rings), so we always source from saved.
-    const notes = (sv && typeof sv.notes === 'string') ? sv.notes : '';
-
+    const notes = (sv && typeof sv.notes === "string") ? sv.notes : "";
     out[pos] = { x, y, tol, notes };
   }
   return out;
