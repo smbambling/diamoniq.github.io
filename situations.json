@@ -344,7 +344,7 @@
   {
     "key": "S4",
     "title": "Situation #4",
-    "desc": "Single to Left Field (No Runners) — Relay to 2B via SS",
+    "desc": "Single to LF (No Runners)",
     "outs": 0,
     "runnersOn": {
       "first": false,
@@ -353,29 +353,105 @@
     },
     "hitType": "line",
     "batterAdvance": 1,
-    "playSeq": ["LF", "SS", "2B"],
-    "seqNote": "Thick red dotted = base hit to LF. Thin red dotted = relay LF → SS (cut) → 2B.",
+    "playSeq": [
+      "LF",
+      "SS",
+      "2B"
+    ],
+    "seqNote": "",
     "starts": {
-      "P": { "x": 1500, "y": 1631 },
-      "C": { "x": 1503, "y": 2147 },
-      "1B": { "x": 1919, "y": 1427 },
-      "2B": { "x": 1836, "y": 1160 },
-      "SS": { "x": 1149, "y": 1156 },
-      "3B": { "x": 1080, "y": 1411 },
-      "LF": { "x": 740, "y": 731 },
-      "CF": { "x": 1527, "y": 350 },
-      "RF": { "x": 2268, "y": 723 }
+      "P": {
+        "x": 1500,
+        "y": 1631
+      },
+      "C": {
+        "x": 1503,
+        "y": 2147
+      },
+      "1B": {
+        "x": 1919,
+        "y": 1427
+      },
+      "2B": {
+        "x": 1836,
+        "y": 1160
+      },
+      "SS": {
+        "x": 1149,
+        "y": 1156
+      },
+      "3B": {
+        "x": 1080,
+        "y": 1411
+      },
+      "LF": {
+        "x": 740,
+        "y": 731
+      },
+      "CF": {
+        "x": 1527,
+        "y": 350
+      },
+      "RF": {
+        "x": 2268,
+        "y": 723
+      }
     },
     "targets": {
-      "P":  { "x": 1505, "y": 1447, "tol": 96,  "notes": "Move into backup lane between mound and 2B." },
-      "C":  { "x": 1999, "y": 1864, "tol": 97,  "notes": "Trail runner toward 1B line; be ready to cover/back up." },
-      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "Cover 1B after runner touches; be ready for pick/throw." },
-      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Cover 2B; receive relay throw." },
-      "SS": { "x": 1115, "y": 1043, "tol": 70,  "notes": "Cut/relay position between ball and 2B; communicate." },
-      "3B": { "x": 1077, "y": 1590, "tol": 65,  "notes": "Stay close to 3B; ready if play develops." },
-      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Field ball in LF; throw hard/low to cutoff." },
-      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
-      "RF": { "x": 2173, "y": 1368, "tol": 106, "notes": "Move in toward infield to back up relay/throw." }
+      "P": {
+        "x": 1705,
+        "y": 1515,
+        "tol": 96,
+        "notes": "Move into backup lane between mound and 2B."
+      },
+      "C": {
+        "x": 1999,
+        "y": 1864,
+        "tol": 97,
+        "notes": "Trail runner toward 1B line; be ready to cover/back up."
+      },
+      "1B": {
+        "x": 1935,
+        "y": 1589,
+        "tol": 65,
+        "notes": "Cover 1B after runner touches; be ready for pick/throw."
+      },
+      "2B": {
+        "x": 1501,
+        "y": 1165,
+        "tol": 65,
+        "notes": "Cover 2B; receive relay throw."
+      },
+      "SS": {
+        "x": 1115,
+        "y": 1043,
+        "tol": 70,
+        "notes": "Cut/relay position between ball and 2B; communicate."
+      },
+      "3B": {
+        "x": 1077,
+        "y": 1590,
+        "tol": 65,
+        "notes": "Stay close to 3B; ready if play develops."
+      },
+      "LF": {
+        "x": 702,
+        "y": 923,
+        "tol": 65,
+        "notes": "Field ball in LF; throw hard/low to cutoff."
+      },
+      "CF": {
+        "x": 807,
+        "y": 503,
+        "tol": 105,
+        "notes": "Sprint to back up LF."
+      },
+      "RF": {
+        "x": 2060,
+        "y": 1105,
+        "tol": 106,
+        "notes": "Move in toward infield to back up relay/throw."
+      }
     },
     "hit": {
       "x": 700,
