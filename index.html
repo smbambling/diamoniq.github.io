@@ -585,6 +585,7 @@
           <div class="title">Export</div>
           <div class="row">
             <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
+            <button id="copyCurrentBtn" class="btn-slate">📋 Copy Current JSON</button>
             <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
           </div>
@@ -704,6 +705,12 @@ function setHowToPhase(phase /* 'p1' | 'p2' */){
 
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
+
+
+  // Back-compat alias (older builds referenced findSituationByKey)
+  function findSituationByKey(key){
+    return getSituationByKey(key);
+  }
 function setTargetNotes(sKey, id, text){
   const s = SITUATIONS.find(x => x.key === sKey); if (!s) return;
   if (!s.targets) s.targets = {};
@@ -1067,13 +1074,13 @@ function startTimer(seconds = TIMER_START_SECS){
             // Phase 2: out of time = out of tries → show fail card + animate sequence
             phase2TriesLeft = 0;
             endPhase2(false);
-          } catch (e){ console.warn('Phase2 timeout handler failed', e); }
+          }catch{}
         } else if (gameActive){
           try{
             // Phase 1: force a final check so rings reveal and round ends
             remainingTries = 1; // makes isFinalTry true inside checkPositions()
             checkPositions();   // will decrement to 0 and run end-of-round logic
-          } catch (e){ console.warn('Phase1 timeout handler failed', e); }
+          }catch{}
         }
       }
       stopTimer();
@@ -1987,13 +1994,30 @@ function lockCorrectPrefix(k){
     refreshSituationAll(); // ensure UI → model before exporting
     download('situation-current.json', buildCurrentSituationExport());
   });
-  if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
+  
+  if(copyCurrentBtn)copyCurrentBtn.addEventListener('click', async ()=>{
+    refreshSituationAll(); // ensure UI → model before copying
+    const ok = await copyTextToClipboard(buildCurrentSituationExport());
+    if(ok){
+      copyCurrentBtn.textContent = 'Copied!';
+      setTimeout(()=>copyCurrentBtn.textContent='Copy JSON', 900);
+    }else{
+      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
+    }
+  });
+if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
   if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
     refreshSituationAll();
-    await copyToClipboard(buildAllSituationsExport());
+    const ok = await copyTextToClipboard(buildAllSituationsExport());
+    if (ok){
+      copyAllBtn.textContent = 'Copied!';
+      setTimeout(()=>copyAllBtn.textContent='Copy All', 900);
+    }else{
+      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
+    }
   });
 
   wireSeqBuilderOnce();
@@ -2146,6 +2170,40 @@ const testHitBtn=document.getElementById('testHitBtn');
 const advanceSel=document.getElementById('advanceSel');
 
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
+
+  // Clipboard helper: works on HTTPS *and* local file/http (falls back to execCommand)
+  async function copyTextToClipboard(text){
+    // Modern API (requires secure context in most browsers)
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        // fall through to legacy
+      }
+    }
+    // Legacy fallback
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.left = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+const copyCurrentBtn=document.getElementById('copyCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
 const copyAllBtn=document.getElementById('copyAllBtn');
 
@@ -2212,6 +2270,7 @@ function observeWrap(){
     if (_wrapResizeObserver) _wrapResizeObserver.disconnect();
     _wrapResizeObserver = new ResizeObserver(() => scheduleLayout());
     _wrapResizeObserver.observe(wrap);
+  }catch{}
 }
 
 /* global listeners */
@@ -3119,10 +3178,18 @@ function getHitSaved(sKey){ const v=hitsMap[sKey]; return (v && !isNaN(v.x) && !
 function setHitSaved(sKey, pt){ if (!pt || isNaN(pt.x) || isNaN(pt.y)) return; hitsMap[sKey] = { x:Math.round(pt.x), y:Math.round(pt.y) }; }
 
 function setTargetFor(sKey,id,pt,tol=DEFAULT_TOL){
-  const s = SITUATIONS.find(x=>x.key===sKey); if(!s) return;
-  if(!s.targets) s.targets={};
-  const prevTol = s.targets[id]?.tol;
-  s.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(tol||prevTol||DEFAULT_TOL) };
+  const s = findSituationByKey(sKey); if(!s) return;
+  if(!s.targets) s.targets = {};
+  const prev = s.targets[id] || {};
+  const prevTol = (typeof prev.tol === 'number') ? prev.tol : null;
+
+  // Preserve any additional per-target fields (e.g., notes) while updating coords/tolerance.
+  s.targets[id] = {
+    ...prev,
+    x: Math.round(pt.x),
+    y: Math.round(pt.y),
+    tol: Number(tol || prevTol || DEFAULT_TOL)
+  };
 }
 function getTargetFor(sKey,id){
   const s = SITUATIONS.find(x=>x.key===sKey);
@@ -3516,112 +3583,133 @@ function setSituation(key){
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
+  // Targets are used for tolerance/placement visualization; for exports we keep them schema-clean (no notes).
   const out = {};
-  getAllRings().forEach(el=>{
-    const id   = el.dataset.id;
-    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
-    const native = cssToUnit(left, top);
-    const modelT = currentSituation.targets?.[id];
+  const rings = getAllRings();
+  rings.forEach(r=>{
+    const id = r.dataset.id;
+    if(!id) return;
+
+    // Prefer the model's tolerance for this target (so exports remain stable), fallback to ring dataset.
+    const modelT = (currentSituation && currentSituation.targets) ? currentSituation.targets[id] : null;
+
+    // Convert on-screen ring location into internal units for persistence/export.
+    const native = cssToUnit(r);
+
     out[id] = {
       x: Math.round(native.x),
       y: Math.round(native.y),
-      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
-      notes: modelT?.notes || ''
+      tol: Math.round((modelT && typeof modelT.tol === "number") ? modelT.tol : (Number(r.dataset.tol) || DEFAULT_TOL))
     };
   });
   return out;
 }
 
-function getHitForExport(sit){ return sit && sit.hit ? { x:Math.round(sit.hit.x), y:Math.round(sit.hit.y) } : undefined; }
+function getHitForExport(sit){
+  if(!sit) return null;
+  const roundPt = (pt)=> (pt && isFinite(pt.x) && isFinite(pt.y)) ? { x:Math.round(pt.x), y:Math.round(pt.y) } : null;
+  const saved = (typeof getHitSaved === 'function') ? roundPt(getHitSaved(sit.key)) : null;
+  const base  = roundPt(sit.hit);
+  const live  = (sit === currentSituation) ? roundPt(currentHit) : null;
+  return live || saved || base || null;
+}
 function getStartsForExport(key){
   const src=(startsMap && startsMap[key]) ? startsMap[key] : DEFAULT_STARTS;
   const out={}; POS_IDS.forEach(id=>{ const p=src[id] || DEFAULT_STARTS[id]; out[id]={ x:Math.round(p.x), y:Math.round(p.y) }; });
   return out;
 }
 function composeSituationForExport(base, starts, targets, hit){
-  const extra = { ...base };
-  delete extra.starts;
-  delete extra.targets;
-  delete extra.hit;
+  // Build a stable, fully-populated payload (keep any future/unknown fields too)
+  const payload = { ...base };
 
-  const payload = { ...extra, starts, targets };
+  // Normalize core fields
+  payload.key = String(base.key || '');
+  payload.title = String(base.title || '');
+  payload.desc = String(base.desc || '');
+  payload.outs = clampInt(base.outs ?? 0, 0, 2);
+  payload.runnersOn = {
+    first: !!(base.runnersOn && base.runnersOn.first),
+    second: !!(base.runnersOn && base.runnersOn.second),
+    third: !!(base.runnersOn && base.runnersOn.third),
+  };
+
+  payload.hitType = String(base.hitType || 'ground');
+  payload.batterAdvance = clampInt(
+    (typeof base.batterAdvance === 'number') ? base.batterAdvance : 1,
+    0, 4
+  );
+
+  payload.playSeq = Array.isArray(base.playSeq) ? base.playSeq.slice() : [];
+  payload.seqNote = (typeof base.seqNote === 'string') ? base.seqNote : '';
+
+  // Always export starts + targets (even if partially null)
+  payload.starts = starts || {};
+  payload.targets = targets || {};
   if (hit) payload.hit = hit;
-
-  if (base.hitType) payload.hitType = base.hitType;
-  if (typeof base.batterAdvance === 'number') {
-    payload.batterAdvance = clampInt(base.batterAdvance, 0, 4);
-  }
-
-  if (Array.isArray(base.playSeq) && base.playSeq.length) {
-    payload.playSeq = base.playSeq.slice();
-  }
-  if (typeof base.seqNote === 'string' && base.seqNote.trim()) {
-    payload.seqNote = base.seqNote;
-  }
 
   return payload;
 }
 
+function mergedTargetsForExport(s){
+  const saved = (s && s.targets) ? s.targets : {};
+  const rendered = (s === currentSituation) ? getRenderedTargets() : null;
+
+  const out = {};
+  for (const pos of POS_LIST){
+    const r  = (rendered && rendered[pos]) ? rendered[pos] : null;
+    const sv = (saved && saved[pos]) ? saved[pos] : null;
+
+    const tol =
+      (r && Number.isFinite(r.tol)) ? r.tol :
+      (sv && Number.isFinite(sv.tol)) ? sv.tol :
+      (DEFAULT_TOL[pos] ?? 65);
+
+    const x =
+      (r && Number.isFinite(r.x)) ? Math.round(r.x) :
+      (sv && Number.isFinite(sv.x)) ? Math.round(sv.x) :
+      null;
+
+    const y =
+      (r && Number.isFinite(r.y)) ? Math.round(r.y) :
+      (sv && Number.isFinite(sv.y)) ? Math.round(sv.y) :
+      null;
+
+    // Notes are stored on the situation model (not the rings), so we always source from saved.
+    const notes = (sv && typeof sv.notes === 'string') ? sv.notes : '';
+
+    out[pos] = { x, y, tol, notes };
+  }
+  return out;
+}
 
 function buildCurrentSituationExport(){
-  const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
-  const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitSaved(s.key) || getHitForExport(s));
-  return JSON.stringify([one],null,2);
+  const s = currentSituation || SITUATIONS[0];
+  if(!s) return '[]';
+  const one = composeSituationForExport(
+    s,
+    getOnscreenStarts(),
+    mergedTargetsForExport(s),
+    getHitForExport(s)
+  );
+  return JSON.stringify([one], null, 2);
 }
+
 function buildAllSituationsExport(){
-  const arr=(SITUATIONS||[]).map(s=>{
-    const isCurrent=currentSituation && (s.key===currentSituation.key);
-    const starts=isCurrent?getOnscreenStarts():getStartsForExport(s.key);
-    let targets=isCurrent?getRenderedTargets():{};
-    if (!isCurrent){
-      Object.entries(s.targets||{}).forEach(([id,pt])=>{
-        targets[id] = {
-          x: Math.round(pt.x),
-          y: Math.round(pt.y),
-          tol: Math.round((pt.tol ?? DEFAULT_TOL[p])),
-          notes: pt.notes || ''
-        };
-      });
-    }
-    const hit=getHitSaved(s.key) || getHitForExport(s);
-    return composeSituationForExport(s,starts,targets,hit);
+  const exported = SITUATIONS.map(s=>{
+    const starts = (s===currentSituation) ? getOnscreenStarts() : (s.starts||{});
+    const targets = mergedTargetsForExport(s);
+    const hit = getHitForExport(s);
+    return composeSituationForExport(s, starts, targets, hit);
   });
-  return JSON.stringify(arr,null,2);
+  return JSON.stringify(exported,null,2);
 }
+
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
-
-async function copyToClipboard(text){
-  try{
-    if (navigator.clipboard && window.isSecureContext){
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-    // Fallback for file:// or non-HTTPS contexts
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly','');
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    ta.style.top = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    const ok = document.execCommand('copy');
-    ta.remove();
-    if (!ok) throw new Error('execCommand copy failed');
-    return true;
-  } catch (e){
-    console.error('Clipboard copy failed', e);
-    alert('Clipboard copy failed. If you are running from a local file, browsers may block clipboard access. Try the Download button, or open this page over https.');
-    return false;
-  }
-}
-
 
 /// @diq:begin [A10.1] One-button refresh (saves Coach Tools + rebuilds UI)
 function refreshSituationAll(){
