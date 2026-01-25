@@ -1067,11 +1067,13 @@ function startTimer(seconds = TIMER_START_SECS){
             // Phase 2: out of time = out of tries → show fail card + animate sequence
             phase2TriesLeft = 0;
             endPhase2(false);
+          } catch (e){ console.warn('Phase2 timeout handler failed', e); }
         } else if (gameActive){
           try{
             // Phase 1: force a final check so rings reveal and round ends
             remainingTries = 1; // makes isFinalTry true inside checkPositions()
             checkPositions();   // will decrement to 0 and run end-of-round logic
+          } catch (e){ console.warn('Phase1 timeout handler failed', e); }
         }
       }
       stopTimer();
