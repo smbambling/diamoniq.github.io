@@ -1,349 +1,7 @@
 [
   {
-    "key": "S1",
+    "key": "BD-01",
     "title": "Situation #1",
-    "desc": "Single to Left Field",
-    "outs": 0,
-    "runnersOn": {
-      "first": false,
-      "second": false,
-      "third": false
-    },
-    "hitType": "line",
-    "batterAdvance": 1,
-    "playSeq": [
-      "LF",
-      "SS",
-      "2B"
-    ],
-    "seqNote": "",
-    "starts": {
-      "P": {
-        "x": 1500,
-        "y": 1631
-      },
-      "C": {
-        "x": 1503,
-        "y": 2147
-      },
-      "1B": {
-        "x": 1919,
-        "y": 1427
-      },
-      "2B": {
-        "x": 1836,
-        "y": 1160
-      },
-      "SS": {
-        "x": 1149,
-        "y": 1156
-      },
-      "3B": {
-        "x": 1080,
-        "y": 1411
-      },
-      "LF": {
-        "x": 740,
-        "y": 731
-      },
-      "CF": {
-        "x": 1527,
-        "y": 350
-      },
-      "RF": {
-        "x": 2268,
-        "y": 723
-      }
-    },
-    "targets": {
-      "P": {
-        "x": 1505,
-        "y": 1447,
-        "tol": 96,
-        "notes": ""
-      },
-      "C": {
-        "x": 1999,
-        "y": 1864,
-        "tol": 97,
-        "notes": ""
-      },
-      "1B": {
-        "x": 1935,
-        "y": 1589,
-        "tol": 65,
-        "notes": ""
-      },
-      "2B": {
-        "x": 1501,
-        "y": 1165,
-        "tol": 65,
-        "notes": ""
-      },
-      "SS": {
-        "x": 1115,
-        "y": 1043,
-        "tol": 70,
-        "notes": ""
-      },
-      "3B": {
-        "x": 1077,
-        "y": 1590,
-        "tol": 65,
-        "notes": ""
-      },
-      "LF": {
-        "x": 702,
-        "y": 923,
-        "tol": 65,
-        "notes": ""
-      },
-      "CF": {
-        "x": 807,
-        "y": 503,
-        "tol": 105,
-        "notes": ""
-      },
-      "RF": {
-        "x": 2173,
-        "y": 1368,
-        "tol": 106,
-        "notes": ""
-      }
-    },
-    "hit": {
-      "x": 700,
-      "y": 924
-    }
-  },
-  {
-    "key": "SITUATION-2",
-    "title": "Situation #2",
-    "desc": "Single to Right Field",
-    "outs": 0,
-    "runnersOn": {
-      "first": true,
-      "second": false,
-      "third": false
-    },
-    "hitType": "popup",
-    "batterAdvance": 2,
-    "playSeq": [],
-    "seqNote": "",
-    "starts": {
-      "P": {
-        "x": 1500,
-        "y": 1631
-      },
-      "C": {
-        "x": 1503,
-        "y": 2147
-      },
-      "1B": {
-        "x": 1888,
-        "y": 1618
-      },
-      "2B": {
-        "x": 1814,
-        "y": 1107
-      },
-      "SS": {
-        "x": 1227,
-        "y": 1097
-      },
-      "3B": {
-        "x": 1163,
-        "y": 1506
-      },
-      "LF": {
-        "x": 742,
-        "y": 770
-      },
-      "CF": {
-        "x": 1530,
-        "y": 394
-      },
-      "RF": {
-        "x": 2268,
-        "y": 774
-      }
-    },
-    "targets": {
-      "P": {
-        "x": 920,
-        "y": 1745,
-        "tol": 80,
-        "notes": ""
-      },
-      "C": {
-        "x": 1501,
-        "y": 2037,
-        "tol": 65,
-        "notes": ""
-      },
-      "1B": {
-        "x": 1811,
-        "y": 1292,
-        "tol": 80,
-        "notes": ""
-      },
-      "2B": {
-        "x": 1507,
-        "y": 1213,
-        "tol": 65,
-        "notes": ""
-      },
-      "SS": {
-        "x": 1611,
-        "y": 1034,
-        "tol": 65,
-        "notes": ""
-      },
-      "3B": {
-        "x": 1075,
-        "y": 1591,
-        "tol": 65,
-        "notes": ""
-      },
-      "LF": {
-        "x": 836,
-        "y": 1397,
-        "tol": 80,
-        "notes": ""
-      },
-      "CF": {
-        "x": 1992,
-        "y": 243,
-        "tol": 149,
-        "notes": ""
-      },
-      "RF": {
-        "x": 2091,
-        "y": 564,
-        "tol": 65,
-        "notes": ""
-      }
-    },
-    "hit": {
-      "x": 2088,
-      "y": 569
-    }
-  },
-  {
-    "key": "S-MFMPO9T6-0",
-    "title": "Situation #3",
-    "desc": "Single to CF",
-    "hitType": "line",
-    "batterAdvance": 1,
-    "outs": 0,
-    "runnersOn": {
-      "first": false,
-      "second": true,
-      "third": false
-    },
-    "seqNote": "",
-    "starts": {
-      "P": {
-        "x": 1500,
-        "y": 1631
-      },
-      "C": {
-        "x": 1503,
-        "y": 2147
-      },
-      "1B": {
-        "x": 1917,
-        "y": 1436
-      },
-      "2B": {
-        "x": 1814,
-        "y": 1173
-      },
-      "SS": {
-        "x": 1279,
-        "y": 1163
-      },
-      "3B": {
-        "x": 1068,
-        "y": 1425
-      },
-      "LF": {
-        "x": 735,
-        "y": 690
-      },
-      "CF": {
-        "x": 1503,
-        "y": 352
-      },
-      "RF": {
-        "x": 2269,
-        "y": 704
-      }
-    },
-    "targets": {
-      "P": {
-        "x": 1502,
-        "y": 2278,
-        "tol": 70,
-        "notes": ""
-      },
-      "C": {
-        "x": 1501,
-        "y": 2032,
-        "tol": 65,
-        "notes": ""
-      },
-      "1B": {
-        "x": 1562,
-        "y": 1341,
-        "tol": 75,
-        "notes": ""
-      },
-      "2B": {
-        "x": 1748,
-        "y": 935,
-        "tol": 75,
-        "notes": ""
-      },
-      "SS": {
-        "x": 1468,
-        "y": 1151,
-        "tol": 65,
-        "notes": ""
-      },
-      "3B": {
-        "x": 1070,
-        "y": 1590,
-        "tol": 65,
-        "notes": ""
-      },
-      "LF": {
-        "x": 852,
-        "y": 1476,
-        "tol": 80,
-        "notes": ""
-      },
-      "CF": {
-        "x": 1652,
-        "y": 563,
-        "tol": 65,
-        "notes": ""
-      },
-      "RF": {
-        "x": 1984,
-        "y": 309,
-        "tol": 80,
-        "notes": ""
-      }
-    },
-    "hit": {
-      "x": 1652,
-      "y": 572
-    }
-  },
-  {
-    "key": "S4",
-    "title": "Situation #4",
     "desc": "Single to LF",
     "outs": 0,
     "runnersOn": {
@@ -360,102 +18,516 @@
     ],
     "seqNote": "",
     "starts": {
-      "P": {
-        "x": 1500,
-        "y": 1631
-      },
-      "C": {
-        "x": 1503,
-        "y": 2147
-      },
-      "1B": {
-        "x": 1919,
-        "y": 1427
-      },
-      "2B": {
-        "x": 1836,
-        "y": 1160
-      },
-      "SS": {
-        "x": 1149,
-        "y": 1156
-      },
-      "3B": {
-        "x": 1080,
-        "y": 1411
-      },
-      "LF": {
-        "x": 740,
-        "y": 731
-      },
-      "CF": {
-        "x": 1527,
-        "y": 350
-      },
-      "RF": {
-        "x": 2268,
-        "y": 723
-      }
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
     },
     "targets": {
-      "P": {
-        "x": 1705,
-        "y": 1515,
-        "tol": 96,
-        "notes": "Move into backup lane between mound and 2B."
-      },
-      "C": {
-        "x": 1999,
-        "y": 1864,
-        "tol": 97,
-        "notes": "Trail runner toward 1B line; be ready to cover/back up."
-      },
-      "1B": {
-        "x": 1935,
-        "y": 1589,
-        "tol": 65,
-        "notes": "Cover 1B after runner touches; be ready for pick/throw."
-      },
-      "2B": {
-        "x": 1501,
-        "y": 1165,
-        "tol": 65,
-        "notes": "Cover 2B; receive relay throw."
-      },
-      "SS": {
-        "x": 1115,
-        "y": 1043,
-        "tol": 70,
-        "notes": "Cut/relay position between ball and 2B; communicate."
-      },
-      "3B": {
-        "x": 1077,
-        "y": 1590,
-        "tol": 65,
-        "notes": "Stay close to 3B; ready if play develops."
-      },
-      "LF": {
-        "x": 702,
-        "y": 923,
-        "tol": 65,
-        "notes": "Field ball in LF; throw hard/low to cutoff."
-      },
-      "CF": {
-        "x": 807,
-        "y": 503,
-        "tol": 105,
-        "notes": "Sprint to back up LF."
-      },
-      "RF": {
-        "x": 2060,
-        "y": 1105,
-        "tol": 106,
-        "notes": "Move in toward infield to back up relay/throw."
-      }
+      "P":  { "x": 1705, "y": 1515, "tol": 96,  "notes": "Move into backup position between mound and 2B. Stay out of the runners lane." },
+      "C":  { "x": 1999, "y": 1864, "tol": 97,  "notes": "Follow the runner to first to back up possible overthrow on back pick." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Move into position to cover 2B, receive throw. Give the runner a lane." },
+      "SS": { "x": 1115, "y": 1043, "tol": 70,  "notes": "Move to cut/relay position between ball and 2B. Listen for communication." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65,  "notes": "Stay close to 3B bag. Be ready for play." },
+      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
+      "RF": { "x": 2060, "y": 1105, "tol": 106, "notes": "Move toward infield to back up throw from LF." }
     },
     "hit": {
       "x": 700,
       "y": 924
+    }
+  },
+  {
+    "key": "BD-02",
+    "title": "Situation #2",
+    "desc": "Single to CF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "CF",
+      "SS",
+      "2B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P":  { "x": 1505, "y": 1447, "tol": 96,  "notes": "Move into backup position between mound and 2B." },
+      "C":  { "x": 1999, "y": 1864, "tol": 97,  "notes": "Follow the runner to first to back up possible overthrow on back pick." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Cover 2B (or be ready to handle the relay depending on side)." },
+      "SS": { "x": 1468, "y": 1151, "tol": 70,  "notes": "If ball is hit to SS side, become cut/relay. If hit to 2B side, cover the bag." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65,  "notes": "Stay close to 3B bag. Be ready for play." },
+      "LF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up CF." },
+      "CF": { "x": 1652, "y": 572,  "tol": 80,  "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle." },
+      "RF": { "x": 1984, "y": 309,  "tol": 120, "notes": "Sprint to back up CF." }
+    },
+    "hit": {
+      "x": 1652,
+      "y": 572
+    }
+  },
+  {
+    "key": "BD-03",
+    "title": "Situation #3",
+    "desc": "Single to RF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "RF",
+      "2B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1919, "y": 1427 },
+      "2B": { "x": 1836, "y": 1160 },
+      "SS": { "x": 1149, "y": 1156 },
+      "3B": { "x": 1080, "y": 1411 },
+      "LF": { "x": 740, "y": 731 },
+      "CF": { "x": 1527, "y": 350 },
+      "RF": { "x": 2268, "y": 723 }
+    },
+    "targets": {
+      "P":  { "x": 1505, "y": 1447, "tol": 96,  "notes": "Move into backup position between mound and SS position." },
+      "C":  { "x": 1999, "y": 1864, "tol": 97,  "notes": "Follow the runner to first to back up possible overthrow on back pick." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane." },
+      "2B": { "x": 1611, "y": 1034, "tol": 70,  "notes": "Move to cut/relay position between ball and 2B. Listen for communication." },
+      "SS": { "x": 1507, "y": 1213, "tol": 65,  "notes": "Cover 2B. Be ready for throw and tag play." },
+      "3B": { "x": 1077, "y": 1590, "tol": 65,  "notes": "Maintain position to possibly back up throw from RF, then cover 3B." },
+      "LF": { "x": 836,  "y": 1397, "tol": 80,  "notes": "Sprint to possible back up position behind SS position." },
+      "CF": { "x": 1992, "y": 243,  "tol": 149, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2091, "y": 564,  "tol": 65,  "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle." }
+    },
+    "hit": {
+      "x": 2088,
+      "y": 569
+    }
+  },
+  {
+    "key": "BD-06",
+    "title": "Situation #6",
+    "desc": "Single to RF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1200, "y": 1745, "tol": 90,  "notes": "Move to backup position between 3B and home. Read play to back up 3B or possibly home plate." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Give runner a lane for play at the plate." },
+      "1B": { "x": 1811, "y": 1292, "tol": 80,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick." },
+      "2B": { "x": 1507, "y": 1213, "tol": 65,  "notes": "After attempting to field (if GB), move to cover 2B. Be ready for possible throw from cut." },
+      "SS": { "x": 1468, "y": 1151, "tol": 75,  "notes": "Move to cut/relay position between ball and 3B. Listen for communication." },
+      "3B": { "x": 1075, "y": 1591, "tol": 65,  "notes": "Cover 3B. Be ready for possible throw from RF/SS." },
+      "LF": { "x": 836,  "y": 1397, "tol": 80,  "notes": "Move into possible back up position behind 3B." },
+      "CF": { "x": 1992, "y": 243,  "tol": 149, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2091, "y": 564,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." }
+    },
+    "hit": {
+      "x": 2088,
+      "y": 569
+    }
+  },
+  {
+    "key": "BD-07",
+    "title": "Situation #7",
+    "desc": "Single to LF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "LF",
+      "3B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1917, "y": 1436 },
+      "2B": { "x": 1814, "y": 1173 },
+      "SS": { "x": 1279, "y": 1163 },
+      "3B": { "x": 1068, "y": 1425 },
+      "LF": { "x": 735, "y": 690 },
+      "CF": { "x": 1503, "y": 352 },
+      "RF": { "x": 2269, "y": 704 }
+    },
+    "targets": {
+      "P":  { "x": 1700, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and first." },
+      "C":  { "x": 1501, "y": 2032, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1562, "y": 1341, "tol": 75,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick." },
+      "2B": { "x": 1501, "y": 1165, "tol": 75,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "SS": { "x": 1070, "y": 1590, "tol": 70,  "notes": "Cover 3B. Be ready for possible throw/flip from cut." },
+      "3B": { "x": 1300, "y": 1400, "tol": 80,  "notes": "Become primary cut/relay. Move between the mound and 3B." },
+      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
+      "RF": { "x": 2060, "y": 1105, "tol": 106, "notes": "Move towards infield for possible back up." }
+    },
+    "hit": {
+      "x": 700,
+      "y": 924
+    }
+  },
+  {
+    "key": "BD-08",
+    "title": "Situation #8",
+    "desc": "Single to CF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "CF",
+      "1B",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1917, "y": 1436 },
+      "2B": { "x": 1814, "y": 1173 },
+      "SS": { "x": 1279, "y": 1163 },
+      "3B": { "x": 1068, "y": 1425 },
+      "LF": { "x": 735, "y": 690 },
+      "CF": { "x": 1503, "y": 352 },
+      "RF": { "x": 2269, "y": 704 }
+    },
+    "targets": {
+      "P":  { "x": 1700, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and first." },
+      "C":  { "x": 1501, "y": 2032, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1562, "y": 1341, "tol": 75,  "notes": "Become the primary cut/relay positioned between the mound and 2B." },
+      "2B": { "x": 1935, "y": 1589, "tol": 75,  "notes": "Cover 1B. Be ready for possible back pick from cut." },
+      "SS": { "x": 1468, "y": 1151, "tol": 65,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "3B": { "x": 1070, "y": 1590, "tol": 65,  "notes": "Cover 3B. Be ready for possible throw from cut." },
+      "LF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up CF." },
+      "CF": { "x": 1652, "y": 572,  "tol": 80,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "RF": { "x": 1984, "y": 309,  "tol": 120, "notes": "Sprint to back up CF." }
+    },
+    "hit": {
+      "x": 1652,
+      "y": 572
+    }
+  },
+  {
+    "key": "BD-09",
+    "title": "Situation #9",
+    "desc": "Single to RF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "RF",
+      "1B",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1917, "y": 1436 },
+      "2B": { "x": 1814, "y": 1173 },
+      "SS": { "x": 1279, "y": 1163 },
+      "3B": { "x": 1068, "y": 1425 },
+      "LF": { "x": 735, "y": 690 },
+      "CF": { "x": 1503, "y": 352 },
+      "RF": { "x": 2269, "y": 704 }
+    },
+    "targets": {
+      "P":  { "x": 1200, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and third." },
+      "C":  { "x": 1501, "y": 2032, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1811, "y": 1292, "tol": 80,  "notes": "Become primary cut/relay between mound and 1B." },
+      "2B": { "x": 1935, "y": 1589, "tol": 75,  "notes": "Cover 1B. Be ready for possible throw/flip from cut." },
+      "SS": { "x": 1468, "y": 1151, "tol": 65,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "3B": { "x": 1070, "y": 1590, "tol": 65,  "notes": "Cover 3B. Be ready for possible throw from cut." },
+      "LF": { "x": 836,  "y": 1397, "tol": 80,  "notes": "Sprint to back up position behind 3B." },
+      "CF": { "x": 1992, "y": 243,  "tol": 149, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2091, "y": 564,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." }
+    },
+    "hit": {
+      "x": 2088,
+      "y": 569
+    }
+  },
+{
+    "key": "BD-10-1",
+    "title": "Situation #10-1",
+    "desc": "Single to LF",
+    "outs": 0,
+    "runnersOn": {
+      "first": false,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "LF",
+      "3B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1700, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and first." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch the base, cover the base. Be ready for possible throw." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "SS": { "x": 1070, "y": 1590, "tol": 70,  "notes": "Cover 3B. Be ready for possible throw/flip from cut." },
+      "3B": { "x": 1300, "y": 1400, "tol": 80,  "notes": "Cut/relay. Move into position for throw from LF between mound and third." },
+      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
+      "RF": { "x": 1980, "y": 1200, "tol": 110, "notes": "Move into possible back up position towards 2B." }
+    },
+    "hit": { "x": 700, "y": 924 }
+  },
+  {
+    "key": "BD-10-2",
+    "title": "Situation #10-2",
+    "desc": "Single to LF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "LF",
+      "3B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1700, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and first." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch the base, cover the base. Be ready for possible throw." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "SS": { "x": 1070, "y": 1590, "tol": 70,  "notes": "Cover 3B. Be ready for possible throw/flip from cut." },
+      "3B": { "x": 1300, "y": 1400, "tol": 80,  "notes": "Cut/relay. Move into position for throw from LF between mound and third." },
+      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
+      "RF": { "x": 1980, "y": 1200, "tol": 110, "notes": "Move into possible back up position towards 2B." }
+    },
+    "hit": { "x": 700, "y": 924 }
+  },
+  {
+    "key": "BD-10-3",
+    "title": "Situation #10-3",
+    "desc": "Single to LF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": true,
+      "third": true
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "LF",
+      "3B",
+      "SS"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1700, "y": 1800, "tol": 85,  "notes": "Back up home plate by going between home and first." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch the base, cover the base. Be ready for possible throw." },
+      "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Cover 2B. Be ready for possible throw from cut." },
+      "SS": { "x": 1070, "y": 1590, "tol": 70,  "notes": "Cover 3B. Be ready for possible throw/flip from cut." },
+      "3B": { "x": 1300, "y": 1400, "tol": 80,  "notes": "Cut/relay. Move into position for throw from LF between mound and third." },
+      "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
+      "RF": { "x": 1980, "y": 1200, "tol": 110, "notes": "Move into possible back up position towards 2B." }
+    },
+    "hit": { "x": 700, "y": 924 }
+  },
+  {
+    "key": "BD-11",
+    "title": "Situation #11",
+    "desc": "Single to CF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "CF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1350, "y": 1750, "tol": 90,  "notes": "Move to back up either 3B or home. Move toward a spot between and then read the throw to dictate where you go." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1562, "y": 1341, "tol": 75,  "notes": "Cut/relay. Move into a position between the mound and 2B to cut/relay throw from CF if needed." },
+      "2B": { "x": 1501, "y": 1165, "tol": 75,  "notes": "Cover 2B. Be ready for possible throw/flip from cut." },
+      "SS": { "x": 1468, "y": 1151, "tol": 75,  "notes": "Possible cut/relay. Move into position to cut/relay throw from CF to 3B." },
+      "3B": { "x": 1070, "y": 1590, "tol": 65,  "notes": "Cover 3B. Be ready for possible throw." },
+      "LF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up CF." },
+      "CF": { "x": 1652, "y": 572,  "tol": 80,  "notes": "Make a good, hard, low throw to 3B. Keep it low enough for the cut/relay to handle." },
+      "RF": { "x": 1984, "y": 309,  "tol": 120, "notes": "Sprint to back up CF." }
+    },
+    "hit": {
+      "x": 1652,
+      "y": 572
+    }
+  },
+  {
+    "key": "BD-12",
+    "title": "Situation #12",
+    "desc": "Single to RF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": true,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 2,
+    "playSeq": [
+      "RF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P":  { "x": 1350, "y": 1750, "tol": 90,  "notes": "Move to back up either 3B or home. Move toward a spot between and then read the throw to dictate where you go." },
+      "C":  { "x": 1501, "y": 2037, "tol": 65,  "notes": "Protect home plate. Be ready for throw. Give the runner a lane." },
+      "1B": { "x": 1811, "y": 1292, "tol": 80,  "notes": "Possible cut/relay. Move into a position between the mound and 1B to cut/relay throw from RF. If throw goes to 3B, cover 1B." },
+      "2B": { "x": 1501, "y": 1165, "tol": 75,  "notes": "Cover 2B. Be ready for possible throw/flip from cut." },
+      "SS": { "x": 1468, "y": 1151, "tol": 75,  "notes": "Possible cut/relay. Move into a position to cut/relay throw from RF to 3B." },
+      "3B": { "x": 1070, "y": 1590, "tol": 65,  "notes": "Cover 3B. Be ready for throw." },
+      "LF": { "x": 836,  "y": 1397, "tol": 80,  "notes": "Sprint to back up position behind 3B." },
+      "CF": { "x": 1992, "y": 243,  "tol": 149, "notes": "Sprint to back up RF." },
+      "RF": { "x": 2091, "y": 564,  "tol": 65,  "notes": "Make a good, hard, low throw toward either home or 3B. Keep it low enough for the cut/relay to handle." }
+    },
+    "hit": {
+      "x": 2088,
+      "y": 569
     }
   }
 ]
