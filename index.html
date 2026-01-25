@@ -705,6 +705,12 @@ function setHowToPhase(phase /* 'p1' | 'p2' */){
 
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
+
+
+  // Back-compat alias (older builds referenced findSituationByKey)
+  function findSituationByKey(key){
+    return getSituationByKey(key);
+  }
 function setTargetNotes(sKey, id, text){
   const s = SITUATIONS.find(x => x.key === sKey); if (!s) return;
   if (!s.targets) s.targets = {};
@@ -1991,20 +1997,27 @@ function lockCorrectPrefix(k){
   
   if(copyCurrentBtn)copyCurrentBtn.addEventListener('click', async ()=>{
     refreshSituationAll(); // ensure UI → model before copying
-    try{
-      await navigator.clipboard.writeText(buildCurrentSituationExport());
-    }catch(e){
-      alert('Clipboard copy failed. Your browser may block clipboard access on non-HTTPS pages.');
+    const ok = await copyTextToClipboard(buildCurrentSituationExport());
+    if(ok){
+      copyCurrentBtn.textContent = 'Copied!';
+      setTimeout(()=>copyCurrentBtn.textContent='Copy JSON', 900);
+    }else{
+      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
     }
   });
-
 if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
   if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
     refreshSituationAll();
-    try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
+    const ok = await copyTextToClipboard(buildAllSituationsExport());
+    if (ok){
+      copyAllBtn.textContent = 'Copied!';
+      setTimeout(()=>copyAllBtn.textContent='Copy All', 900);
+    }else{
+      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
+    }
   });
 
   wireSeqBuilderOnce();
@@ -2157,6 +2170,39 @@ const testHitBtn=document.getElementById('testHitBtn');
 const advanceSel=document.getElementById('advanceSel');
 
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
+
+  // Clipboard helper: works on HTTPS *and* local file/http (falls back to execCommand)
+  async function copyTextToClipboard(text){
+    // Modern API (requires secure context in most browsers)
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        // fall through to legacy
+      }
+    }
+    // Legacy fallback
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-9999px';
+      ta.style.left = '-9999px';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, ta.value.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
 const copyCurrentBtn=document.getElementById('copyCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
 const copyAllBtn=document.getElementById('copyAllBtn');
