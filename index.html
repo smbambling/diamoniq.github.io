@@ -585,6 +585,7 @@
           <div class="title">Export</div>
           <div class="row">
             <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
+            <button id="copyCurrentBtn" class="btn-slate">📋 Copy Current JSON</button>
             <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
           </div>
@@ -1987,7 +1988,17 @@ function lockCorrectPrefix(k){
     refreshSituationAll(); // ensure UI → model before exporting
     download('situation-current.json', buildCurrentSituationExport());
   });
-  if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
+  
+  if(copyCurrentBtn)copyCurrentBtn.addEventListener('click', async ()=>{
+    refreshSituationAll(); // ensure UI → model before copying
+    try{
+      await navigator.clipboard.writeText(buildCurrentSituationExport());
+    }catch(e){
+      alert('Clipboard copy failed. Your browser may block clipboard access on non-HTTPS pages.');
+    }
+  });
+
+if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
@@ -2146,6 +2157,7 @@ const testHitBtn=document.getElementById('testHitBtn');
 const advanceSel=document.getElementById('advanceSel');
 
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
+const copyCurrentBtn=document.getElementById('copyCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
 const copyAllBtn=document.getElementById('copyAllBtn');
 
