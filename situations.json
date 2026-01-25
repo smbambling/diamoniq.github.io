@@ -135,6 +135,186 @@
     }
   },
   {
+    "key": "BD-04",
+    "title": "Situation #4",
+    "desc": "Single to LF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "LF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": {
+        "x": 1200,
+        "y": 1745,
+        "tol": 90,
+        "notes": "Move to back up position between 3B and home. Read the play to back up 3B or possibly home plate."
+      },
+      "C": {
+        "x": 1501,
+        "y": 2037,
+        "tol": 65,
+        "notes": "Protect home plate. Give runner a lane for play at the plate."
+      },
+      "1B": {
+        "x": 1935,
+        "y": 1589,
+        "tol": 70,
+        "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick."
+      },
+      "2B": {
+        "x": 1507,
+        "y": 1213,
+        "tol": 70,
+        "notes": "Cover 2B. Be ready for possible throw/play on back runner."
+      },
+      "SS": {
+        "x": 1285,
+        "y": 1250,
+        "tol": 85,
+        "notes": "Move to cut/relay position between ball and 3B. Listen for communication."
+      },
+      "3B": {
+        "x": 1075,
+        "y": 1591,
+        "tol": 65,
+        "notes": "Cover 3B. Be ready for possible throw from LF."
+      },
+      "LF": {
+        "x": 702,
+        "y": 923,
+        "tol": 65,
+        "notes": "Make a good, hard, low throw to 3B. Make the throw low enough for the cut/relay to handle."
+      },
+      "CF": {
+        "x": 807,
+        "y": 503,
+        "tol": 105,
+        "notes": "Sprint to back up LF."
+      },
+      "RF": {
+        "x": 1980,
+        "y": 1200,
+        "tol": 110,
+        "notes": "Move to back up position near 2B."
+      }
+    },
+    "hit": {
+      "x": 700,
+      "y": 924
+    }
+  },
+  {
+    "key": "BD-05",
+    "title": "Situation #5",
+    "desc": "Single to CF",
+    "outs": 0,
+    "runnersOn": {
+      "first": true,
+      "second": false,
+      "third": false
+    },
+    "hitType": "line",
+    "batterAdvance": 1,
+    "playSeq": [
+      "CF",
+      "SS",
+      "3B"
+    ],
+    "seqNote": "",
+    "starts": {
+      "P": { "x": 1500, "y": 1631 },
+      "C": { "x": 1503, "y": 2147 },
+      "1B": { "x": 1888, "y": 1618 },
+      "2B": { "x": 1814, "y": 1107 },
+      "SS": { "x": 1227, "y": 1097 },
+      "3B": { "x": 1163, "y": 1506 },
+      "LF": { "x": 742, "y": 770 },
+      "CF": { "x": 1530, "y": 394 },
+      "RF": { "x": 2268, "y": 774 }
+    },
+    "targets": {
+      "P": {
+        "x": 1200,
+        "y": 1745,
+        "tol": 90,
+        "notes": "Move to back up position between 3B and home. Read the play to back up 3B or possibly home plate."
+      },
+      "C": {
+        "x": 1501,
+        "y": 2037,
+        "tol": 65,
+        "notes": "Protect home plate. Give runner a lane for play at the plate."
+      },
+      "1B": {
+        "x": 1935,
+        "y": 1589,
+        "tol": 70,
+        "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick."
+      },
+      "2B": {
+        "x": 1507,
+        "y": 1213,
+        "tol": 70,
+        "notes": "Cover 2B. Be ready for possible throw/play on back runner."
+      },
+      "SS": {
+        "x": 1285,
+        "y": 1250,
+        "tol": 85,
+        "notes": "Move to cut/relay position between ball and 3B. Listen for communication."
+      },
+      "3B": {
+        "x": 1075,
+        "y": 1591,
+        "tol": 65,
+        "notes": "Cover 3B. If SS cannot recover in time, be ready for throw all the way from CF."
+      },
+      "LF": {
+        "x": 807,
+        "y": 503,
+        "tol": 105,
+        "notes": "Sprint to back up CF."
+      },
+      "CF": {
+        "x": 1652,
+        "y": 572,
+        "tol": 80,
+        "notes": "Make a good, hard, low throw to 3B. Make the throw low enough for the cut/relay to handle."
+      },
+      "RF": {
+        "x": 1984,
+        "y": 309,
+        "tol": 120,
+        "notes": "Sprint to back up CF."
+      }
+    },
+    "hit": {
+      "x": 1652,
+      "y": 572
+    }
+  },
+  {
     "key": "BD-06",
     "title": "Situation #6",
     "desc": "Single to RF",
