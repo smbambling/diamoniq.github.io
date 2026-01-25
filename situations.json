@@ -344,7 +344,7 @@
   {
     "key": "S4",
     "title": "Situation #4",
-    "desc": "Single to LF (No Runners)",
+    "desc": "Single to LF",
     "outs": 0,
     "runnersOn": {
       "first": false,
