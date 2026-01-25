@@ -29,7 +29,7 @@
       "RF": { "x": 2268, "y": 723 }
     },
     "targets": {
-      "P":  { "x": 1505, "y": 1447, "tol": 96,  "notes": "Move into backup position between mound and 2B. Stay out of the runners lane." },
+      "P":  { "x": 1705, "y": 1515, "tol": 96,  "notes": "Move into backup position between mound and 2B. Stay out of the runners lane." },
       "C":  { "x": 1999, "y": 1864, "tol": 97,  "notes": "Follow the runner to first to back up possible overthrow on back pick." },
       "1B": { "x": 1935, "y": 1589, "tol": 65,  "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane. Be ready for possible back pick." },
       "2B": { "x": 1501, "y": 1165, "tol": 65,  "notes": "Move into position to cover 2B, receive throw. Give the runner a lane." },
@@ -37,7 +37,7 @@
       "3B": { "x": 1077, "y": 1590, "tol": 65,  "notes": "Stay close to 3B bag. Be ready for play." },
       "LF": { "x": 702,  "y": 923,  "tol": 65,  "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle." },
       "CF": { "x": 807,  "y": 503,  "tol": 105, "notes": "Sprint to back up LF." },
-      "RF": { "x": 2173, "y": 1368, "tol": 106, "notes": "Move toward infield to back up throw from LF." }
+      "RF": { "x": 2060, "y": 1105, "tol": 106, "notes": "Move toward infield to back up throw from LF." }
     },
     "hit": {
       "x": 700,
