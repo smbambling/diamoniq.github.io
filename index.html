@@ -705,12 +705,6 @@ function setHowToPhase(phase /* 'p1' | 'p2' */){
 
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
-
-
-  // Back-compat alias (older builds referenced findSituationByKey)
-  function findSituationByKey(key){
-    return getSituationByKey(key);
-  }
 function setTargetNotes(sKey, id, text){
   const s = SITUATIONS.find(x => x.key === sKey); if (!s) return;
   if (!s.targets) s.targets = {};
@@ -1997,27 +1991,20 @@ function lockCorrectPrefix(k){
   
   if(copyCurrentBtn)copyCurrentBtn.addEventListener('click', async ()=>{
     refreshSituationAll(); // ensure UI → model before copying
-    const ok = await copyTextToClipboard(buildCurrentSituationExport());
-    if(ok){
-      copyCurrentBtn.textContent = 'Copied!';
-      setTimeout(()=>copyCurrentBtn.textContent='Copy JSON', 900);
-    }else{
-      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
+    try{
+      await navigator.clipboard.writeText(buildCurrentSituationExport());
+    }catch(e){
+      alert('Clipboard copy failed. Your browser may block clipboard access on non-HTTPS pages.');
     }
   });
+
 if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
   if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
     refreshSituationAll();
-    const ok = await copyTextToClipboard(buildAllSituationsExport());
-    if (ok){
-      copyAllBtn.textContent = 'Copied!';
-      setTimeout(()=>copyAllBtn.textContent='Copy All', 900);
-    }else{
-      alert('Clipboard copy failed. If you are opening this over file:// or non-HTTPS, use “Download JSON” instead (or serve the page over HTTPS).');
-    }
+    try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
   });
 
   wireSeqBuilderOnce();
@@ -2170,60 +2157,6 @@ const testHitBtn=document.getElementById('testHitBtn');
 const advanceSel=document.getElementById('advanceSel');
 
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
-
-  // Clipboard helper: works on HTTPS *and* local file/http (falls back to execCommand)
-  function downloadTextAsFile(filename, text){
-    const blob = new Blob([text], {type:"application/json;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 500);
-}
-
-function showCopyFallback(text, filename){
-    // Fallback UI when clipboard APIs are blocked (non-HTTPS, permissions, etc.)
-    // 1) Try legacy execCommand copy (works in more contexts)
-    try{
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly","");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      ta.style.top = "0";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      if(ok){
-        toast("Copied to clipboard (fallback).");
-        return true;
-      }
-    }catch(e){/* ignore */}
-    // 2) If copy fails, download the JSON file instead
-    downloadTextAsFile(filename, text);
-    toast("Clipboard blocked — downloaded JSON instead.");
-    return false;
-}
-
-async function copyTextToClipboard(text, filenameForFallback="diamondiq.json"){
-    // Primary: Clipboard API (requires secure context in most browsers)
-    try{
-      if(navigator.clipboard && window.isSecureContext){
-        await navigator.clipboard.writeText(text);
-        return true;
-      }
-    }catch(e){
-      // fall through
-    }
-    // Fallback: legacy copy / download
-    return showCopyFallback(text, filenameForFallback);
-}
-
 const copyCurrentBtn=document.getElementById('copyCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
 const copyAllBtn=document.getElementById('copyAllBtn');
@@ -3199,18 +3132,10 @@ function getHitSaved(sKey){ const v=hitsMap[sKey]; return (v && !isNaN(v.x) && !
 function setHitSaved(sKey, pt){ if (!pt || isNaN(pt.x) || isNaN(pt.y)) return; hitsMap[sKey] = { x:Math.round(pt.x), y:Math.round(pt.y) }; }
 
 function setTargetFor(sKey,id,pt,tol=DEFAULT_TOL){
-  const s = findSituationByKey(sKey); if(!s) return;
-  if(!s.targets) s.targets = {};
-  const prev = s.targets[id] || {};
-  const prevTol = (typeof prev.tol === 'number') ? prev.tol : null;
-
-  // Preserve any additional per-target fields (e.g., notes) while updating coords/tolerance.
-  s.targets[id] = {
-    ...prev,
-    x: Math.round(pt.x),
-    y: Math.round(pt.y),
-    tol: Number(tol || prevTol || DEFAULT_TOL)
-  };
+  const s = SITUATIONS.find(x=>x.key===sKey); if(!s) return;
+  if(!s.targets) s.targets={};
+  const prevTol = s.targets[id]?.tol;
+  s.targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(tol||prevTol||DEFAULT_TOL) };
 }
 function getTargetFor(sKey,id){
   const s = SITUATIONS.find(x=>x.key===sKey);
@@ -3604,23 +3529,17 @@ function setSituation(key){
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
-  // Targets are used for tolerance/placement visualization; for exports we keep them schema-clean (no notes).
   const out = {};
-  const rings = getAllRings();
-  rings.forEach(r=>{
-    const id = r.dataset.id;
-    if(!id) return;
-
-    // Prefer the model's tolerance for this target (so exports remain stable), fallback to ring dataset.
-    const modelT = (currentSituation && currentSituation.targets) ? currentSituation.targets[id] : null;
-
-    // Convert on-screen ring location into internal units for persistence/export.
-    const native = cssToUnit(r);
-
+  getAllRings().forEach(el=>{
+    const id   = el.dataset.id;
+    const left = parseFloat(el.style.left), top = parseFloat(el.style.top);
+    const native = cssToUnit(left, top);
+    const modelT = currentSituation.targets?.[id];
     out[id] = {
       x: Math.round(native.x),
       y: Math.round(native.y),
-      tol: Math.round((modelT && typeof modelT.tol === "number") ? modelT.tol : (Number(r.dataset.tol) || DEFAULT_TOL))
+      tol: Math.round(modelT?.tol ?? DEFAULT_TOL),
+      notes: modelT?.notes || ''
     };
   });
   return out;
@@ -3633,101 +3552,55 @@ function getStartsForExport(key){
   return out;
 }
 function composeSituationForExport(base, starts, targets, hit){
-  // Build a stable, fully-populated payload (keep any future/unknown fields too)
-  const payload = { ...base };
+  const extra = { ...base };
+  delete extra.starts;
+  delete extra.targets;
+  delete extra.hit;
 
-  // Normalize core fields
-  payload.key = String(base.key || '');
-  payload.title = String(base.title || '');
-  payload.desc = String(base.desc || '');
-  payload.outs = clampInt(base.outs ?? 0, 0, 2);
-  payload.runnersOn = {
-    first: !!(base.runnersOn && base.runnersOn.first),
-    second: !!(base.runnersOn && base.runnersOn.second),
-    third: !!(base.runnersOn && base.runnersOn.third),
-  };
-
-  payload.hitType = String(base.hitType || 'ground');
-  payload.batterAdvance = clampInt(
-    (typeof base.batterAdvance === 'number') ? base.batterAdvance : 1,
-    0, 4
-  );
-
-  payload.playSeq = Array.isArray(base.playSeq) ? base.playSeq.slice() : [];
-  payload.seqNote = (typeof base.seqNote === 'string') ? base.seqNote : '';
-
-  // Always export starts + targets (even if partially null)
-  payload.starts = starts || {};
-  payload.targets = targets || {};
+  const payload = { ...extra, starts, targets };
   if (hit) payload.hit = hit;
+
+  if (base.hitType) payload.hitType = base.hitType;
+  if (typeof base.batterAdvance === 'number') {
+    payload.batterAdvance = clampInt(base.batterAdvance, 0, 4);
+  }
+
+  if (Array.isArray(base.playSeq) && base.playSeq.length) {
+    payload.playSeq = base.playSeq.slice();
+  }
+  if (typeof base.seqNote === 'string' && base.seqNote.trim()) {
+    payload.seqNote = base.seqNote;
+  }
 
   return payload;
 }
 
-function mergedTargetsForExport(s){
-  // Export targets reliably (including notes). For the currently loaded situation,
-  // prefer DOM-rendered target coordinates so the export matches what you see
-  // on the field even if the in-memory situation object is a clone.
-  const out = {};
-  const currentKey = (window.currentSituation && window.currentSituation.key) ? window.currentSituation.key : null;
-
-  // 1) If this is the current situation, use the rendered target positions from the DOM.
-  // getRenderedTargets() returns native IMG_W/IMG_H units (via cssToUnit()).
-  const useDOM = !!(currentKey && s && s.key === currentKey && typeof getRenderedTargets === 'function');
-  const domTargets = useDOM ? getRenderedTargets() : null;
-
-  // 2) Notes may live either on the situation object in the list OR on currentSituation.
-  const noteSourceTargets = (useDOM && window.currentSituation && window.currentSituation.targets) ? window.currentSituation.targets : (s && s.targets ? s.targets : {});
-
-  // 3) Ensure we have a position list; fall back to a safe default if POS_IDS is missing.
-  const ids = (typeof POS_IDS !== 'undefined' && Array.isArray(POS_IDS) && POS_IDS.length) ? POS_IDS
-            : ['P','C','1B','2B','SS','3B','LF','CF','RF'];
-
-  ids.forEach(id=>{
-    const srcRec = (domTargets && domTargets[id]) ? domTargets[id]
-                  : (s && s.targets && s.targets[id]) ? s.targets[id]
-                  : null;
-
-    const noteRec = (noteSourceTargets && noteSourceTargets[id]) ? noteSourceTargets[id] : null;
-    const notes = (noteRec && typeof noteRec.notes === 'string') ? noteRec.notes : '';
-
-    const x = (srcRec && srcRec.x != null) ? srcRec.x : null;
-    const y = (srcRec && srcRec.y != null) ? srcRec.y : null;
-
-    // Tolerance: prefer DOM's tol if present, else stored tol, else a reasonable default.
-    const tol = (srcRec && srcRec.tol != null) ? srcRec.tol
-             : (s && s.targets && s.targets[id] && s.targets[id].tol != null) ? s.targets[id].tol
-             : 65;
-
-    out[id] = { x, y, tol, notes };
-  });
-
-  return out;
-}
-
 
 function buildCurrentSituationExport(){
-  const s = currentSituation || SITUATIONS[0];
-  if(!s) return '[]';
-  const one = composeSituationForExport(
-    s,
-    getOnscreenStarts(),
-    mergedTargetsForExport(s),
-    getHitForExport(s)
-  );
-  return JSON.stringify([one], null, 2);
+  const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
+  const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
+  return JSON.stringify([one],null,2);
 }
-
 function buildAllSituationsExport(){
-  const exported = SITUATIONS.map(s=>{
-    const starts = (s===currentSituation) ? getOnscreenStarts() : (s.starts||{});
-    const targets = mergedTargetsForExport(s);
-    const hit = getHitForExport(s);
-    return composeSituationForExport(s, starts, targets, hit);
+  const arr=(SITUATIONS||[]).map(s=>{
+    const isCurrent=currentSituation && (s.key===currentSituation.key);
+    const starts=isCurrent?getOnscreenStarts():getStartsForExport(s.key);
+    let targets=isCurrent?getRenderedTargets():{};
+    if (!isCurrent){
+      Object.entries(s.targets||{}).forEach(([id,pt])=>{
+        targets[id] = {
+          x: Math.round(pt.x),
+          y: Math.round(pt.y),
+          tol: Math.round(pt.tol || DEFAULT_TOL),
+          notes: pt.notes || ''
+        };
+      });
+    }
+    const hit=getHitSaved(s.key) || getHitForExport(s);
+    return composeSituationForExport(s,starts,targets,hit);
   });
-  return JSON.stringify(exported,null,2);
+  return JSON.stringify(arr,null,2);
 }
-
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
