@@ -210,14 +210,14 @@
         "notes": "Stay close to 3B bag. Be ready for play."
       },
       "LF": {
-        "x": 807,
-        "y": 503,
+        "x": 1126,
+        "y": 299,
         "tol": 105,
         "notes": "Sprint to back up CF."
       },
       "CF": {
-        "x": 1652,
-        "y": 572,
+        "x": 1525,
+        "y": 527,
         "tol": 80,
         "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle."
       },
@@ -229,8 +229,8 @@
       }
     },
     "hit": {
-      "x": 1652,
-      "y": 572
+      "x": 1525,
+      "y": 539
     }
   },
   {
@@ -291,8 +291,8 @@
     },
     "targets": {
       "P": {
-        "x": 1505,
-        "y": 1447,
+        "x": 1337,
+        "y": 1401,
         "tol": 96,
         "notes": "Move into backup position between mound and SS position."
       },
@@ -309,14 +309,14 @@
         "notes": "After seeing the runner touch 1B, cover the bag. Give the runner a lane."
       },
       "2B": {
-        "x": 1611,
-        "y": 1034,
+        "x": 1827,
+        "y": 1000,
         "tol": 70,
         "notes": "Move to cut/relay position between ball and 2B. Listen for communication."
       },
       "SS": {
-        "x": 1507,
-        "y": 1213,
+        "x": 1503,
+        "y": 1176,
         "tol": 65,
         "notes": "Cover 2B. Be ready for throw and tag play."
       },
@@ -327,27 +327,27 @@
         "notes": "Maintain position to possibly back up throw from RF, then cover 3B."
       },
       "LF": {
-        "x": 836,
-        "y": 1397,
+        "x": 827,
+        "y": 1185,
         "tol": 80,
         "notes": "Sprint to possible back up position behind SS position."
       },
       "CF": {
-        "x": 1992,
-        "y": 243,
+        "x": 2317,
+        "y": 440,
         "tol": 149,
         "notes": "Sprint to back up RF."
       },
       "RF": {
-        "x": 2091,
-        "y": 564,
+        "x": 2188,
+        "y": 794,
         "tol": 65,
         "notes": "Make a good, hard, low throw toward 2B. Keep it low enough for the cut/relay to handle."
       }
     },
     "hit": {
-      "x": 2088,
-      "y": 569
+      "x": 2192,
+      "y": 796
     }
   },
   {
