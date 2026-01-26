@@ -3651,17 +3651,6 @@ function refreshSituationAll(){
     };
   });
 
-  ath.round(p.y), tol:DEFAULT_TOL };
-    });
-  }
-  currentSituation.targets = {};
-  Object.entries(targets).forEach(([id,pt])=>{
-    currentSituation.targets[id] = {
-      x:Math.round(pt.x),
-      y:Math.round(pt.y),
-      tol:Number(pt.tol)||DEFAULT_TOL
-    };
-  });
 
   // 6) Hit + meta (+ persist hit location only)
   ensureDefaultHit();
