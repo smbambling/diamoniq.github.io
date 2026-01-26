@@ -2141,6 +2141,15 @@ const tolTargetSel=document.getElementById('tolTargetSel');
 const tolNum=document.getElementById('tolNum');
 const tolRange=document.getElementById('tolRange');
 
+function selectTolTarget(id, opts = {}){
+  if(!id || !tolTargetSel) return;
+  tolTargetSel.value = id;
+  tolTargetSel.dispatchEvent(new Event('change', { bubbles:true }));
+  if(opts && opts.focusNotes && tolNotes){
+    try{ tolNotes.focus(); }catch(e){}
+  }
+}
+
 const hitTypeSel=document.getElementById('hitTypeSel');
 const testHitBtn=document.getElementById('testHitBtn');
 const advanceSel=document.getElementById('advanceSel');
@@ -2416,6 +2425,13 @@ function buildTargets(){
       ring.style.display='block';
       ring.classList.add('show-label','draggable'); ring.classList.remove('locked');
       makeTargetDraggable(ring,id);
+
+      // Coach convenience: click a ring to select it in Targets & Tolerance dropdown
+      ring.addEventListener('click', (e)=>{
+        if(!coachUnlocked) return;
+        e.stopPropagation();
+        selectTolTarget(id);
+      });
     } else {
       ring.style.display='none';
       ring.classList.remove('show-label','draggable'); ring.classList.add('locked');
