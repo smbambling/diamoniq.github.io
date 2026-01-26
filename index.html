@@ -627,7 +627,83 @@
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
 </div>
         </div>
-        <!-- Player Results Viewer (Coach) -->
+        
+      <!-- TEAMS (Coach) -->
+      <div class="subsec" id="teamsSubsec" style="margin-top:14px;">
+        <div class="sectionTitle">TEAMS</div>
+        <div class="muted" style="margin-bottom:10px;">
+          Manage teams & rosters. Export <code>teams.json</code> and place it next to <code>index.html</code> and <code>situations.json</code>.
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+          <button id="teamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
+          <button id="teamsCopyBtn" class="btn btn-ghost" type="button">Copy teams.json</button>
+          <button id="teamsImportBtn" class="btn btn-ghost" type="button">Import teams JSON</button>
+          <button id="teamsResetBtn" class="btn btn-ghost" type="button" title="Clear locally saved teams (does not affect teams.json on disk)">Clear local teams</button>
+        </div>
+
+        <div class="rowGrid">
+          <label class="field">
+            <span>Team</span>
+            <select id="coachTeamSelect" class="select"></select>
+          </label>
+
+          <label class="field">
+            <span>Team Name</span>
+            <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
+          </label>
+
+          <label class="field">
+            <span>Coach Email</span>
+            <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="coachTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
+          <button id="coachTeamUpdateBtn" class="btn btn-ghost" type="button">Update Team</button>
+          <button id="coachTeamRemoveBtn" class="btn btn-ghost" type="button">Remove Team</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">Roster</div>
+        <div class="rowGrid">
+          <label class="field">
+            <span>Player</span>
+            <select id="coachRosterSelect" class="select" disabled></select>
+          </label>
+
+          <label class="field">
+            <span>Player Name</span>
+            <input id="coachPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled/>
+          </label>
+
+          <label class="field">
+            <span>Player Number</span>
+            <input id="coachPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled/>
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <div style="display:flex; gap:8px;">
+              <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
+              <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="muted" id="coachPlayerIdPreview" style="margin-top:8px;"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="coachPlayerAddBtn" class="btn btn-brand" type="button" disabled>Add Player</button>
+          <button id="coachPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled>Update Player</button>
+          <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
+        </div>
+      </div>
+
+
+<!-- Player Results Viewer (Coach) -->
         <div class="subsec" id="coachResultsSubsec">
           <div class="title">Player Results Viewer</div>
           <div class="hint" style="margin:-6px 0 8px">Paste the JSON a player exports (Player → Export Results → Copy Results JSON). This does not modify your saved situations.</div>
@@ -659,44 +735,63 @@
 
 
 <!-- Player Info Modal -->
-<div id="playerModalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
-  <div class="modal">
-    <div class="modal-header" id="playerModalTitle">Player Info</div>
-    <div class="modal-body">
-      <div class="help-muted">This will be appended to your random Player ID for exports.</div>
 
-      <div>
-        <label for="playerTeam">Team Name</label>
-        <input id="playerTeam" type="text" placeholder="e.g., 13U Black" autocomplete="organization"/>
+  <!-- Player Modal -->
+  <div id="playerModalOverlay" class="modalOverlay" style="display:none;">
+    <div class="modalPanel">
+      <div class="modalHeader">
+        <div style="font-weight:800;">Player</div>
+        <button id="playerModalCloseX" class="btn btn-ghost" type="button">Close</button>
       </div>
 
-      <div>
-        <label for="playerName">Player Name</label>
-        <input id="playerName" type="text" placeholder="e.g., John Smith" autocomplete="name"/>
-      </div>
+      <div class="modalBody">
+        <div class="subsec">
+          <div class="sectionTitle">Player Login</div>
+          <div class="rowGrid">
+            <label class="field">
+              <span>Team</span>
+              <select id="playerTeamSelect" class="select"></select>
+            </label>
 
-      <div>
-        <label for="playerNumber">Player Number</label>
-        <input id="playerNumber" type="text" inputmode="numeric" placeholder="e.g., 12" autocomplete="off"/>
-      </div>
+            <label class="field">
+              <span>Player</span>
+              <select id="playerNameSelect" class="select" disabled></select>
+            </label>
 
-      <div class="help-muted" id="playerIdPreview"></div>
-      <div class="subsec" style="margin-top:12px">
-        <div class="subsecTitle">Export My Results</div>
-        <div class="help-muted">Share your attempts with your coach (includes Player ID + per-situation score + stage-2 play sequence).</div>
-        <div class="row" style="gap:8px; flex-wrap:wrap">
-          <button id="copyResultsBtn" class="btn sm">Copy Results JSON</button>
-          <button id="downloadResultsBtn" class="btn sm">Download Results JSON</button>
+            <label class="field">
+              <span>Password</span>
+              <input id="playerPass" class="input" type="password" autocomplete="current-password" placeholder="Password"/>
+            </label>
+          </div>
+
+          <div class="rowGrid" style="margin-top:10px;">
+            <div class="pill" id="playerLoginStatus" style="justify-self:start;">Not logged in</div>
+            <div style="justify-self:end; display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="playerLoginBtn" class="btn btn-brand" type="button">Login</button>
+              <button id="playerLogoutBtn" class="btn btn-ghost" type="button" style="display:none;">Logout</button>
+            </div>
+          </div>
+
+          <div id="playerIdLine" class="muted" style="margin-top:8px; display:none;">
+            Player ID: <span id="playerIdText" style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></span>
+          </div>
+        </div>
+
+        <div class="subsec" style="margin-top:14px;">
+          <div class="sectionTitle">Results</div>
+          <div class="muted" style="margin-bottom:8px;">
+            Share sends your results to your coach’s email (configured for your team).
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="playerShareResultsBtn" class="btn btn-brand" type="button" disabled>Share my results</button>
+            <button id="playerCopyResultsBtn" class="btn btn-ghost" type="button" title="Fallback: Copy results JSON" disabled>Copy results JSON</button>
+          </div>
+          <div class="muted" id="playerShareHint" style="margin-top:8px;"></div>
         </div>
       </div>
-
-    </div>
-    <div class="modal-actions">
-      <button id="playerCancelBtn" class="btn-slate">Cancel</button>
-      <button id="playerSaveBtn" class="btn-green">Save</button>
     </div>
   </div>
-</div>
+
 
 <script>
 /// @diq:begin [A0] Constants & pure helpers
@@ -806,90 +901,779 @@ let _timerSecs = TIMER_START_SECS;
   }
 
 
-  // --- Player info modal wiring ---
-  const playerBtn = document.getElementById("playerBtn");
-  const playerModalOverlay = document.getElementById("playerModalOverlay");
-  const playerTeamInput = document.getElementById("playerTeam");
-  const playerNameInput = document.getElementById("playerName");
-  const playerNumberInput = document.getElementById("playerNumber");
-  const playerIdPreview = document.getElementById("playerIdPreview");
-  const playerCancelBtn = document.getElementById("playerCancelBtn");
-  const playerSaveBtn = document.getElementById("playerSaveBtn");
+  // --- Teams (Coach-managed) + Player Login ---
+  const TEAMS_STORAGE_KEY = "diq_teams_v1";
+  let TEAMS = { version: 1, teams: [] };
 
-  function refreshPlayerPreview(){
-    const tmp = { team: playerTeamInput.value, name: playerNameInput.value, number: playerNumberInput.value };
-    const teamSlug = slugify(tmp.team) || "team";
-    const nameSlug = slugify(tmp.name) || "player";
-    const num = String(tmp.number || "").trim().replace(/\s+/g,"");
+  function slugifyLoose(str){
+    return String(str || "")
+      .trim()
+      .toLowerCase()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function deepClone(obj){
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function normalizeTeamsData(raw){
+    const out = { version: 1, teams: [] };
+    if(!raw) return out;
+
+    // Accept either {teams:[...]} or [...]
+    const teamsArr = Array.isArray(raw) ? raw : (Array.isArray(raw.teams) ? raw.teams : []);
+    out.version = (raw.version && !Array.isArray(raw)) ? raw.version : 1;
+
+    out.teams = teamsArr.map(t => {
+      const name = String(t.name || t.teamName || "").trim();
+      const id = String(t.id || slugifyLoose(name) || "team").trim();
+      const coachEmail = String(t.coachEmail || t.email || "").trim();
+      const rosterArr = Array.isArray(t.roster) ? t.roster : [];
+      const roster = rosterArr.map(p => {
+        const pName = String(p.name || p.playerName || "").trim();
+        const number = String(p.number ?? p.playerNumber ?? "").trim();
+        const password = String(p.password || "").trim();
+        const baseId = String(p.baseId || p.randomId || "").trim() || randomId(8);
+        const playerSlug = slugifyLoose(pName) || "player";
+        const numSafe = number ? number.replace(/[^0-9a-zA-Z-]/g, "") : "0";
+        const playerId = String(p.playerId || `${baseId}-${slugifyLoose(name)}-${playerSlug}-${numSafe}`);
+        return { name: pName, number, password, baseId, playerId };
+      }).sort((a,b)=> (a.number||"").localeCompare(b.number||"") || (a.name||"").localeCompare(b.name||""));
+      return { id, name, coachEmail, roster };
+    }).sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+
+    return out;
+  }
+
+  function saveTeamsToLocal(){
+    try{
+      localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(TEAMS));
+    }catch(e){
+      console.warn("Failed to save TEAMS to localStorage", e);
+    }
+  }
+
+  function loadTeamsFromLocal(){
+    try{
+      const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
+      if(!raw) return null;
+      return normalizeTeamsData(JSON.parse(raw));
+    }catch(e){
+      console.warn("Failed to load TEAMS from localStorage", e);
+      return null;
+    }
+  }
+
+  async function loadTeamsFromJson(){
+    // Prefer teams.json if present, fall back to localStorage, then empty.
+    try{
+      const resp = await fetch("./teams.json?ts=" + Date.now(), { cache: "no-store" });
+      if(resp.ok){
+        const data = normalizeTeamsData(await resp.json());
+        TEAMS = data;
+        saveTeamsToLocal();
+        return true;
+      }
+    }catch(e){
+      // ignore fetch failures (likely no teams.json yet)
+    }
+    const local = loadTeamsFromLocal();
+    if(local){
+      TEAMS = local;
+      return true;
+    }
+    TEAMS = normalizeTeamsData(null);
+    return false;
+  }
+
+  function findTeam(teamId){
+    return (TEAMS.teams || []).find(t => t.id === teamId) || null;
+  }
+  function findPlayer(teamId, playerId){
+    const t = findTeam(teamId);
+    if(!t) return null;
+    return (t.roster || []).find(p => p.playerId === playerId) || null;
+  }
+
+  // --- Coach TEAMS UI wiring ---
+  const coachTeamSelect = document.getElementById("coachTeamSelect");
+  const coachTeamName = document.getElementById("coachTeamName");
+  const coachTeamEmail = document.getElementById("coachTeamEmail");
+  const coachTeamAddBtn = document.getElementById("coachTeamAddBtn");
+  const coachTeamUpdateBtn = document.getElementById("coachTeamUpdateBtn");
+  const coachTeamRemoveBtn = document.getElementById("coachTeamRemoveBtn");
+
+  const coachRosterSelect = document.getElementById("coachRosterSelect");
+  const coachPlayerName = document.getElementById("coachPlayerName");
+  const coachPlayerNumber = document.getElementById("coachPlayerNumber");
+  const coachPlayerPass = document.getElementById("coachPlayerPass");
+  const coachGenPassBtn = document.getElementById("coachGenPassBtn");
+  const coachPlayerIdPreview = document.getElementById("coachPlayerIdPreview");
+  const coachPlayerAddBtn = document.getElementById("coachPlayerAddBtn");
+  const coachPlayerUpdateBtn = document.getElementById("coachPlayerUpdateBtn");
+  const coachPlayerRemoveBtn = document.getElementById("coachPlayerRemoveBtn");
+
+  const teamsDownloadBtn = document.getElementById("teamsDownloadBtn");
+  const teamsCopyBtn = document.getElementById("teamsCopyBtn");
+  const teamsImportBtn = document.getElementById("teamsImportBtn");
+  const teamsResetBtn = document.getElementById("teamsResetBtn");
+
+  function setRosterControlsEnabled(enabled){
+    coachRosterSelect.disabled = !enabled;
+    coachPlayerName.disabled = !enabled;
+    coachPlayerNumber.disabled = !enabled;
+    coachPlayerPass.disabled = !enabled;
+    coachGenPassBtn.disabled = !enabled;
+    coachPlayerAddBtn.disabled = !enabled;
+    coachPlayerUpdateBtn.disabled = !enabled;
+    coachPlayerRemoveBtn.disabled = !enabled;
+  }
+
+  function refreshCoachTeamSelect(){
+    if(!coachTeamSelect) return;
+    const prev = coachTeamSelect.value;
+    coachTeamSelect.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "— Select team —";
+    coachTeamSelect.appendChild(opt0);
+
+    (TEAMS.teams || []).forEach(t=>{
+      const o = document.createElement("option");
+      o.value = t.id;
+      o.textContent = t.name || t.id;
+      coachTeamSelect.appendChild(o);
+    });
+
+    if(prev && findTeam(prev)) coachTeamSelect.value = prev;
+  }
+
+  function refreshCoachRosterSelect(){
+    const teamId = coachTeamSelect ? coachTeamSelect.value : "";
+    const t = teamId ? findTeam(teamId) : null;
+
+    coachRosterSelect.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "— Select player —";
+    coachRosterSelect.appendChild(opt0);
+
+    if(!t){
+      setRosterControlsEnabled(false);
+      coachPlayerIdPreview.textContent = "";
+      return;
+    }
+
+    setRosterControlsEnabled(true);
+
+    (t.roster || []).forEach(p=>{
+      const o = document.createElement("option");
+      o.value = p.playerId;
+      o.textContent = `${p.number ? "#"+p.number+" " : ""}${p.name}`;
+      coachRosterSelect.appendChild(o);
+    });
+
+    coachRosterSelect.value = "";
+    coachPlayerName.value = "";
+    coachPlayerNumber.value = "";
+    coachPlayerPass.value = "";
+    coachPlayerIdPreview.textContent = "";
+  }
+
+  function setCoachTeamFieldsFromSelection(){
+    const teamId = coachTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+    coachTeamName.value = t ? (t.name || "") : "";
+    coachTeamEmail.value = t ? (t.coachEmail || "") : "";
+    refreshCoachRosterSelect();
+    refreshPlayerTeamDropdown(); // keep player UI in sync
+    refreshPlayerLoginUI();
+  }
+
+  function setCoachPlayerFieldsFromSelection(){
+    const teamId = coachTeamSelect.value;
+    const playerId = coachRosterSelect.value;
+    const p = (teamId && playerId) ? findPlayer(teamId, playerId) : null;
+
+    coachPlayerName.value = p ? (p.name || "") : "";
+    coachPlayerNumber.value = p ? (p.number || "") : "";
+    coachPlayerPass.value = p ? (p.password || "") : "";
+
+    coachPlayerIdPreview.textContent = p ? `Player ID: ${p.playerId}` : "";
+  }
+
+  function buildPlayerIdForTeam(teamName, playerName, playerNumber, baseId){
+    const teamSlug = slugifyLoose(teamName) || "team";
+    const nameSlug = slugifyLoose(playerName) || "player";
+    const num = String(playerNumber || "").trim().replace(/\s+/g,"");
     const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
-    playerIdPreview.textContent = `Player ID Preview: ${PLAYER_BASE_ID}-${teamSlug}-${nameSlug}-${numSafe}`;
+    return `${baseId}-${teamSlug}-${nameSlug}-${numSafe}`;
   }
 
-  function updatePlayerButtonLabel(){
-    const num = String(PLAYER_META.number || "").trim().replace(/\s+/g,"") || "0";
-    const nDisp = PLAYER_META.name ? PLAYER_META.name : "Player";
-    playerBtn.textContent = `Player: ${nDisp} #${num}`;
-    playerBtn.title = `Player ID: ${getPlayerId()}\nTeam: ${PLAYER_META.team || ""}\nName: ${PLAYER_META.name || ""}\nNumber: ${PLAYER_META.number || ""}`;
+  function genSimplePassword(){
+    // 4-digit numeric
+    return String(Math.floor(1000 + Math.random()*9000));
   }
 
-  function openPlayerModal(force=false){
-    playerTeamInput.value = PLAYER_META.team || "";
-    playerNameInput.value = PLAYER_META.name || "";
-    playerNumberInput.value = PLAYER_META.number || "";
-    refreshPlayerPreview();
-    playerModalOverlay.style.display = "flex";
-    const first = !playerTeamInput.value ? playerTeamInput : (!playerNameInput.value ? playerNameInput : (!playerNumberInput.value ? playerNumberInput : playerTeamInput));
-    setTimeout(()=>first.focus(), 0);
-    playerModalOverlay.dataset.force = force ? "1" : "0";
-  }
-  function closePlayerModal(){ playerModalOverlay.style.display = "none"; }
+  function upsertTeam(name, email){
+    const teamName = String(name || "").trim();
+    if(!teamName) return null;
+    const id = slugifyLoose(teamName) || "team";
 
-  function ensurePlayerMeta(){
-    if(!PLAYER_META.team || !PLAYER_META.name || !String(PLAYER_META.number||"").trim()){
-      openPlayerModal(true);
-    } else {
-      updatePlayerButtonLabel();
+    let t = findTeam(id);
+    if(!t){
+      t = { id, name: teamName, coachEmail: String(email||"").trim(), roster: [] };
+      TEAMS.teams.push(t);
+    }else{
+      t.name = teamName;
+      t.coachEmail = String(email||"").trim();
     }
+    TEAMS.teams = TEAMS.teams.sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+    saveTeamsToLocal();
+    return t;
   }
 
-  playerBtn?.addEventListener("click", ()=>openPlayerModal(false));
-  playerCancelBtn?.addEventListener("click", ()=>{
-    if(playerModalOverlay.dataset.force === "1") return;
-    closePlayerModal();
-  });
-  playerModalOverlay?.addEventListener("click", (e)=>{
-    if(e.target === playerModalOverlay){
-      if(playerModalOverlay.dataset.force === "1") return;
-      closePlayerModal();
-    }
-  });
+  function removeTeam(teamId){
+    TEAMS.teams = (TEAMS.teams || []).filter(t => t.id !== teamId);
+    saveTeamsToLocal();
+  }
 
-  [playerTeamInput, playerNameInput, playerNumberInput].forEach(inp=>{
-    inp?.addEventListener("input", refreshPlayerPreview);
-    inp?.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter") playerSaveBtn.click();
-      if(e.key === "Escape" && playerModalOverlay.dataset.force !== "1") closePlayerModal();
+  function upsertPlayer(teamId, playerName, playerNumber, password){
+    const t = findTeam(teamId);
+    if(!t) return null;
+
+    const name = String(playerName||"").trim();
+    const number = String(playerNumber??"").trim();
+    const pass = String(password||"").trim();
+
+    if(!name || !number || !pass) return null;
+
+    // stable baseId per player
+    let existing = (t.roster || []).find(p => slugifyLoose(p.name)===slugifyLoose(name) && String(p.number)===String(number));
+    if(existing){
+      existing.name = name;
+      existing.number = number;
+      existing.password = pass;
+      existing.playerId = buildPlayerIdForTeam(t.name, name, number, existing.baseId);
+    }else{
+      const baseId = randomId(8);
+      const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
+      existing = { name, number, password: pass, baseId, playerId };
+      t.roster.push(existing);
+    }
+
+    t.roster = (t.roster || []).sort((a,b)=> (a.number||"").localeCompare(b.number||"") || (a.name||"").localeCompare(b.name||""));
+    saveTeamsToLocal();
+    return existing;
+  }
+
+  function removePlayer(teamId, playerId){
+    const t = findTeam(teamId);
+    if(!t) return;
+    t.roster = (t.roster || []).filter(p => p.playerId !== playerId);
+    saveTeamsToLocal();
+  }
+
+  function downloadJson(filename, obj){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  function copyTextToClipboard(text){
+    return navigator.clipboard.writeText(text);
+  }
+
+  function promptForJsonPaste(title){
+    return window.prompt(title + "\n\nPaste JSON here:");
+  }
+
+  if(coachTeamSelect){
+    coachTeamSelect.addEventListener("change", setCoachTeamFieldsFromSelection);
+  }
+  if(coachRosterSelect){
+    coachRosterSelect.addEventListener("change", setCoachPlayerFieldsFromSelection);
+  }
+
+  if(coachTeamAddBtn){
+    coachTeamAddBtn.addEventListener("click", ()=>{
+      const t = upsertTeam(coachTeamName.value, coachTeamEmail.value);
+      refreshCoachTeamSelect();
+      if(t) coachTeamSelect.value = t.id;
+      setCoachTeamFieldsFromSelection();
+    });
+  }
+  if(coachTeamUpdateBtn){
+    coachTeamUpdateBtn.addEventListener("click", ()=>{
+      const teamId = coachTeamSelect.value;
+      if(!teamId) return alert("Select a team to update.");
+      // allow rename by updating via current name (will slugify)
+      // if slug changes, migrate roster
+      const old = findTeam(teamId);
+      if(!old) return;
+      const newName = String(coachTeamName.value||"").trim();
+      const newId = slugifyLoose(newName) || teamId;
+      const newEmail = String(coachTeamEmail.value||"").trim();
+
+      if(newId !== teamId){
+        // migrate
+        const migrated = { id: newId, name: newName, coachEmail: newEmail, roster: deepClone(old.roster || []) };
+        // rebuild playerIds with new team name/slug
+        migrated.roster.forEach(p=>{
+          p.playerId = buildPlayerIdForTeam(migrated.name, p.name, p.number, p.baseId);
+        });
+        removeTeam(teamId);
+        TEAMS.teams.push(migrated);
+      }else{
+        old.name = newName || old.name;
+        old.coachEmail = newEmail;
+        // rebuild playerIds with team name changes
+        (old.roster||[]).forEach(p=>{
+          p.playerId = buildPlayerIdForTeam(old.name, p.name, p.number, p.baseId);
+        });
+      }
+
+      TEAMS.teams = TEAMS.teams.sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+      saveTeamsToLocal();
+      refreshCoachTeamSelect();
+      coachTeamSelect.value = newId;
+      setCoachTeamFieldsFromSelection();
+    });
+  }
+  if(coachTeamRemoveBtn){
+    coachTeamRemoveBtn.addEventListener("click", ()=>{
+      const teamId = coachTeamSelect.value;
+      if(!teamId) return alert("Select a team to remove.");
+      if(!confirm("Remove this team and its roster?")) return;
+      removeTeam(teamId);
+      refreshCoachTeamSelect();
+      coachTeamSelect.value = "";
+      setCoachTeamFieldsFromSelection();
+    });
+  }
+
+  if(coachGenPassBtn){
+    coachGenPassBtn.addEventListener("click", ()=>{
+      coachPlayerPass.value = genSimplePassword();
+      // update preview
+      const t = findTeam(coachTeamSelect.value);
+      const baseId = (coachRosterSelect.value && t) ? (findPlayer(t.id, coachRosterSelect.value)?.baseId || randomId(8)) : randomId(8);
+      coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t ? t.name : coachTeamName.value, coachPlayerName.value, coachPlayerNumber.value, baseId)}`;
+    });
+  }
+
+  function refreshCoachPlayerIdPreview(){
+    const teamId = coachTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+    if(!t){
+      coachPlayerIdPreview.textContent = "";
+      return;
+    }
+    const baseId = (coachRosterSelect.value ? (findPlayer(teamId, coachRosterSelect.value)?.baseId) : null) || randomId(8);
+    const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerNumber.value, baseId);
+    coachPlayerIdPreview.textContent = `Player ID preview: ${preview}`;
+  }
+
+  ["input","change"].forEach(ev=>{
+    if(coachPlayerName) coachPlayerName.addEventListener(ev, refreshCoachPlayerIdPreview);
+    if(coachPlayerNumber) coachPlayerNumber.addEventListener(ev, refreshCoachPlayerIdPreview);
+    if(coachTeamName) coachTeamName.addEventListener(ev, ()=>{
+      // if team name is being edited, preview updates, but actual ids rebuild on update
+      refreshCoachPlayerIdPreview();
     });
   });
 
-  playerSaveBtn?.addEventListener("click", ()=>{
-    const team = String(playerTeamInput.value||"").trim();
-    const name = String(playerNameInput.value||"").trim();
-    const number = String(playerNumberInput.value||"").trim();
-    if(!team || !name || !number){
-      alert("Please fill Team Name, Player Name, and Player Number.");
+  if(coachPlayerAddBtn){
+    coachPlayerAddBtn.addEventListener("click", ()=>{
+      const teamId = coachTeamSelect.value;
+      if(!teamId) return alert("Select a team first.");
+      const pass = coachPlayerPass.value || genSimplePassword();
+      coachPlayerPass.value = pass;
+      const p = upsertPlayer(teamId, coachPlayerName.value, coachPlayerNumber.value, pass);
+      if(!p) return alert("Enter player name, number, and password.");
+      refreshCoachRosterSelect();
+      coachRosterSelect.value = p.playerId;
+      setCoachPlayerFieldsFromSelection();
+      refreshPlayerTeamDropdown();
+      refreshPlayerLoginUI();
+    });
+  }
+  if(coachPlayerUpdateBtn){
+    coachPlayerUpdateBtn.addEventListener("click", ()=>{
+      const teamId = coachTeamSelect.value;
+      const selectedPlayerId = coachRosterSelect.value;
+      if(!teamId || !selectedPlayerId) return alert("Select a player to update.");
+      const t = findTeam(teamId);
+      const old = findPlayer(teamId, selectedPlayerId);
+      if(!t || !old) return;
+
+      // Update the record in-place (keep baseId)
+      old.name = String(coachPlayerName.value||"").trim();
+      old.number = String(coachPlayerNumber.value||"").trim();
+      old.password = String(coachPlayerPass.value||"").trim();
+      old.playerId = buildPlayerIdForTeam(t.name, old.name, old.number, old.baseId);
+
+      t.roster = (t.roster || []).sort((a,b)=> (a.number||"").localeCompare(b.number||"") || (a.name||"").localeCompare(b.name||""));
+      saveTeamsToLocal();
+      refreshCoachRosterSelect();
+      coachRosterSelect.value = old.playerId;
+      setCoachPlayerFieldsFromSelection();
+      refreshPlayerTeamDropdown();
+      refreshPlayerLoginUI();
+    });
+  }
+  if(coachPlayerRemoveBtn){
+    coachPlayerRemoveBtn.addEventListener("click", ()=>{
+      const teamId = coachTeamSelect.value;
+      const playerId = coachRosterSelect.value;
+      if(!teamId || !playerId) return alert("Select a player to remove.");
+      if(!confirm("Remove this player from the roster?")) return;
+      removePlayer(teamId, playerId);
+      refreshCoachRosterSelect();
+      refreshPlayerTeamDropdown();
+      refreshPlayerLoginUI();
+    });
+  }
+
+  if(teamsDownloadBtn){
+    teamsDownloadBtn.addEventListener("click", ()=>{
+      downloadJson("teams.json", TEAMS);
+    });
+  }
+  if(teamsCopyBtn){
+    teamsCopyBtn.addEventListener("click", ()=>{
+      const txt = JSON.stringify(TEAMS, null, 2);
+      copyTextToClipboard(txt)
+        .then(()=> alert("Teams JSON copied."))
+        .catch(()=>{ alert("Clipboard copy failed. Use Download teams.json instead."); });
+    });
+  }
+  if(teamsImportBtn){
+    teamsImportBtn.addEventListener("click", ()=>{
+      const raw = promptForJsonPaste("Import teams JSON");
+      if(!raw) return;
+      try{
+        const parsed = JSON.parse(raw);
+        TEAMS = normalizeTeamsData(parsed);
+        saveTeamsToLocal();
+        refreshTeamsUIAll();
+        alert("Teams imported.");
+      }catch(e){
+        alert("Invalid JSON.");
+      }
+    });
+  }
+  if(teamsResetBtn){
+    teamsResetBtn.addEventListener("click", ()=>{
+      if(!confirm("Clear locally saved teams? (This does not delete teams.json on disk.)")) return;
+      try{ localStorage.removeItem(TEAMS_STORAGE_KEY); }catch(e){}
+      TEAMS = normalizeTeamsData(null);
+      refreshTeamsUIAll();
+    });
+  }
+
+  function refreshTeamsUIAll(){
+    refreshCoachTeamSelect();
+    setCoachTeamFieldsFromSelection();
+    refreshPlayerTeamDropdown();
+    refreshPlayerLoginUI();
+  }
+
+  // --- Player login UI wiring ---
+  const playerBtn = document.getElementById("playerBtn");
+  const playerModalOverlay = document.getElementById("playerModalOverlay");
+  const playerModalCloseX = document.getElementById("playerModalCloseX");
+  const playerTeamSelect = document.getElementById("playerTeamSelect");
+  const playerNameSelect = document.getElementById("playerNameSelect");
+  const playerPassInput = document.getElementById("playerPass");
+  const playerLoginBtn = document.getElementById("playerLoginBtn");
+  const playerLogoutBtn = document.getElementById("playerLogoutBtn");
+  const playerLoginStatus = document.getElementById("playerLoginStatus");
+  const playerIdLine = document.getElementById("playerIdLine");
+  const playerIdText = document.getElementById("playerIdText");
+
+  const playerShareResultsBtn = document.getElementById("playerShareResultsBtn");
+  const playerCopyResultsBtn = document.getElementById("playerCopyResultsBtn");
+  const playerShareHint = document.getElementById("playerShareHint");
+
+  function getCurrentPlayerFromMeta(){
+    // PLAYER_META is global (loaded from STORAGE_PLAYER_META)
+    const teamId = slugifyLoose(PLAYER_META.team || "");
+    if(!teamId) return null;
+    const team = findTeam(teamId);
+    if(!team) return null;
+    const num = String(PLAYER_META.number || "").trim();
+    const name = String(PLAYER_META.name || "").trim();
+    const p = (team.roster || []).find(x => String(x.number).trim()===num && slugifyLoose(x.name)===slugifyLoose(name)) || null;
+    if(!p) return null;
+    return { team, player: p };
+  }
+
+  function refreshPlayerTeamDropdown(){
+    if(!playerTeamSelect) return;
+    const prev = playerTeamSelect.value;
+    playerTeamSelect.innerHTML = "";
+    const o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = "— Select team —";
+    playerTeamSelect.appendChild(o0);
+
+    (TEAMS.teams || []).forEach(t=>{
+      const o = document.createElement("option");
+      o.value = t.id;
+      o.textContent = t.name || t.id;
+      playerTeamSelect.appendChild(o);
+    });
+
+    if(prev && findTeam(prev)) playerTeamSelect.value = prev;
+  }
+
+  function refreshPlayerNameDropdown(){
+    if(!playerNameSelect) return;
+    const teamId = playerTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+
+    playerNameSelect.innerHTML = "";
+    const o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = "— Select player —";
+    playerNameSelect.appendChild(o0);
+
+    if(!t){
+      playerNameSelect.disabled = true;
       return;
     }
-    PLAYER_META = {team, name, number};
-    savePlayerMeta(PLAYER_META);
-    updatePlayerButtonLabel();
-    closePlayerModal();
-  });
 
-  // ------------------------------------------------------------
-  // Results persistence (per playerBaseId)
-  // ------------------------------------------------------------
-  const STORAGE_RESULTS_PREFIX = "diq_results_v1_";
+    (t.roster || []).forEach(p=>{
+      const o = document.createElement("option");
+      o.value = p.playerId;
+      o.textContent = `${p.number ? "#"+p.number+" " : ""}${p.name}`;
+      playerNameSelect.appendChild(o);
+    });
+
+    playerNameSelect.disabled = false;
+  }
+
+  function setPlayerUIForLoggedIn(){
+    const cur = getCurrentPlayerFromMeta();
+    if(cur){
+      playerLoginStatus.textContent = `Logged in: ${cur.team.name} • #${cur.player.number} ${cur.player.name}`;
+      playerIdLine.style.display = "block";
+      playerIdText.textContent = cur.player.playerId;
+
+      playerLoginBtn.style.display = "none";
+      playerLogoutBtn.style.display = "inline-flex";
+
+      playerShareResultsBtn.disabled = false;
+      playerCopyResultsBtn.disabled = false;
+
+      // set selects to match meta
+      const teamId = cur.team.id;
+      playerTeamSelect.value = teamId;
+      refreshPlayerNameDropdown();
+      playerNameSelect.value = cur.player.playerId;
+
+      playerShareHint.textContent = cur.team.coachEmail ? `Coach email: ${cur.team.coachEmail}` : "No coach email configured for this team (ask coach to add one).";
+    }else{
+      playerLoginStatus.textContent = "Not logged in";
+      playerIdLine.style.display = "none";
+      playerIdText.textContent = "";
+
+      playerLoginBtn.style.display = "inline-flex";
+      playerLogoutBtn.style.display = "none";
+
+      playerShareResultsBtn.disabled = true;
+      playerCopyResultsBtn.disabled = true;
+      playerShareHint.textContent = "";
+    }
+  }
+
+  function refreshPlayerLoginUI(){
+    // If there's saved meta, try to align dropdowns
+    refreshPlayerTeamDropdown();
+
+    // pick team based on saved meta if possible
+    const metaTeamId = slugifyLoose(PLAYER_META.team || "");
+    if(metaTeamId && findTeam(metaTeamId)){
+      playerTeamSelect.value = metaTeamId;
+    }
+    refreshPlayerNameDropdown();
+
+    const cur = getCurrentPlayerFromMeta();
+    if(cur){
+      playerNameSelect.value = cur.player.playerId;
+    }else{
+      playerNameSelect.value = "";
+    }
+    playerPassInput.value = "";
+    setPlayerUIForLoggedIn();
+  }
+
+  function openPlayerModal(){
+    if(!playerModalOverlay) return;
+    refreshPlayerLoginUI();
+    playerModalOverlay.style.display = "flex";
+  }
+  function closePlayerModal(){
+    if(!playerModalOverlay) return;
+    playerModalOverlay.style.display = "none";
+  }
+
+  if(playerBtn) playerBtn.addEventListener("click", openPlayerModal);
+  if(playerModalCloseX) playerModalCloseX.addEventListener("click", closePlayerModal);
+  if(playerModalOverlay){
+    playerModalOverlay.addEventListener("click", (e)=>{
+      if(e.target === playerModalOverlay) closePlayerModal();
+    });
+  }
+
+  if(playerTeamSelect){
+    playerTeamSelect.addEventListener("change", ()=>{
+      refreshPlayerNameDropdown();
+    });
+  }
+
+  function doPlayerLogin(){
+    const teamId = playerTeamSelect.value;
+    const playerId = playerNameSelect.value;
+    const pass = String(playerPassInput.value || "").trim();
+
+    if(!teamId) return alert("Select a team.");
+    if(!playerId) return alert("Select a player.");
+    const t = findTeam(teamId);
+    const p = findPlayer(teamId, playerId);
+    if(!t || !p) return alert("Invalid team/player selection.");
+    if(!pass) return alert("Enter your password.");
+    if(String(p.password || "").trim() !== pass){
+      return alert("Incorrect password.");
+    }
+
+    // Persist player identity for this browser/session
+    PLAYER_META = { team: t.name, name: p.name, number: p.number };
+    savePlayerMeta(PLAYER_META);
+
+    // Switch results storage to this player's base id
+    try{
+      localStorage.setItem(STORAGE_PLAYER_BASE_ID, p.baseId);
+    }catch(e){}
+    PLAYER_BASE_ID = p.baseId;
+
+    // Reload results for this player base id
+    loadResults();
+
+    refreshPlayerLoginUI();
+    alert("Logged in.");
+  }
+
+  function doPlayerLogout(){
+    if(!confirm("Logout?")) return;
+    // Clear player meta & base id
+    PLAYER_META = { team:"", name:"", number:"" };
+    savePlayerMeta(PLAYER_META);
+    try{ localStorage.removeItem(STORAGE_PLAYER_BASE_ID); }catch(e){}
+    PLAYER_BASE_ID = getOrCreatePlayerBaseId(); // back to anon/random
+    loadResults();
+
+    refreshPlayerLoginUI();
+  }
+
+  if(playerLoginBtn) playerLoginBtn.addEventListener("click", doPlayerLogin);
+  if(playerLogoutBtn) playerLogoutBtn.addEventListener("click", doPlayerLogout);
+
+  function formatCoachFriendlySummary(payload){
+    const lines = [];
+    lines.push("Diamond IQ Results");
+    lines.push("------------------");
+    lines.push(`Player ID: ${payload.playerId || ""}`);
+    if(payload.playerMeta){
+      lines.push(`Player: ${payload.playerMeta.name || ""} #${payload.playerMeta.number || ""}`);
+      lines.push(`Team: ${payload.playerMeta.team || ""}`);
+    }
+    if(payload.generatedAt) lines.push(`Generated: ${payload.generatedAt}`);
+    lines.push("");
+
+    const by = payload.bySituation || {};
+    const keys = Object.keys(by);
+    lines.push(`Situations recorded: ${keys.length}`);
+    lines.push("");
+
+    keys.sort().forEach(k=>{
+      const r = by[k];
+      const title = r.title || k;
+      const p1 = r.phase1 || {};
+      const p2 = r.phase2 || {};
+      lines.push(`${k} — ${title}`);
+      if(p1.attempts != null){
+        lines.push(`  Phase 1: attempts=${p1.attempts}, best=${p1.bestPct ?? "—"}%, correct=${p1.lastCorrect ? "yes" : "no"}`);
+      }
+      if(p2.attempts != null){
+        lines.push(`  Phase 2: attempts=${p2.attempts}, correct=${p2.lastCorrect ? "yes" : "no"}`);
+      }
+      if(r.lastPlayedAt){
+        lines.push(`  Last played: ${r.lastPlayedAt}`);
+      }
+      lines.push("");
+    });
+
+    return lines.join("\n");
+  }
+
+  function mailtoEncode(str){
+    return encodeURIComponent(str).replace(/%20/g, "+");
+  }
+
+  function shareResultsByEmail(){
+    const cur = getCurrentPlayerFromMeta();
+    if(!cur) return alert("Login first.");
+    const coachEmail = String(cur.team.coachEmail || "").trim();
+    if(!coachEmail){
+      alert("No coach email configured for your team. Ask your coach to add one in TEAMS.");
+      return;
+    }
+
+    const payload = buildResultsExportPayload();
+    // add extra context
+    payload.playerMeta = deepClone(PLAYER_META);
+    payload.teamId = cur.team.id;
+    payload.coachEmail = coachEmail;
+
+    const summary = formatCoachFriendlySummary(payload);
+    const body = summary + "\n\nJSON:\n" + JSON.stringify(payload, null, 2);
+
+    const subject = `Diamond IQ Results - ${cur.player.name} #${cur.player.number} (${cur.team.name})`;
+    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
+
+    // open mail app
+    window.location.href = mailto;
+  }
+
+  if(playerShareResultsBtn){
+    playerShareResultsBtn.addEventListener("click", shareResultsByEmail);
+  }
+
+  if(playerCopyResultsBtn){
+    playerCopyResultsBtn.addEventListener("click", ()=>{
+      const payload = buildResultsExportPayload();
+      const cur = getCurrentPlayerFromMeta();
+      if(cur){
+        payload.playerMeta = deepClone(PLAYER_META);
+        payload.teamId = cur.team.id;
+        payload.coachEmail = String(cur.team.coachEmail || "").trim();
+      }
+      const txt = JSON.stringify(payload, null, 2);
+      copyTextToClipboard(txt)
+        .then(()=> alert("Results JSON copied."))
+        .catch(()=>{ alert("Clipboard copy failed. Use Share my results or download from your browser settings."); });
+    });
+  }
+
+
   function resultsStorageKey(){
     return STORAGE_RESULTS_PREFIX + PLAYER_BASE_ID;
   }
@@ -4512,6 +5296,8 @@ async function init(){
     ensureHeaderGrouping();
 
     await loadSituationsFromJson();
+      await loadTeamsFromJson();
+      refreshTeamsUIAll();
     loadStarts(); loadHits();
     if (!Array.isArray(SITUATIONS) || SITUATIONS.length===0){
       SITUATIONS=[{ key:'S1', title:'Default', desc:'', starts:Fcopy(DEFAULT_STARTS), targets:{},
