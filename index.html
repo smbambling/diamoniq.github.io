@@ -383,6 +383,9 @@
   @media (max-width:520px){
     #sitSelect{ min-width:140px; }
   }
+
+/* Player sidebar header */
+.cardTitleRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 </style>
 
 </head>
@@ -390,7 +393,12 @@
 
 <header>
   <h1>Diamond IQ</h1>
-    <button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button>
+    
+      <button id="playerBtn" class="btn-slate btn-small" title="Set player info">Player</button>
+
+
+  
+<button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button>
   <select id="sitSelect" aria-label="Situation" data-testid="sit-select"></select>
   <span id="descHud" class="badge"></span>
   <span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span>
@@ -413,11 +421,7 @@
     <span id="timerBadge" class="badge badge-timer" title="Time left in this phase">
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
-  </div>
-      <button id="playerBtn" class="btn-slate btn-small" title="Set player info">Player</button>
-
-
-  <button id="coachBtn" class="btn-slate">Coach Tools</button>
+  </div><button id="coachBtn" class="btn-slate">Coach Tools</button>
 </header>
 
 <main class="app">
@@ -484,7 +488,19 @@
 
 
     <!-- Coach Tools (hidden until unlocked) -->
-    <div id="coachCard" class="card hidden">
+    
+    <div id="playerSidebarCard" class="card hidden">
+      <div class="cardTitleRow">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="cardTitle" style="margin:0">Player</div>
+          <span id="playerSidebarStatus" class="tag">not logged in</span>
+        </div>
+        <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Close</button>
+      </div>
+      <div id="playerSidebarMount"></div>
+    </div>
+
+<div id="coachCard" class="card hidden">
       <div class="coachGrid">
   <div class="row">
     <strong>Coach Tools</strong>
@@ -1474,6 +1490,7 @@ let _timerSecs = TIMER_START_SECS;
     const cur = getCurrentPlayerFromMeta();
     if(cur){
       playerLoginStatus.textContent = `Logged in: ${cur.team.name} • #${cur.player.number} ${cur.player.name}`;
+      const _ps = document.getElementById('playerSidebarStatus'); if(_ps) _ps.textContent = 'logged in';
       playerIdLine.style.display = "block";
       playerIdText.textContent = cur.player.playerId;
 
@@ -1492,6 +1509,7 @@ let _timerSecs = TIMER_START_SECS;
       playerShareHint.textContent = cur.team.coachEmail ? `Coach email: ${cur.team.coachEmail}` : "No coach email configured for this team (ask coach to add one).";
     }else{
       playerLoginStatus.textContent = "Not logged in";
+      const _ps = document.getElementById('playerSidebarStatus'); if(_ps) _ps.textContent = 'not logged in';
       playerIdLine.style.display = "none";
       playerIdText.textContent = "";
 
@@ -1525,23 +1543,47 @@ let _timerSecs = TIMER_START_SECS;
     setPlayerUIForLoggedIn();
   }
 
-  function openPlayerModal(){
-    if(!playerModalOverlay) return;
-    refreshPlayerLoginUI();
-    playerModalOverlay.style.display = "flex";
-  }
-  function closePlayerModal(){
-    if(!playerModalOverlay) return;
+  
+  function mountPlayerSidebar(){
+    const card = document.getElementById("playerSidebarCard");
+    const mount = document.getElementById("playerSidebarMount");
+    if(!card || !mount || !playerModalOverlay) return;
+
+    // Move the existing Player modal body into the sidebar mount (avoid duplicate IDs)
+    const body = playerModalOverlay.querySelector(".modalBody");
+    if(body && mount.childNodes.length === 0){
+      while(body.firstChild) mount.appendChild(body.firstChild);
+    }
+
+    // Disable the overlay/modal UX (we're using the sidebar now)
     playerModalOverlay.style.display = "none";
+    playerModalOverlay.classList.add("hidden");
+
+    const closeBtn = document.getElementById("playerSidebarCloseBtn");
+    if(closeBtn){
+      closeBtn.addEventListener("click", ()=> card.classList.add("hidden"));
+    }
   }
 
-  if(playerBtn) playerBtn.addEventListener("click", openPlayerModal);
-  if(playerModalCloseX) playerModalCloseX.addEventListener("click", closePlayerModal);
-  if(playerModalOverlay){
-    playerModalOverlay.addEventListener("click", (e)=>{
-      if(e.target === playerModalOverlay) closePlayerModal();
-    });
+  function openPlayerSidebar(){
+    const card = document.getElementById("playerSidebarCard");
+    if(!card) return;
+    refreshPlayerLoginUI();
+    card.classList.remove("hidden");
   }
+
+  function closePlayerSidebar(){
+    const card = document.getElementById("playerSidebarCard");
+    if(!card) return;
+    card.classList.add("hidden");
+  }
+
+  if(playerBtn) playerBtn.addEventListener("click", ()=>{
+    const card = document.getElementById("playerSidebarCard");
+    if(card && !card.classList.contains("hidden")) closePlayerSidebar();
+    else openPlayerSidebar();
+  });
+
 
   if(playerTeamSelect){
     playerTeamSelect.addEventListener("change", ()=>{
@@ -5320,6 +5362,10 @@ async function init(){
 
     updateDescriptionHudText();
     wireOnce();
+      // Teams UI elements are wired after JSON load; refresh dropdowns now
+      refreshTeamsUIAll();
+      // Mount Player panel into sidebar
+      mountPlayerSidebar();
     setHowToPhase('p1');
 
   } catch (err){
