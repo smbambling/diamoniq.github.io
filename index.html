@@ -997,26 +997,31 @@ let _timerSecs = TIMER_START_SECS;
   }
 
   async function loadTeamsFromJson(){
-    // Prefer teams.json if present, fall back to localStorage, then empty.
+    // Load teams.json (lives alongside index.html) and cache to localStorage as fallback.
+    // This works on GitHub Pages and on any HTTP(S) server. (file:// cannot fetch.)
+    const base = new URL('.', window.location.href);
+    const url = new URL('teams.json', base);
+
     try{
-      const resp = await fetch("./teams.json?ts=" + Date.now(), { cache: "no-store" });
-      if(resp.ok){
-        const data = normalizeTeamsData(await resp.json());
-        TEAMS = data;
-        saveTeamsToLocal();
-        return true;
-      }
-    }catch(e){
-      // ignore fetch failures (likely no teams.json yet)
+      const res = await fetch(url.toString(), { cache: 'no-store' });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      TEAMS = normalizeTeamsData(data);
+      // Persist a copy so the app still works if teams.json is temporarily unavailable
+      try{ localStorage.setItem(TEAMS_STORE_KEY, JSON.stringify(TEAMS)); }catch(_e){}
+      return;
+    }catch(err){
+      console.warn('[Teams] Unable to load teams.json, falling back to localStorage.', err);
     }
-    const local = loadTeamsFromLocal();
-    if(local){
-      TEAMS = local;
-      return true;
+
+    // Fallback: localStorage copy
+    try{
+      const raw = localStorage.getItem(TEAMS_STORE_KEY);
+      TEAMS = raw ? normalizeTeamsData(JSON.parse(raw)) : { teams: [] };
+    }catch(_e){
+      TEAMS = { teams: [] };
     }
-    TEAMS = normalizeTeamsData(null);
-    return false;
-  }
+}
 
   function findTeam(teamId){
     return (TEAMS.teams || []).find(t => t.id === teamId) || null;
@@ -1575,12 +1580,23 @@ function isPlayerLoggedInNow(){
   const cur = getCurrentPlayer();
   return !!(cur && cur.player && cur.team);
 }
+  // expose for header button logic (avoids scoping quirks)
+  window.isPlayerLoggedInNow = isPlayerLoggedInNow;
+
 function updatePlayerHeaderButton(){
-  const btn = document.getElementById('playerBtn');
-  if(!btn) return;
-  btn.textContent = 'Player Login';
-  btn.classList.remove('btn-green','btn-yellow');
-  btn.classList.add(isPlayerLoggedInNow() ? 'btn-green' : 'btn-yellow');
+    const btn = document.getElementById('playerBtn');
+    if(!btn) return;
+
+    let logged = false;
+    try{
+      if(typeof isPlayerLoggedInNow === 'function') logged = !!isPlayerLoggedInNow();
+      else if(window.PLAYER && window.PLAYER.playerId) logged = true;
+    }catch(_e){ logged = false; }
+
+    btn.textContent = 'Player Login';
+    btn.classList.remove('btn-yellow','btn-green');
+    btn.classList.add(logged ? 'btn-green' : 'btn-yellow');
+    btn.setAttribute('aria-pressed', logged ? 'true' : 'false');
 }
 
 
@@ -1640,7 +1656,10 @@ function updatePlayerHeaderButton(){
 
     refreshPlayerLoginUI();
     alert("Logged in.");
-  }
+  
+  // Ensure dropdowns are populated once the sidebar is mounted
+  try{ refreshTeamsUIAll(); }catch(_e){}
+}
 
   function doPlayerLogout(){
     if(!confirm("Logout?")) return;
