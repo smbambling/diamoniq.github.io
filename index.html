@@ -2108,7 +2108,7 @@ function wireOnce(){
   });
 
   // --- Create a Verify Sequence button in the header row (once) ---
-  const actionsRow = document.querySelector('header .header-actions');
+  const actionsRow = document.querySelector('.header-actions') || document.querySelector('header .header-actions');
   if (!verifySeqBtn){
     verifySeqBtn = document.createElement('button');
     verifySeqBtn.id = 'verifySeqBtn';
