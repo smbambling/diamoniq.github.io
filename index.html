@@ -389,6 +389,26 @@
 
 /* Player sidebar header */
 .cardTitleRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+
+/* Player Login form alignment (scoped) */
+#playerSidebarCard .playerLoginGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-items:end;
+}
+#playerSidebarCard .field{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+#playerSidebarCard .field > span{
+  font-size:12px;
+  font-weight:700;
+  color:#64748b;
+  line-height:1.1;
+}
+
 </style>
 
 </head>
@@ -766,7 +786,7 @@
       <div class="modalBody">
         <div class="subsec">
           <div class="sectionTitle">Player Login</div>
-          <div class="rowGrid">
+          <div class="rowGrid playerLoginGrid">
             <label class="field">
               <span>Team</span>
               <select id="playerTeamSelect" class="select"></select>
@@ -776,12 +796,12 @@
               <span>Player</span>
               <select id="playerNameSelect" class="select" disabled></select>
             </label>
-
-            <label class="field">
-              <span>Password</span>
-              <input id="playerPass" class="input" type="password" autocomplete="current-password" placeholder="Password"/>
-            </label>
           </div>
+
+          <label class="field" style="margin-top:10px;">
+            <span>Password</span>
+            <input id="playerPass" class="input" type="password" autocomplete="current-password" placeholder="Password"/>
+          </label>
 
           <div class="rowGrid" style="margin-top:10px;">
             <div class="pill" id="playerLoginStatus" style="justify-self:start;">Not logged in</div>
@@ -1105,7 +1125,8 @@ let _timerSecs = TIMER_START_SECS;
 
     (t.roster || []).forEach(p=>{
       const o = document.createElement("option");
-      o.value = p.playerId;
+      const pid = (p && p.playerId) ? String(p.playerId) : slugifyLoose(`${(t && t.id) ? t.id : teamId}-${p && p.number ? p.number : ''}-${p && p.name ? p.name : ''}`);
+      o.value = pid;
       o.textContent = `${p.number ? "#"+p.number+" " : ""}${p.name}`;
       coachRosterSelect.appendChild(o);
     });
@@ -1487,7 +1508,8 @@ let _timerSecs = TIMER_START_SECS;
 
     (t.roster || []).forEach(p=>{
       const o = document.createElement("option");
-      o.value = p.playerId;
+      const pid = (p && p.playerId) ? String(p.playerId) : slugifyLoose(`${(t && t.id) ? t.id : teamId}-${p && p.number ? p.number : ''}-${p && p.name ? p.name : ''}`);
+      o.value = pid;
       o.textContent = `${p.number ? "#"+p.number+" " : ""}${p.name}`;
       playerNameSelect.appendChild(o);
     });
@@ -1532,23 +1554,40 @@ let _timerSecs = TIMER_START_SECS;
   }
 
   function refreshPlayerLoginUI(){
-    // If there's saved meta, try to align dropdowns
+    // Preserve current UI selections (don't clobber player pick while logged out)
+    const prevTeam = playerTeamSelect && playerTeamSelect.value ? String(playerTeamSelect.value) : "";
+    const prevPlayer = playerNameSelect && playerNameSelect.value ? String(playerNameSelect.value) : "";
+
+    // Rebuild team dropdown from TEAMS
     refreshPlayerTeamDropdown();
 
-    // pick team based on saved meta if possible
-    const metaTeamId = slugifyLoose(PLAYER_META.team || "");
-    if(metaTeamId && findTeam(metaTeamId)){
-      playerTeamSelect.value = metaTeamId;
+    // Determine desired team
+    const cur = getCurrentPlayerFromMeta();
+    let desiredTeam = "";
+    if(cur && cur.team && cur.team.id){
+      desiredTeam = String(cur.team.id);
+    }else if(prevTeam){
+      desiredTeam = prevTeam;
+    }else{
+      const metaTeamId = slugifyLoose(PLAYER_META.team || "");
+      if(metaTeamId && findTeam(metaTeamId)) desiredTeam = metaTeamId;
     }
+    if(desiredTeam && findTeam(desiredTeam)){
+      playerTeamSelect.value = desiredTeam;
+    }
+
+    // Rebuild player dropdown for chosen team
     refreshPlayerNameDropdown();
 
-    const cur = getCurrentPlayerFromMeta();
-    if(cur){
-      playerNameSelect.value = cur.player.playerId;
-    }else{
-      playerNameSelect.value = "";
+    // Determine desired player
+    if(cur && cur.player && cur.player.playerId){
+      playerNameSelect.value = String(cur.player.playerId);
+    }else if(prevPlayer){
+      const exists = Array.from(playerNameSelect.options || []).some(o => o && o.value === prevPlayer);
+      if(exists) playerNameSelect.value = prevPlayer;
     }
-    playerPassInput.value = "";
+
+    // Do NOT clear password here; only clear on successful login / explicit actions.
     setPlayerUIForLoggedIn();
   }
 
