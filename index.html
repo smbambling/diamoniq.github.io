@@ -619,7 +619,14 @@
         </div>
 
         <!-- Export -->
-        
+        <div class="subsec">
+          <div class="title">Export</div>
+          <div class="row">
+            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
+            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
+            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
+</div>
+        </div>
       </div>
     </div>
   </aside>
@@ -662,6 +669,15 @@
       </div>
 
       <div class="help-muted" id="playerIdPreview"></div>
+      <div class="subsec" style="margin-top:12px">
+        <div class="subsecTitle">Export My Results</div>
+        <div class="help-muted">Share your attempts with your coach (includes Player ID + per-situation score + stage-2 play sequence).</div>
+        <div class="row" style="gap:8px; flex-wrap:wrap">
+          <button id="copyResultsBtn" class="btn sm">Copy Results JSON</button>
+          <button id="downloadResultsBtn" class="btn sm">Download Results JSON</button>
+        </div>
+      </div>
+
     </div>
     <div class="modal-actions">
       <button id="playerCancelBtn" class="btn-slate">Cancel</button>
@@ -678,23 +694,7 @@
 /** @typedef {{ first:boolean, second:boolean, third:boolean }} RunnersOn */
 /** @typedef {{
  *   key:string, title:string, desc:string,
- *   sta
-      <div class="subsec" id="playerExportSubsec">
-        <h3>Export Results</h3>
-        <div class="row">
-          <button class="btn-slate" id="downloadAllBtn">Download All Situations</button>
-          <button class="btn-slate" id="copyAllBtn">Copy All Situations JSON</button>
-        </div>
-        <div class="row">
-          <button class="btn-slate" id="downloadCurrentBtn">Download Current Situation</button>
-        </div>
-        <div class="row">
-          <button class="btn-green" id="downloadResultsBtn">Download My Results</button>
-          <button class="btn-green" id="copyResultsBtn">Copy My Results JSON</button>
-        </div>
-        <div class="help-muted">Tip: “My Results” includes your Player ID so your coach can import/track them.</div>
-      </div>
-rts?:Starts, targets?:Targets,
+ *   starts?:Starts, targets?:Targets,
  *   hit?:Pt, hitType?:'line'|'popup'|'grounder',
  *   batterAdvance?:number,
  *   outs?:0|1|2,
