@@ -79,6 +79,9 @@
   }
   button{ cursor:pointer }
   .btn-green{background:#16a34a;color:#fff;border-color:#15803d}
+  .btn-yellow{background:#facc15;color:#111827;border:1px solid #eab308;}
+  .btn-yellow:hover{filter:brightness(.97)}
+
   .btn-orange{background:#f97316;color:#fff;border-color:#ea580c}
   .btn-slate{background:#fff;color:#334155;border:1px solid #cbd5e1}
   .btn-small{padding:4px 8px;font-size:12px;line-height:1.2}
@@ -394,7 +397,7 @@
 <header>
   <h1>Diamond IQ</h1>
     
-      <button id="playerBtn" class="btn-slate btn-small" title="Set player info">Player</button>
+      <button id="playerBtn" class="btn-yellow btn-small" title="Player login">Player Login</button>
 
 
   
@@ -944,34 +947,35 @@ let _timerSecs = TIMER_START_SECS;
     return JSON.parse(JSON.stringify(obj));
   }
 
-  function normalizeTeamsData(raw){
-    const out = { version: 1, teams: [] };
-    if(!raw) return out;
+  function normalizeTeamsData(data){
+  // Accept multiple top-level keys to be forgiving with hand-edited JSON
+  const rawTeams =
+    (data && (data.teams || data.Teams || data.TEAMS)) || [];
+  const teamsArr = Array.isArray(rawTeams) ? rawTeams : [];
 
-    // Accept either {teams:[...]} or [...]
-    const teamsArr = Array.isArray(raw) ? raw : (Array.isArray(raw.teams) ? raw.teams : []);
-    out.version = (raw.version && !Array.isArray(raw)) ? raw.version : 1;
+  const out = { version: 1, teams: [] };
+  teamsArr.forEach((t, i)=>{
+    const name = String((t && (t.name || t.team || t.teamName || t.Team || t.TeamName)) || '').trim();
+    const id = String((t && (t.id || t.teamId || t.slug)) || (name ? slugify(name) : ('team-' + (i+1))));
+    const coachEmail = String((t && (t.coachEmail || t.coachesEmail || t.coach_email || t.email)) || '').trim();
 
-    out.teams = teamsArr.map(t => {
-      const name = String(t.name || t.teamName || "").trim();
-      const id = String(t.id || slugifyLoose(name) || "team").trim();
-      const coachEmail = String(t.coachEmail || t.email || "").trim();
-      const rosterArr = Array.isArray(t.roster) ? t.roster : [];
-      const roster = rosterArr.map(p => {
-        const pName = String(p.name || p.playerName || "").trim();
-        const number = String(p.number ?? p.playerNumber ?? "").trim();
-        const password = String(p.password || "").trim();
-        const baseId = String(p.baseId || p.randomId || "").trim() || randomId(8);
-        const playerSlug = slugifyLoose(pName) || "player";
-        const numSafe = number ? number.replace(/[^0-9a-zA-Z-]/g, "") : "0";
-        const playerId = String(p.playerId || `${baseId}-${slugifyLoose(name)}-${playerSlug}-${numSafe}`);
-        return { name: pName, number, password, baseId, playerId };
-      }).sort((a,b)=> (a.number||"").localeCompare(b.number||"") || (a.name||"").localeCompare(b.name||""));
-      return { id, name, coachEmail, roster };
-    }).sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+    const rawRoster =
+      (t && (t.roster || t.Roster || t.players || t.Players || t.playerList)) || [];
+    const rosterArr = Array.isArray(rawRoster) ? rawRoster : [];
 
-    return out;
-  }
+    const roster = rosterArr.map((p, j)=>{
+      const playerName = String((p && (p.name || p.playerName || p.player || p.PlayerName)) || '').trim();
+      const playerNumber = String((p && (p.number || p.playerNumber || p.num || p.PlayerNumber)) || '').trim();
+      const password = String((p && (p.password || p.pass || p.pin || p.PlayerPassword)) || '').trim();
+      const playerId = String((p && (p.playerId || p.id)) || '').trim();
+      return { name: playerName, number: playerNumber, password, playerId };
+    }).filter(p=>p.name && p.number);
+
+    out.teams.push({ id, name, coachEmail, roster });
+  });
+
+  return out;
+}
 
   function saveTeamsToLocal(){
     try{
@@ -1563,7 +1567,22 @@ let _timerSecs = TIMER_START_SECS;
     if(closeBtn){
       closeBtn.addEventListener("click", ()=> card.classList.add("hidden"));
     }
-  }
+  
+  updatePlayerHeaderButton();
+}
+
+function isPlayerLoggedInNow(){
+  const cur = getCurrentPlayer();
+  return !!(cur && cur.player && cur.team);
+}
+function updatePlayerHeaderButton(){
+  const btn = document.getElementById('playerBtn');
+  if(!btn) return;
+  btn.textContent = 'Player Login';
+  btn.classList.remove('btn-green','btn-yellow');
+  btn.classList.add(isPlayerLoggedInNow() ? 'btn-green' : 'btn-yellow');
+}
+
 
   function openPlayerSidebar(){
     const card = document.getElementById("playerSidebarCard");
