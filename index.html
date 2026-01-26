@@ -627,6 +627,18 @@
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
 </div>
         </div>
+        <!-- Player Results Viewer (Coach) -->
+        <div class="subsec" id="coachResultsSubsec">
+          <div class="title">Player Results Viewer</div>
+          <div class="hint" style="margin:-6px 0 8px">Paste the JSON a player exports (Player → Export Results → Copy Results JSON). This does not modify your saved situations.</div>
+          <textarea id="coachResultsInput" class="inp mono" placeholder="Paste player results JSON here..." style="min-height:140px"></textarea>
+          <div class="row" style="gap:8px; margin-top:8px">
+            <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
+            <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
+          </div>
+          <div id="coachResultsOutput" style="margin-top:10px"></div>
+        </div>
+
       </div>
     </div>
   </aside>
@@ -2384,6 +2396,27 @@ function lockCorrectPrefix(k){
     try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
   });
 
+
+      // Coach: Player Results Viewer
+      const coachParseResultsBtn = document.getElementById('coachParseResultsBtn');
+      const coachClearResultsBtn = document.getElementById('coachClearResultsBtn');
+      const coachResultsInput = document.getElementById('coachResultsInput');
+      const coachResultsOutput = document.getElementById('coachResultsOutput');
+
+      if (coachParseResultsBtn && coachResultsInput && coachResultsOutput) {
+        coachParseResultsBtn.addEventListener('click', () => {
+          const txt = coachResultsInput.value || '';
+          const parsed = parsePlayerResultsPayload(txt);
+          renderPlayerResultsForCoach(coachResultsOutput, parsed);
+        });
+      }
+      if (coachClearResultsBtn && coachResultsInput && coachResultsOutput) {
+        coachClearResultsBtn.addEventListener('click', () => {
+          coachResultsInput.value = '';
+          coachResultsOutput.innerHTML = '';
+        });
+      }
+
   // Results export buttons (avoid relying on id->window globals)
   const copyResultsBtn = document.getElementById('copyResultsBtn');
   const downloadResultsBtn = document.getElementById('downloadResultsBtn');
@@ -4045,6 +4078,164 @@ async function copyResults(){
   const text = buildResultsExportText();
   await navigator.clipboard.writeText(text);
 }
+
+
+/* =========================
+   Coach: Player Results Viewer (parse + render)
+   ========================= */
+
+function parsePlayerResultsPayload(rawText){
+  const txt = String(rawText || '').trim();
+  if(!txt) return { ok:false, error:'Paste a player results JSON first.' };
+
+  let obj;
+  try{
+    obj = JSON.parse(txt);
+  }catch(e){
+    return { ok:false, error:'Invalid JSON. Make sure you copied the full exported JSON.', detail: String((e && e.message) || e) };
+  }
+
+  // Expected wrapper: { type:'diamondiq_results_v1', exportedAt, playerId, results:{log,bySituation} }
+  if(obj && typeof obj === 'object' && !Array.isArray(obj)){
+    if(obj.type && String(obj.type).indexOf('diamondiq_results') === 0 && obj.results && typeof obj.results === 'object'){
+      return { ok:true, kind:'results', meta:{ type:obj.type, exportedAt:obj.exportedAt, playerId:obj.playerId }, results: obj.results, raw: obj };
+    }
+    if(obj.log && obj.bySituation){
+      return { ok:true, kind:'results', meta:{}, results: obj, raw: obj };
+    }
+    if(obj.situations || obj.SITUATIONS){
+      return { ok:false, error:'This looks like situations JSON (coach export), not player results JSON.' };
+    }
+  }
+
+  if(Array.isArray(obj)){
+    return { ok:false, error:'This looks like situations JSON (an array). Paste the player Results JSON instead.' };
+  }
+
+  return { ok:false, error:'Unrecognized JSON shape. Paste the player Results JSON exported from the Player panel.' };
+}
+
+function _escHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function _fmtMs(ms){
+  if(ms==null || !Number.isFinite(ms)) return '—';
+  const sec = Math.round(ms/100)/10; // 0.1s
+  return sec.toFixed(1)+'s';
+}
+function _fmtIso(ts){
+  if(!ts) return '—';
+  try{ return new Date(ts).toLocaleString(); }catch(e){ return String(ts); }
+}
+
+function renderPlayerResultsForCoach(outEl, parsed){
+  if(!outEl) return;
+
+  if(!parsed || !parsed.ok){
+    const msg = _escHtml(parsed && parsed.error ? parsed.error : 'Unable to parse.');
+    const detail = parsed && parsed.detail ? `<div class="hint" style="margin-top:6px">${_escHtml(parsed.detail)}</div>` : '';
+    outEl.innerHTML = `<div class="card" style="border:1px solid #fecaca;background:#fff1f2;padding:10px;border-radius:12px">
+      <div style="font-weight:900;color:#991b1b">Parse failed</div>
+      <div style="color:#7f1d1d">${msg}</div>${detail}
+    </div>`;
+    return;
+  }
+
+  const meta = parsed.meta || {};
+  const results = parsed.results || {};
+  const log = Array.isArray(results.log) ? results.log : [];
+  const by = (results.bySituation && typeof results.bySituation==='object') ? results.bySituation : {};
+
+  const keys = Object.keys(by);
+  keys.sort((a,b)=> String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'}));
+
+  const totalAttempts = log.length;
+  const totalScore = log.reduce((sum,e)=> sum + (Number(e && e.scoreDelta)||0), 0);
+
+  const playerId =
+    meta.playerId ||
+    results.playerId ||
+    (log[0] && log[0].playerId) ||
+    '—';
+
+  const exportedAt =
+    meta.exportedAt ? _fmtIso(meta.exportedAt) :
+    (results.exportedAt ? _fmtIso(results.exportedAt) : '—');
+
+  const header = `
+    <div class="card" style="padding:12px;border-radius:14px">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:900">Player Results</div>
+          <div class="hint" style="margin-top:2px">
+            Player ID: <span class="mono">${_escHtml(playerId)}</span><br/>
+            Exported: ${_escHtml(exportedAt)}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="pill" style="background:#ecfeff;border:1px solid #a5f3fc;color:#155e75">Attempts: <b>${totalAttempts}</b></span>
+          <span class="pill" style="background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3">Score Δ: <b>${totalScore}</b></span>
+        </div>
+      </div>
+    </div>`;
+
+  const ptxt = (p) => {
+    if(!p) return '—';
+    const b = p.correct===true ? '✅' : (p.correct===false ? '❌' : '—');
+    const tries = (p.triesUsed!=null ? p.triesUsed : '—');
+    return `${b} • ${_escHtml(tries)} • ${_escHtml(_fmtMs(p.timeMs))}`;
+  };
+
+  const tableRows = keys.map(k=>{
+    const s = by[k] || {};
+    const p1 = s.p1 || null;
+    const p21 = s.p2_1 || null;
+    const p22 = s.p2_2 || null;
+
+    const last = s.lastTs ? _fmtIso(s.lastTs) : '—';
+    const attempts = (s.attempts!=null ? s.attempts : 0);
+
+    return `<tr>
+      <td class="mono">${_escHtml(k)}</td>
+      <td>${_escHtml(s.title||'')}</td>
+      <td style="white-space:nowrap">${ptxt(p1)}</td>
+      <td style="white-space:nowrap">${ptxt(p21)}</td>
+      <td style="white-space:nowrap">${ptxt(p22)}</td>
+      <td style="white-space:nowrap">${_escHtml(String(attempts))}</td>
+      <td style="white-space:nowrap">${_escHtml(last)}</td>
+    </tr>`;
+  }).join('');
+
+  const table = `
+    <div class="card" style="padding:12px;border-radius:14px;margin-top:10px">
+      <div style="font-weight:900;margin-bottom:8px">Summary by Situation</div>
+      <div style="overflow:auto">
+        <table class="tbl" style="min-width:920px">
+          <thead>
+            <tr>
+              <th style="text-align:left">Key</th>
+              <th style="text-align:left">Title</th>
+              <th style="text-align:left">Phase 1</th>
+              <th style="text-align:left">Phase 2 – Seq</th>
+              <th style="text-align:left">Phase 2 – Stage 2</th>
+              <th style="text-align:left">Attempts</th>
+              <th style="text-align:left">Last</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows || `<tr><td colspan="7" class="hint">No situations found in this export.</td></tr>`}</tbody>
+        </table>
+      </div>
+      <details style="margin-top:10px">
+        <summary class="hint" style="cursor:pointer">Show raw attempt log (${totalAttempts})</summary>
+        <div style="margin-top:8px;max-height:260px;overflow:auto;border:1px solid var(--rule);border-radius:12px;padding:10px;background:#fbfbfd">
+          <pre class="mono" style="margin:0;white-space:pre-wrap">${_escHtml(JSON.stringify(log.slice().reverse(), null, 2))}</pre>
+        </div>
+      </details>
+    </div>`;
+
+  outEl.innerHTML = header + table;
+}
+
 
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
