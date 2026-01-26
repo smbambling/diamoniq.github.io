@@ -2377,15 +2377,14 @@ function lockCorrectPrefix(k){
     try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
   });
 
-  if (copyResultsBtn)      copyResultsBtn.addEventListener('click', async ()=>{
-    try{ await copyResults(); }catch{}
-  });
-  if (downloadResultsBtn)  downloadResultsBtn.addEventListener('click', ()=>{
-    try{ downloadResults(); }catch{}
-  });
-  if (copyResultsTopBtn)   copyResultsTopBtn.addEventListener('click', async ()=>{
-    try{ await copyResults(); }catch{}
-  });
+  // Results export buttons (avoid relying on id->window globals)
+  const copyResultsBtn = document.getElementById('copyResultsBtn');
+  const downloadResultsBtn = document.getElementById('downloadResultsBtn');
+  const copyResultsTopBtn = document.getElementById('copyResultsTopBtn'); // optional
+
+  if (copyResultsBtn)      copyResultsBtn.addEventListener('click', async ()=>{ try{ await copyResults(); }catch{} });
+  if (downloadResultsBtn)  downloadResultsBtn.addEventListener('click', ()=>{ downloadResults(); });
+  if (copyResultsTopBtn)   copyResultsTopBtn.addEventListener('click', async ()=>{ try{ await copyResults(); }catch{} });
 
   wireSeqBuilderOnce();
 }
