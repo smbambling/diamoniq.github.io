@@ -83,7 +83,33 @@
   .btn-slate{background:#fff;color:#334155;border:1px solid #cbd5e1}
   .btn-small{padding:4px 8px;font-size:12px;line-height:1.2}
 
-  #startBtn:disabled,#resetBtn:disabled{
+  
+  /* Player info modal */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(2,6,23,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:9999;
+  }
+  .modal{
+    width:min(520px, 96vw);
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.22);
+    overflow:hidden;
+  }
+  .modal-header{padding:14px 16px;border-bottom:1px solid #e5e7eb;font-weight:900}
+  .modal-body{padding:14px 16px;display:grid;gap:10px}
+  .modal-body label{font-weight:800;font-size:12px;color:#334155}
+  .modal-body input{width:100%}
+  .modal-actions{padding:14px 16px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:10px}
+  .help-muted{color:#64748b;font-size:12px}
+
+#startBtn:disabled,#resetBtn:disabled{
     background:#f1f5f9;color:#94a3b8;border-color:#cbd5e1;cursor:not-allowed;
   }
   #checkBtn:disabled{
@@ -388,6 +414,8 @@
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
   </div>
+      <button id="playerBtn" class="btn-slate btn-small" title="Set player info">Player</button>
+
 
   <button id="coachBtn" class="btn-slate">Coach Tools</button>
 </header>
@@ -580,6 +608,16 @@
         </div>
 
 
+
+        <div class="subsec" style="margin-top:10px">
+          <div class="subhead">Stage 2 Play Sequence <span class="muted">(optional)</span></div>
+          <div class="tiny muted" style="margin:-4px 0 8px">Comma-separated positions (e.g., <code>LF,SS,2B</code>). This runs immediately after Stage 1 succeeds.</div>
+          <div class="row" style="gap:8px; align-items:center">
+            <input id="seq2Input" class="inp" placeholder="LF,SS,2B" style="flex:1" />
+          </div>
+          <textarea id="seq2NoteInput" class="inp" placeholder="Stage 2 notes (optional)..." style="margin-top:8px; min-height:68px"></textarea>
+        </div>
+
         <!-- Export -->
         <div class="subsec">
           <div class="title">Export</div>
@@ -587,6 +625,8 @@
             <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
             <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
+            <button id="copyResultsBtn" class="btn-slate">📋 Copy Results</button>
+            <button id="downloadResultsBtn" class="btn-slate">⬇️ Download Results</button>
           </div>
         </div>
       </div>
@@ -603,6 +643,38 @@
     <div class="row" style="justify-content:flex-end;margin-top:10px">
       <button id="pwOk" class="btn-green">Unlock</button>
       <button id="pwCancel" class="btn-slate">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Player Info Modal -->
+<div id="playerModalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
+  <div class="modal">
+    <div class="modal-header" id="playerModalTitle">Player Info</div>
+    <div class="modal-body">
+      <div class="help-muted">This will be appended to your random Player ID for exports.</div>
+
+      <div>
+        <label for="playerTeam">Team Name</label>
+        <input id="playerTeam" type="text" placeholder="e.g., 13U Black" autocomplete="organization"/>
+      </div>
+
+      <div>
+        <label for="playerName">Player Name</label>
+        <input id="playerName" type="text" placeholder="e.g., John Smith" autocomplete="name"/>
+      </div>
+
+      <div>
+        <label for="playerNumber">Player Number</label>
+        <input id="playerNumber" type="text" inputmode="numeric" placeholder="e.g., 12" autocomplete="off"/>
+      </div>
+
+      <div class="help-muted" id="playerIdPreview"></div>
+    </div>
+    <div class="modal-actions">
+      <button id="playerCancelBtn" class="btn-slate">Cancel</button>
+      <button id="playerSaveBtn" class="btn-green">Save</button>
     </div>
   </div>
 </div>
@@ -646,6 +718,197 @@ const BASES_NATIVE = {
 const TIMER_START_SECS = 60;
 let _timerId = null;
 let _timerSecs = TIMER_START_SECS;
+
+
+// --- Player identity + per-situation results (localStorage) ---
+
+  // --- Player identity (base random id + user-entered metadata) ---
+  const STORAGE_PLAYER_BASE_ID = "diq_player_baseid_v1";
+  const STORAGE_PLAYER_META   = "diq_player_meta_v1";
+
+  function slugify(str){
+    return String(str || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function getOrCreatePlayerBaseId(){
+    let base = localStorage.getItem(STORAGE_PLAYER_BASE_ID);
+    if(!base){
+      // 8-char random (base36), stable per browser/device unless cleared
+      base = [...crypto.getRandomValues(new Uint32Array(2))]
+        .map(n => n.toString(36).padStart(6,"0"))
+        .join("")
+        .slice(0,8);
+      localStorage.setItem(STORAGE_PLAYER_BASE_ID, base);
+    }
+    return base;
+  }
+
+  function loadPlayerMeta(){
+    try{
+      const raw = localStorage.getItem(STORAGE_PLAYER_META);
+      if(!raw) return {team:"", name:"", number:""};
+      const obj = JSON.parse(raw);
+      return {
+        team: typeof obj.team === "string" ? obj.team : "",
+        name: typeof obj.name === "string" ? obj.name : "",
+        number: typeof obj.number === "string" ? obj.number : (obj.number!=null ? String(obj.number) : "")
+      };
+    }catch(e){
+      return {team:"", name:"", number:""};
+    }
+  }
+
+  function savePlayerMeta(meta){
+    localStorage.setItem(STORAGE_PLAYER_META, JSON.stringify({
+      team: meta.team || "",
+      name: meta.name || "",
+      number: meta.number || ""
+    }));
+  }
+
+  let PLAYER_BASE_ID = getOrCreatePlayerBaseId();
+  let PLAYER_META = loadPlayerMeta();
+
+  function buildPlayerId(){
+    const teamSlug = slugify(PLAYER_META.team) || "team";
+    const nameSlug = slugify(PLAYER_META.name) || "player";
+    const num = String(PLAYER_META.number || "").trim().replace(/\s+/g,"");
+    const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
+    return `${PLAYER_BASE_ID}-${teamSlug}-${nameSlug}-${numSafe}`;
+  }
+
+  function getPlayerId(){
+    return buildPlayerId();
+  }
+
+
+  // --- Player info modal wiring ---
+  const playerBtn = document.getElementById("playerBtn");
+  const playerModalOverlay = document.getElementById("playerModalOverlay");
+  const playerTeamInput = document.getElementById("playerTeam");
+  const playerNameInput = document.getElementById("playerName");
+  const playerNumberInput = document.getElementById("playerNumber");
+  const playerIdPreview = document.getElementById("playerIdPreview");
+  const playerCancelBtn = document.getElementById("playerCancelBtn");
+  const playerSaveBtn = document.getElementById("playerSaveBtn");
+
+  function refreshPlayerPreview(){
+    const tmp = { team: playerTeamInput.value, name: playerNameInput.value, number: playerNumberInput.value };
+    const teamSlug = slugify(tmp.team) || "team";
+    const nameSlug = slugify(tmp.name) || "player";
+    const num = String(tmp.number || "").trim().replace(/\s+/g,"");
+    const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
+    playerIdPreview.textContent = `Player ID Preview: ${PLAYER_BASE_ID}-${teamSlug}-${nameSlug}-${numSafe}`;
+  }
+
+  function updatePlayerButtonLabel(){
+    const num = String(PLAYER_META.number || "").trim().replace(/\s+/g,"") || "0";
+    const nDisp = PLAYER_META.name ? PLAYER_META.name : "Player";
+    playerBtn.textContent = `Player: ${nDisp} #${num}`;
+    playerBtn.title = `Player ID: ${getPlayerId()}\nTeam: ${PLAYER_META.team || ""}\nName: ${PLAYER_META.name || ""}\nNumber: ${PLAYER_META.number || ""}`;
+  }
+
+  function openPlayerModal(force=false){
+    playerTeamInput.value = PLAYER_META.team || "";
+    playerNameInput.value = PLAYER_META.name || "";
+    playerNumberInput.value = PLAYER_META.number || "";
+    refreshPlayerPreview();
+    playerModalOverlay.style.display = "flex";
+    const first = !playerTeamInput.value ? playerTeamInput : (!playerNameInput.value ? playerNameInput : (!playerNumberInput.value ? playerNumberInput : playerTeamInput));
+    setTimeout(()=>first.focus(), 0);
+    playerModalOverlay.dataset.force = force ? "1" : "0";
+  }
+  function closePlayerModal(){ playerModalOverlay.style.display = "none"; }
+
+  function ensurePlayerMeta(){
+    if(!PLAYER_META.team || !PLAYER_META.name || !String(PLAYER_META.number||"").trim()){
+      openPlayerModal(true);
+    } else {
+      updatePlayerButtonLabel();
+    }
+  }
+
+  playerBtn?.addEventListener("click", ()=>openPlayerModal(false));
+  playerCancelBtn?.addEventListener("click", ()=>{
+    if(playerModalOverlay.dataset.force === "1") return;
+    closePlayerModal();
+  });
+  playerModalOverlay?.addEventListener("click", (e)=>{
+    if(e.target === playerModalOverlay){
+      if(playerModalOverlay.dataset.force === "1") return;
+      closePlayerModal();
+    }
+  });
+
+  [playerTeamInput, playerNameInput, playerNumberInput].forEach(inp=>{
+    inp?.addEventListener("input", refreshPlayerPreview);
+    inp?.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") playerSaveBtn.click();
+      if(e.key === "Escape" && playerModalOverlay.dataset.force !== "1") closePlayerModal();
+    });
+  });
+
+  playerSaveBtn?.addEventListener("click", ()=>{
+    const team = String(playerTeamInput.value||"").trim();
+    const name = String(playerNameInput.value||"").trim();
+    const number = String(playerNumberInput.value||"").trim();
+    if(!team || !name || !number){
+      alert("Please fill Team Name, Player Name, and Player Number.");
+      return;
+    }
+    PLAYER_META = {team, name, number};
+    savePlayerMeta(PLAYER_META);
+    updatePlayerButtonLabel();
+    closePlayerModal();
+  });
+
+let RESULTS = loadResults();
+if(!RESULTS.playerId) RESULTS.playerId = getPlayerId();
+if(RESULTS.playerId !== getPlayerId()) RESULTS.playerId = getPlayerId();
+saveResults();
+
+function recordAttempt(entry){
+  try{
+    const e = Object.assign({ playerId: getPlayerId(), ts: new Date().toISOString() }, entry || {});
+    RESULTS.log.push(e);
+
+    const key = e.situationKey;
+    if(key){
+      const prev = RESULTS.bySituation[key] || {};
+      const next = Object.assign({}, prev);
+      next.key = key;
+      next.title = e.situationTitle || prev.title || '';
+      next.attempts = (prev.attempts || 0) + 1;
+      next.lastTs = e.ts;
+
+      // Phase 1 best score
+      if(e.phase === 1 && Number.isFinite(e.score) && Number.isFinite(e.total)){
+        const best = prev.bestPhase1 || null;
+        const cand = { score: e.score, total: e.total, triesUsed: e.triesUsed, timeElapsed: e.timeElapsed, ts: e.ts };
+        if(!best || cand.score > best.score || (cand.score === best.score && (cand.triesUsed||999) < (best.triesUsed||999))){
+          next.bestPhase1 = cand;
+        }else{
+          next.bestPhase1 = best;
+        }
+      }
+
+      // Phase 2 stage results
+      if(e.phase === 2 && (e.stage === 1 || e.stage === 2)){
+        const field = (e.stage === 2) ? 'lastPhase2Stage2' : 'lastPhase2Stage1';
+        next[field] = { success: !!e.success, triesUsed: e.triesUsed, timeElapsed: e.timeElapsed, picked: e.picked || [], ts: e.ts };
+      }
+
+      RESULTS.bySituation[key] = next;
+    }
+    saveResults();
+  }catch(err){}
+}
+// --- end results ---
 
 const Fcopy = o => JSON.parse(JSON.stringify(o));
 const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
@@ -751,6 +1014,13 @@ function getSeqForCurrent(){
     .filter(s => POS_IDS.includes(s));
 }
 
+
+function getSeq2ForCurrent(){
+  // Optional Stage-2 sequence
+  const raw = (currentSituation && Array.isArray(currentSituation.playSeq2)) ? currentSituation.playSeq2 : [];
+  return raw.map(s => String(s||'').trim()).filter(Boolean);
+}
+
 function showSeqPanel(textHTML){
   if (!seqPanel || !seqBody) return;
 
@@ -827,6 +1097,18 @@ function setPlaySeq(next){
   if (!currentSituation) return;
   currentSituation.playSeq = sanitizeSeq(next);
   renderSeqBuilder();
+}
+
+
+function setPlaySeq2FromCsv(csv){
+  if(!currentSituation) return;
+  const parts = String(csv||'').split(',').map(s=>s.trim()).filter(Boolean);
+  currentSituation.playSeq2 = sanitizeSeq(parts);
+}
+
+function setSeqNote2(note){
+  if(!currentSituation) return;
+  currentSituation.seqNote2 = (typeof note === 'string') ? note : '';
 }
 
 /** Clickable grid for adding steps */
@@ -1013,6 +1295,24 @@ function wireSeqBuilderOnce(){
     seqNoteInput.addEventListener('input',  syncSeqNote);
     seqNoteInput.addEventListener('change', syncSeqNote);
   }
+
+  if (seq2Input){
+    const syncSeq2 = () => {
+      if (!currentSituation) return;
+      setPlaySeq2FromCsv(seq2Input.value);
+    };
+    seq2Input.addEventListener('input',  syncSeq2);
+    seq2Input.addEventListener('change', syncSeq2);
+  }
+  if (seq2NoteInput){
+    const syncSeq2Note = () => {
+      if (!currentSituation) return;
+      setSeqNote2(String(seq2NoteInput.value || ''));
+    };
+    seq2NoteInput.addEventListener('input',  syncSeq2Note);
+    seq2NoteInput.addEventListener('change', syncSeq2Note);
+  }
+
 }
 
 // Remove any in-progress Phase 2 sequence-throw visualization (ball + trail + RAF)
@@ -1270,8 +1570,56 @@ function endPhase2(success = true) {
     return;
   }
 
-  // Stop interaction for a real Phase 2 end
+  
+  // Record Phase 2 attempt (per-stage) before we potentially transition/exit
+  try{
+    recordAttempt({
+      phase: 2,
+      stage: phase2Stage,
+      situationKey: currentSituation ? currentSituation.key : null,
+      situationTitle: currentSituation ? currentSituation.title : '',
+      success: !!success,
+      triesUsed: (typeof phase2TriesLeft === 'number') ? (PHASE2_MAX_TRIES - phase2TriesLeft) : null,
+      timeElapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
+      picked: Array.isArray(phase2Picks) ? phase2Picks.slice() : []
+    });
+  }catch(e){}
+
+  // If Stage 1 succeeded and this situation has a Stage 2 sequence, immediately run Stage 2
+  if (success && phase2Stage === 1){
+    const seq2 = getSeq2ForCurrent();
+    if (Array.isArray(seq2) && seq2.length){
+      phase2Stage = 2;
+
+      // Reset Phase 2 state for Stage 2 (do NOT end Phase 2)
+      seqOrder = seq2.slice();
+      seqIndex = 0;
+      phase2TriesLeft = PHASE2_MAX_TRIES;
+      if (phase2TriesLeftEl) phase2TriesLeftEl.textContent = phase2TriesLeft;
+      phase2Locked = new Set();
+      phase2Picks = [];
+      clearAllPicks();
+      updatePhase2Hud();
+
+      // Make sure the UI is in "sequence picking" mode
+      allowSeqPanel = false;
+      hideSeqPanel();
+      if (continueBtn) continueBtn.classList.add('hidden');
+      if (verifySeqBtn) verifySeqBtn.classList.remove('hidden');
+
+      // Keep chips clickable for the next pick
+      phase2Active = true;
+      setChipsSelectable(true);
+      resetTimer(TIMER_START_SECS);
+      startTimer();
+
+      return;
+    }
+  }
+
+// Stop interaction for a real Phase 2 end
   phase2Active = false;
+  phase2Stage = 1;
   setChipsSelectable(false);
 
   if (continueBtn) continueBtn.classList.add('hidden');
@@ -1860,6 +2208,7 @@ function lockCorrectPrefix(k){
     }
 
     // Start Phase 2 state
+  phase2Stage = 1;
     seqOrder = seq;
     seqIndex = 0; // not used in the new "pick then verify" flow, kept for compatibility
     phase2TriesLeft = PHASE2_MAX_TRIES;
@@ -1996,6 +2345,16 @@ function lockCorrectPrefix(k){
     try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
   });
 
+  if (copyResultsBtn)      copyResultsBtn.addEventListener('click', async ()=>{
+    try{ await copyResults(); }catch{}
+  });
+  if (downloadResultsBtn)  downloadResultsBtn.addEventListener('click', ()=>{
+    try{ downloadResults(); }catch{}
+  });
+  if (copyResultsTopBtn)   copyResultsTopBtn.addEventListener('click', async ()=>{
+    try{ await copyResults(); }catch{}
+  });
+
   wireSeqBuilderOnce();
 }
 
@@ -2040,7 +2399,8 @@ let _phase2Ended = false;   // prevents target panel from showing after Phase 2
 const PHASE2_MAX_TRIES = 3;
 let phase2TriesLeft = 0;
 let allowSeqPanel = false;
-let phase2Picks = [];         // array of POS_IDS in the order the user picked
+let phase2Picks = [];
+let phase2Stage = 1; // 1 = primary playSeq, 2 = optional secondary playSeq2         // array of POS_IDS in the order the user picked
 let verifySeqBtn = null;      // created in wireOnce
 let phase2Locked = new Set(); // chips locked as correct prefix (GLOBAL)
 
@@ -3246,6 +3606,12 @@ function syncSituationInputsFromCurrent(){
 
   const o = clampInt((currentSituation.outs ?? 0), 0, 2);
   setOuts(o, { quiet: true });
+
+  // Coach tools: keep Play Sequence + notes inputs in sync with the selected situation
+  if (seqNoteInput) seqNoteInput.value = (typeof currentSituation.seqNote === 'string') ? currentSituation.seqNote : '';
+  if (typeof renderSeqBuilder === 'function') renderSeqBuilder();
+  if (seq2Input) seq2Input.value = Array.isArray(currentSituation.playSeq2) ? currentSituation.playSeq2.join(',') : '';
+  if (seq2NoteInput) seq2NoteInput.value = (typeof currentSituation.seqNote2 === 'string') ? currentSituation.seqNote2 : '';
 }
 
 
@@ -3614,6 +3980,34 @@ function buildAllSituationsExport(){
   });
   return JSON.stringify(arr,null,2);
 }
+
+
+function buildResultsExportPayload(){
+  return {
+    type: 'diamondiq_results_v1',
+    exportedAt: new Date().toISOString(),
+    playerId: getPlayerId(),
+    results: RESULTS
+  };
+}
+function buildResultsExportText(){
+  return JSON.stringify(buildResultsExportPayload(), null, 2);
+}
+function downloadResults(){
+  const text = buildResultsExportText();
+  const blob = new Blob([text], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `diamondiq_results_${getPlayerId()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+}
+async function copyResults(){
+  const text = buildResultsExportText();
+  await navigator.clipboard.writeText(text);
+}
+
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
@@ -3881,6 +4275,7 @@ function resetPlayers(){
 
 /// @diq:begin [A12] Init & events
 async function init(){
+  ensurePlayerMeta();
   try{
     sizeOverlays();
 
@@ -3906,7 +4301,9 @@ async function init(){
     console.error('[Init] fatal error:', err && (err.stack||err.message||err));
     alert('There was an error starting the app. Open the console for details.');
   }
+  ensurePlayerMeta();
 }
+
 
 function syncTolInputsFromModel(id){
   const t = getTargetFor(currentSituation.key, id);
