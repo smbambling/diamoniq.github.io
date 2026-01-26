@@ -4,7 +4,8 @@
       "name": "13U Black",
       "coachEmail": "coach@example.com",
       "roster": [
-        { "name": "John Smith", "number": "12", "password": "1234" }
+        { "name": "John Smith", "number": "12", "password": "1234" },
+        { "name": "Bob Smith", "number": "11", "password": "1234" }
       ]
     }
   ]
