@@ -619,16 +619,7 @@
         </div>
 
         <!-- Export -->
-        <div class="subsec">
-          <div class="title">Export</div>
-          <div class="row">
-            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
-            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
-            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
-            <button id="copyResultsBtn" class="btn-slate">📋 Copy Results</button>
-            <button id="downloadResultsBtn" class="btn-slate">⬇️ Download Results</button>
-          </div>
-        </div>
+        
       </div>
     </div>
   </aside>
@@ -687,7 +678,23 @@
 /** @typedef {{ first:boolean, second:boolean, third:boolean }} RunnersOn */
 /** @typedef {{
  *   key:string, title:string, desc:string,
- *   starts?:Starts, targets?:Targets,
+ *   sta
+      <div class="subsec" id="playerExportSubsec">
+        <h3>Export Results</h3>
+        <div class="row">
+          <button class="btn-slate" id="downloadAllBtn">Download All Situations</button>
+          <button class="btn-slate" id="copyAllBtn">Copy All Situations JSON</button>
+        </div>
+        <div class="row">
+          <button class="btn-slate" id="downloadCurrentBtn">Download Current Situation</button>
+        </div>
+        <div class="row">
+          <button class="btn-green" id="downloadResultsBtn">Download My Results</button>
+          <button class="btn-green" id="copyResultsBtn">Copy My Results JSON</button>
+        </div>
+        <div class="help-muted">Tip: “My Results” includes your Player ID so your coach can import/track them.</div>
+      </div>
+rts?:Starts, targets?:Targets,
  *   hit?:Pt, hitType?:'line'|'popup'|'grounder',
  *   batterAdvance?:number,
  *   outs?:0|1|2,
