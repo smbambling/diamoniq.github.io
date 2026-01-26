@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "updatedAt": "2026-01-26T00:00:00Z",
+  "teams": [
+    {
+      "teamId": "13u-black",
+      "teamName": "13U Black",
+      "coachEmail": "coach13ublack@example.com",
+      "roster": [
+        {
+          "playerId": "p-8f3a2c7b-13u-black-john-smith-12",
+          "playerName": "John Smith",
+          "playerNumber": "12",
+          "password": "tigers12"
+        },
+        {
+          "playerId": "p-41d9b0aa-13u-black-mason-jones-7",
+          "playerName": "Mason Jones",
+          "playerNumber": "7",
+          "password": "mason7"
+        }
+      ]
+    },
+    {
+      "teamId": "11u-black",
+      "teamName": "11U Black",
+      "coachEmail": "coach11ublack@example.com",
+      "roster": [
+        {
+          "playerId": "p-2c9e6d10-11u-black-owen-brown-3",
+          "playerName": "Owen Brown",
+          "playerNumber": "3",
+          "password": "owen3"
+        }
+      ]
+    }
+  ]
+}
