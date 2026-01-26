@@ -867,6 +867,38 @@ let _timerSecs = TIMER_START_SECS;
     closePlayerModal();
   });
 
+  // ------------------------------------------------------------
+  // Results persistence (per playerBaseId)
+  // ------------------------------------------------------------
+  const STORAGE_RESULTS_PREFIX = "diq_results_v1_";
+  function resultsStorageKey(){
+    return STORAGE_RESULTS_PREFIX + PLAYER_BASE_ID;
+  }
+  function loadResults(){
+    try{
+      const raw = localStorage.getItem(resultsStorageKey());
+      if(!raw) return { playerBaseId: PLAYER_BASE_ID, playerId: "", log: [], bySituation: {} };
+      const obj = JSON.parse(raw) || {};
+      return {
+        playerBaseId: PLAYER_BASE_ID,
+        playerId: (typeof obj.playerId === "string") ? obj.playerId : "",
+        log: Array.isArray(obj.log) ? obj.log : [],
+        bySituation: (obj.bySituation && typeof obj.bySituation === "object") ? obj.bySituation : {}
+      };
+    }catch(e){
+      return { playerBaseId: PLAYER_BASE_ID, playerId: "", log: [], bySituation: {} };
+    }
+  }
+  function saveResults(){
+    try{
+      localStorage.setItem(resultsStorageKey(), JSON.stringify(RESULTS));
+    }catch(e){
+      // ignore quota / privacy mode errors
+    }
+  }
+
+
+
 let RESULTS = loadResults();
 if(!RESULTS.playerId) RESULTS.playerId = getPlayerId();
 if(RESULTS.playerId !== getPlayerId()) RESULTS.playerId = getPlayerId();
