@@ -2422,28 +2422,27 @@ Notes:
         if(ro.third) parts.push('3B');
         return ` • Runners: ${esc(parts.join(','))}`;
       })();
-      bodyRows += `<tr class="grp"><td colspan="7">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
+      bodyRows += `<tr class="grp"><td colspan="8">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
-      let n = 0;
       for(const r of g.rows){
         n += 1;
         const phaseLabel = (r.phase==='1' || r.phase===1) ? 'P1' : 'P2';
-                        const secs = (r.timeElapsed==='' ? '' : `${Number(r.timeElapsed).toFixed ? Number(r.timeElapsed).toFixed(1) : esc(r.timeElapsed)}s`);
-        let playBtn = '';
-        if(phaseLabel==='P2' && Array.isArray(r.picked) && r.picked.length){
-          const pi = playMap.length;
-          playMap.push({ attempt: r, label: `${k} — ${g.title || ''} — ${r.time || ''}` });
-          playBtn = `<button class="btn btn-ghost" type="button" data-play-index="${pi}">Play</button>`;
+                        const playMapKey = `${r.situationKey}|${r.ts || 0}|1`;
+        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
+        if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
+          playMap.set(playMapKey, { key: r.situationKey, picked: r.playbackPicked.slice() });
+          playBtn = `<button class="btn btn-white btn-xs" data-play="${esc(playMapKey)}">Play</button>`;
         }
-        bodyRows += `
+bodyRows += `
           <tr>
             <td class="coachMono">${esc(r.time || '')}</td>
-            <td class="coachMono">${esc(n)}</td>
-            <td class="coachMono">${esc(r.result || '')}</td>
-            <td class="coachMono">${esc(r.triesUsed)}</td>
-            <td class="coachMono">${esc(secs)}</td>
-            <td class="coachMono">${esc(r.detail || '')}</td>
-            <td>${playBtn}</td>
+            <td class="coachMono num">${esc(r.attemptNo || '')}</td>
+            <td class="coachMono">${(r.tokensOk==null?'—':(r.tokensOk?'SUCCESS':'FAIL'))}</td>
+            <td class="coachMono">${esc(r.relaySummary || '—')}</td>
+            <td class="coachMono num">${esc(r.triesUsed || '')}</td>
+            <td class="coachMono num">${esc(r.elapsed || '')}</td>
+            <td class="coachMono">${esc(r.details || '')}</td>
+            <td class="num">${playBtn}</td>
           </tr>
         `;
       }
@@ -2568,46 +2567,129 @@ Notes:
   function _safe(s){ return String(s==null?'':s); }
 
   function buildDailyAttemptRows(dayKey){
-    const log = (RESULTS && Array.isArray(RESULTS.log)) ? RESULTS.log : [];
-    const rows = [];
-    for(const e of log){
-      const dk = _dayKeyLocal(e.ts || Date.now());
-      if(dk !== dayKey) continue;
+  // Build per-situation, per-attempt rows for the given day (one row per full attempt)
+  const rows = [];
+  if(!RESULTS?.log?.length) return rows;
 
-      const phase = e.phase;
-      const stage = e.stage;
-      let result = '';
-      let detail = '';
-      const pickedArr = Array.isArray(e.picked) ? e.picked.slice() : null;
+  const start = new Date(`${dayKey}T00:00:00`);
+  const end   = new Date(`${dayKey}T23:59:59.999`);
 
-      if(phase === 1){
-        if(Number.isFinite(e.score) && Number.isFinite(e.total)) result = `${e.score}/${e.total}`;
-      }else if(phase === 2){
-        result = e.success ? 'SUCCESS' : 'FAIL';
-        if(pickedArr && pickedArr.length) detail = pickedArr.join(' → ');
-      }
+  const evts = RESULTS.log
+    .filter(e=>{
+      const ts = new Date(e.ts || 0);
+      return ts >= start && ts <= end;
+    })
+    .sort((a,b)=> (new Date(a.ts||0).getTime()) - (new Date(b.ts||0).getTime()));
 
-      rows.push({
-        attemptKey: `${e.ts||''}|${e.situationKey||''}|${phase||''}|${stage||''}`,
-        ts: e.ts,
-        time: _timeLocal(e.ts),
-        situationKey: _safe(e.situationKey),
-        situationTitle: _safe(e.situationTitle),
-        situationDesc: _safe(e.situationDesc),
+  const byKey = {}; // situationKey -> { title, desc, outs, runnersOn, attempts:[], attemptNo:number }
+
+  const fmtTime = (ts)=>{
+    try{ return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}); }
+    catch{ return ''; }
+  };
+
+  const seqStr = (arr)=>{
+    if(!Array.isArray(arr) || !arr.length) return '';
+    return arr.join(' → ');
+  };
+
+  for(const e of evts){
+    // Coach Review rows are anchored on Phase 2 attempts (which may include Phase 1 outcome)
+    if(e.phase !== 2) continue;
+    if(!e.situationKey) continue;
+
+    const k = e.situationKey;
+    if(!byKey[k]){
+      byKey[k] = {
+        title: _safe(e.situationTitle),
+        desc: _safe(e.situationDesc),
         outs: (e.outs==null?'':_safe(e.outs)),
         runnersOn: (e.runnersOn==null?null:e.runnersOn),
-        phase: _safe(phase),
-        stage: (stage==null?'':_safe(stage)),
-        result,
-        triesUsed: (e.triesUsed==null?'':_safe(e.triesUsed)),
-        timeElapsed: (e.timeElapsed==null?'':_safe(e.timeElapsed)),
-        detail,
-        picked: pickedArr
-      });
+        attempts: [],
+        attemptNo: 0
+      };
     }
-    rows.sort((a,b)=> String(a.ts).localeCompare(String(b.ts)));
-    return rows;
+
+    const g = byKey[k];
+
+    if(Number(e.stage) === 1){
+      // Stage 1 record begins a new attempt
+      g.attemptNo += 1;
+
+      const attempt = {
+        situationKey: k,
+        situationTitle: g.title,
+        situationDesc: g.desc,
+        outs: g.outs,
+        runnersOn: g.runnersOn,
+
+        ts: e.ts || 0,
+        time: fmtTime(e.ts || 0),
+        attemptNo: g.attemptNo,
+
+        tokensOk: (e.phase1Ok==null?null:!!e.phase1Ok),
+        relay1Ok: (e.success==null?null:!!e.success),
+        relay2Ok: null,
+
+        triesUsed: (e.triesUsed==null?'' : _safe(e.triesUsed)),
+        elapsed: (e.timeElapsed==null?'' : _safe(e.timeElapsed) + 's'),
+
+        seq1: Array.isArray(e.picked) ? e.picked.slice() : [],
+        seq2: []
+      };
+
+      g.attempts.push(attempt);
+      continue;
+    }
+
+    if(Number(e.stage) === 2){
+      // Stage 2 record attaches to the last attempt for this situationKey
+      const last = g.attempts[g.attempts.length-1];
+      if(last){
+        last.relay2Ok = (e.success==null?null:!!e.success);
+        last.seq2 = Array.isArray(e.picked) ? e.picked.slice() : [];
+      }
+      continue;
+    }
   }
+
+  // Flatten into rows
+  Object.keys(byKey).sort().forEach(k=>{
+    byKey[k].attempts.forEach(a=>{
+      const s1 = seqStr(a.seq1);
+      const s2 = seqStr(a.seq2);
+      let detail = s1;
+      if(s2) detail = `${s1}  |  S2: ${s2}`;
+
+      let relaySummary = '';
+      if(a.relay1Ok==null) relaySummary = '';
+      else if(a.relay2Ok==null) relaySummary = (a.relay1Ok ? 'SUCCESS' : 'FAIL');
+      else relaySummary = `S1:${a.relay1Ok?'SUCCESS':'FAIL'} / S2:${a.relay2Ok?'SUCCESS':'FAIL'}`;
+
+      rows.push({
+        situationKey: a.situationKey,
+        situationTitle: a.situationTitle,
+        situationDesc: a.situationDesc,
+        outs: a.outs,
+        runnersOn: a.runnersOn,
+
+        ts: a.ts,
+        time: a.time,
+        attemptNo: a.attemptNo,
+
+        tokensOk: a.tokensOk,
+        relaySummary,
+        triesUsed: a.triesUsed,
+        elapsed: a.elapsed,
+        details: detail,
+
+        playbackPicked: a.seq1
+      });
+    });
+  });
+
+  return rows;
+}
 
 
 function shareResultsByEmail(){
@@ -3393,6 +3475,11 @@ function endPhase2(success = true) {
       situationDesc: currentSituation ? (currentSituation.desc || '') : '',
       outs: currentSituation ? (currentSituation.outs ?? null) : null,
       runnersOn: currentSituation ? (currentSituation.runnersOn || null) : null,
+      // Phase 1 outcome (tokens)
+      phase1Ok: _phase1Summary ? !!_phase1Summary.ok : null,
+      phase1TriesUsed: _phase1Summary ? _phase1Summary.triesUsed : null,
+      phase1Elapsed: _phase1Summary ? _phase1Summary.elapsed : null,
+
       success: !!success,
       triesUsed: (typeof phase2TriesLeft === 'number') ? (PHASE2_MAX_TRIES - phase2TriesLeft) : null,
       timeElapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
@@ -3905,6 +3992,7 @@ function wireOnce(){
     // --- Set game state up front ---
     gameActive = true;
     resetTimer(TIMER_START_SECS);
+    _phase1Summary = null;
     remainingTries = MAX_TRIES;
     updateHud(0);
     _allTargetsCorrect = false;
@@ -4279,6 +4367,10 @@ let remainingTries = 0;
 const MAX_TRIES = 3;
 
 let _allTargetsCorrect = false;
+
+// Phase 1 (chip placement) summary for the most recently completed round
+let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts:number }
+
 
 let coachUnlocked = false;
 
@@ -6273,6 +6365,16 @@ function checkPositions(){
     if (shouldEndRound){
       // Stop timer and hide the Check button
       stopTimer();
+      // Capture Phase 1 outcome for Coach Review / exports (tokens passed or failed)
+      try{
+        _phase1Summary = {
+          ok: !!allCorrectNow,
+          triesUsed: (MAX_TRIES - remainingTries),
+          elapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
+          ts: Date.now()
+        };
+      }catch(e){ _phase1Summary = null; }
+
       if (checkBtn) checkBtn.classList.add('hidden');
 
       // Lock chips; keep round open for inspection
