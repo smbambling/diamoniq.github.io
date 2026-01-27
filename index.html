@@ -1344,10 +1344,19 @@ function computeRosterPlayerId(teamObj, playerObj){
   }
 
   function downloadTeamsCsvTemplate(){
+    // Excel-friendly template (save/export as CSV)
+    // Action:
+    //  - ADD    : add/update a player row (requires Player Name, Player Number, Player Password)
+    //  - REMOVE : remove a player (Team Name + Player Number; Player Name optional)
+    //  - REMOVE : remove a team (Team Name only; leave player fields blank)
     const csv = [
       'Team Name,Coach Email,Player Name,Player Number,Player Password,Action',
+      // Add / update a player (team will be created if missing)
       '13U Black,coach@example.com,John Smith,12,1234,ADD',
-      '13U Black,,John Smith,12,,REMOVE'
+      // Remove a player (do not include password)
+      '13U Black,,John Smith,12,,REMOVE',
+      // Remove an entire team (leave player fields blank)
+      '13U Black,,,,,REMOVE'
     ].join('\n');
     downloadText('diamondiq_teams_roster_template.csv', csv, 'text/csv');
   }
