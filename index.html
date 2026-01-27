@@ -424,7 +424,7 @@
   <h1>Diamond IQ</h1>
     
   <!-- @diq:begin [H_PLAYER_BTN] Player Login button -->
-      <button id="playerBtn" class="btn-yellow btn-small" title="Player login">Player Login</button>
+      <button id="playerBtn" class="btn-orange btn-small" title="Player login">Player Login</button>
   <!-- @diq:end [H_PLAYER_BTN] -->
 
 
@@ -1664,8 +1664,8 @@ function updatePlayerHeaderButton(){
     }catch(_e){ logged = false; }
 
     btn.textContent = 'Player Login';
-    btn.classList.remove('btn-yellow','btn-green');
-    btn.classList.add(logged ? 'btn-green' : 'btn-yellow');
+    btn.classList.remove('btn-orange','btn-yellow','btn-green');
+    btn.classList.add(logged ? 'btn-green' : 'btn-orange');
     btn.setAttribute('aria-pressed', logged ? 'true' : 'false');
 }
 
