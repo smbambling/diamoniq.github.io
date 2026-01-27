@@ -126,6 +126,8 @@
     border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
     background:#f8fafc;color:#0b1321;
   }
+
+  .badge-mini{padding:3px 8px;font-size:12px;font-weight:900;}
   .badge-score{background:#ecfeff;border-color:#a5f3fc}
   .badge-tries{background:#eef2ff;border-color:#c7d2fe}
   .tries-green{background:#dcfce7;border-color:#86efac}
@@ -2431,13 +2433,26 @@ Notes:
           playBtn = `<button class="btn btn-white btn-xs" data-play-index="${playIndex}">Play</button>`;
         }
 
-bodyRows += `
+const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='FAIL' ? 'score-red' : 'score-yellow');
+        const posBadge = (r.posResult && r.posResult!=='—')
+          ? `<span class="badge badge-mini ${posBadgeCls}">${esc(r.posResult)}</span>`
+          : `<span class="text-slate-400 text-xs">—</span>`;
+
+        let posScoreBadge = `<span class="text-slate-400 text-xs">—</span>`;
+        const pc = (r.posScoreCorrect==null?null:Number(r.posScoreCorrect));
+        const pt = (r.posScoreTotal==null?null:Number(r.posScoreTotal));
+        if(r.posScore && pc!=null && pt!=null && !Number.isNaN(pc) && !Number.isNaN(pt) && pt>0){
+          const cls = (pc>=pt) ? 'score-green' : (pc>0 ? 'score-yellow' : 'score-red');
+          posScoreBadge = `<span class="badge badge-mini ${cls}">Score: ${esc(r.posScore)}</span>`;
+        }
+
+        bodyRows += `
           <tr>
             <td class="coachMono">${esc(r.time || '')}</td>
             <td class="coachMono num">${esc(r.attemptNo || '')}</td>
 
-            <td class="coachMono">${esc(r.posResult || '—')}</td>
-            <td class="coachMono num">${esc(r.posScore || '')}</td>
+            <td class="coachMono">${posBadge}</td>
+            <td class="coachMono num">${posScoreBadge}</td>
             <td class="coachMono num">${esc(r.posTries || '')}</td>
             <td class="coachMono num">${esc(r.posElapsed || '')}</td>
 
@@ -2705,6 +2720,8 @@ bodyRows += `
         posTries: a.posTriesUsed,
         posElapsed: a.posElapsed,
         posScore: (a.posScoreCorrect!=='' && a.posScoreTotal!=='') ? `${a.posScoreCorrect}/${a.posScoreTotal}` : '',
+        posScoreCorrect: a.posScoreCorrect,
+        posScoreTotal: a.posScoreTotal,
 
         // Phase 2 columns
         seqResult: seqSummary,
