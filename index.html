@@ -430,6 +430,29 @@
     line-height:1.1;
   }
 
+
+/* Coach Tools collapsible sections */
+#coachCard .subsec{position:relative;}
+#coachCard .subsec.diq-collapsible .title,
+#coachCard .subsec.diq-collapsible .sectionTitle{
+  cursor:pointer;
+  user-select:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+#coachCard .subsec.diq-collapsible .diq-chevron{
+  width:18px;height:18px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #e5e7eb;border-radius:8px;
+  color:#64748b;background:#fff;
+  font-size:12px;line-height:1;
+}
+#coachCard .subsec.diq-collapsible.diq-collapsed .diq-chevron{transform:rotate(-90deg);}
+#coachCard .subsec.diq-collapsible .diq-body{margin-top:8px;}
+#coachCard .subsec.diq-collapsible.diq-collapsed .diq-body{display:none;}
+
 </style>
 
 </head>
@@ -561,7 +584,12 @@
     <strong>Coach Tools</strong>
     <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
     <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
-  </div>
+  
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <button id="coachCollapseAllBtn" class="btn-slate" type="button" title="Collapse sections">Collapse all</button>
+      <button id="coachExpandAllBtn" class="btn-slate" type="button" title="Expand sections">Expand all</button>
+    </span>
+</div>
 
   <!-- Situation Builder -->
   <div class="subsec">
@@ -774,6 +802,29 @@
           <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
         </div>
       </div>
+      <!-- COACH REVIEW (paste code from player email) -->
+      <div class="subsec" id="coachReviewSubsec" style="margin-top:14px;">
+        <div class="sectionTitle">COACH REVIEW</div>
+        <div class="muted" style="margin-bottom:10px;">
+          Paste a Coach Review Code from a player email to view a clean table + Phase 2 playback.
+        </div>
+
+        <div class="grid" style="gap:10px;">
+          <label class="field">
+            <span>Coach Review Code</span>
+            <textarea id="coachReviewInput" class="textarea mono" rows="5" placeholder="DIQ1:..."></textarea>
+          </label>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="coachReviewLoadBtn" class="btn btn-brand" type="button">Load Review</button>
+            <button id="coachReviewClearBtn" class="btn btn-ghost" type="button">Clear</button>
+          </div>
+
+          <div id="coachReviewOutput"></div>
+          <div id="coachReviewPlayback"></div>
+        </div>
+      </div>
+
 
 
 
@@ -1115,6 +1166,16 @@ function computeRosterPlayerId(teamObj, playerObj){
   const coachTeamAddBtn = document.getElementById("coachTeamAddBtn");
   const coachTeamUpdateBtn = document.getElementById("coachTeamUpdateBtn");
   const coachTeamRemoveBtn = document.getElementById("coachTeamRemoveBtn");
+
+  const coachReviewInput = document.getElementById("coachReviewInput");
+  const coachReviewLoadBtn = document.getElementById("coachReviewLoadBtn");
+  const coachReviewClearBtn = document.getElementById("coachReviewClearBtn");
+  const coachReviewOutput = document.getElementById("coachReviewOutput");
+  const coachReviewPlayback = document.getElementById("coachReviewPlayback");
+
+  const coachCollapseAllBtn = document.getElementById("coachCollapseAllBtn");
+  const coachExpandAllBtn = document.getElementById("coachExpandAllBtn");
+
 
   const coachRosterSelect = document.getElementById("coachRosterSelect");
   const coachPlayerName = document.getElementById("coachPlayerName");
@@ -3417,6 +3478,32 @@ function wireOnce(){
   if (_wired) return;
   _wired = true;
 
+  // Coach tools collapsible sections
+  initCoachToolsCollapsibles();
+  if(coachCollapseAllBtn) coachCollapseAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(true));
+  if(coachExpandAllBtn) coachExpandAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(false));
+
+  // Coach Review (paste code → table + playback)
+  if(coachReviewLoadBtn){
+    coachReviewLoadBtn.addEventListener('click', ()=>{
+      try{
+        const obj = decodeCoachReviewCode(coachReviewInput ? coachReviewInput.value : '');
+        renderCoachReview(obj);
+      }catch(e){
+        alert("Could not load Coach Review Code: " + (e && e.message ? e.message : e));
+      }
+    });
+  }
+  if(coachReviewClearBtn){
+    coachReviewClearBtn.addEventListener('click', ()=>{
+      if(coachReviewInput) coachReviewInput.value = '';
+      if(coachReviewOutput) coachReviewOutput.innerHTML = '';
+      if(coachReviewPlayback) coachReviewPlayback.innerHTML = '';
+      _stopCoachPlayback();
+    });
+  }
+
+
   // --- everything from your “/* Wiring */” block goes here ---
   if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
   if (randomSitBtn) randomSitBtn.addEventListener('click', pickRandomSituation);
@@ -5607,10 +5694,7 @@ function renderPlayerResultsForCoach(outEl, parsed){
           <pre class="mono" style="margin:0;white-space:pre-wrap">${_escHtml(JSON.stringify(log.slice().reverse(), null, 2))}</pre>
         </div>
       </details>
-    
-        <div class="subsec" id="coachReviewSubsec">
-          <div class="subsec-title">COACH REVIEW</div>
-          <div class="subsec-desc">Paste a Coach Review Code from a player email to view a clean report + playback (Phase 2 sequence).</div>
+<div class="subsec-desc">Paste a Coach Review Code from a player email to view a clean report + playback (Phase 2 sequence).</div>
 
           <div class="mt-3 grid gap-2">
             <label class="label" for="coachReviewInput">Coach Review Code</label>
@@ -5898,6 +5982,80 @@ function resetPlayers(){
 
 // @diq:end [A11]
 /// @diq:begin [A12] Init & events
+
+const COACH_COLLAPSE_KEY = "diq_coachSubsecCollapsed_v1";
+
+function _loadCoachCollapseMap(){
+  try{ return JSON.parse(localStorage.getItem(COACH_COLLAPSE_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function _saveCoachCollapseMap(map){
+  try{ localStorage.setItem(COACH_COLLAPSE_KEY, JSON.stringify(map || {})); }catch(e){}
+}
+
+function initCoachToolsCollapsibles(){
+  const card = document.getElementById("coachCard");
+  if(!card) return;
+
+  const map = _loadCoachCollapseMap();
+
+  const subsecs = Array.from(card.querySelectorAll(".subsec"));
+  subsecs.forEach(subsec=>{
+    if(subsec.dataset.diqCollapsible === "1") return;
+
+    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
+    if(!header) return;
+
+    // Mark + add chevron
+    subsec.dataset.diqCollapsible = "1";
+    subsec.classList.add("diq-collapsible");
+
+    // Chevron (visual)
+    const chev = document.createElement("span");
+    chev.className = "diq-chevron";
+    chev.textContent = "▾";
+    header.appendChild(chev);
+
+    // Wrap remaining children into body
+    const body = document.createElement("div");
+    body.className = "diq-body";
+    const kids = Array.from(subsec.children);
+    kids.forEach(el=>{
+      if(el === header) return;
+      body.appendChild(el);
+    });
+    subsec.appendChild(body);
+
+    const key = subsec.id || (header.textContent || "").trim() || ("subsec_" + Math.random());
+    const defaultCollapsed = !(subsec.id === "teamsSubsec" || subsec.id === "coachReviewSubsec");
+    const collapsed = (key in map) ? !!map[key] : defaultCollapsed;
+    if(collapsed) subsec.classList.add("diq-collapsed");
+
+    header.addEventListener("click", ()=>{
+      const now = !subsec.classList.contains("diq-collapsed");
+      // now=true means expanded; store collapsed=false
+      subsec.classList.toggle("diq-collapsed");
+      map[key] = subsec.classList.contains("diq-collapsed");
+      _saveCoachCollapseMap(map);
+    });
+  });
+}
+
+function setAllCoachSubsecsCollapsed(collapsed){
+  const card = document.getElementById("coachCard");
+  if(!card) return;
+  const map = _loadCoachCollapseMap();
+  const subsecs = Array.from(card.querySelectorAll(".subsec.diq-collapsible"));
+  subsecs.forEach(subsec=>{
+    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
+    const key = subsec.id || (header && header.textContent ? header.textContent.trim() : "");
+    if(!key) return;
+    if(collapsed) subsec.classList.add("diq-collapsed");
+    else subsec.classList.remove("diq-collapsed");
+    map[key] = !!collapsed;
+  });
+  _saveCoachCollapseMap(map);
+}
+
 async function init(){
   ensurePlayerMeta();
   try{
