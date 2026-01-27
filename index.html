@@ -2422,15 +2422,13 @@ Notes:
         if(ro.third) parts.push('3B');
         return ` • Runners: ${esc(parts.join(','))}`;
       })();
-      bodyRows += `<tr class="grp"><td colspan="9">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
+      bodyRows += `<tr class="grp"><td colspan="7">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
       let n = 0;
       for(const r of g.rows){
         n += 1;
         const phaseLabel = (r.phase==='1' || r.phase===1) ? 'P1' : 'P2';
-        const stageLabel = (phaseLabel==='P2' && r.stage) ? `S${esc(r.stage)}` : '';
-        const tries = esc(r.triesUsed);
-        const secs = (r.timeElapsed==='' ? '' : `${Number(r.timeElapsed).toFixed ? Number(r.timeElapsed).toFixed(1) : esc(r.timeElapsed)}s`);
+                        const secs = (r.timeElapsed==='' ? '' : `${Number(r.timeElapsed).toFixed ? Number(r.timeElapsed).toFixed(1) : esc(r.timeElapsed)}s`);
         let playBtn = '';
         if(phaseLabel==='P2' && Array.isArray(r.picked) && r.picked.length){
           const pi = playMap.length;
@@ -2441,12 +2439,10 @@ Notes:
           <tr>
             <td class="coachMono">${esc(r.time || '')}</td>
             <td class="coachMono">${esc(n)}</td>
-            <td>${esc(phaseLabel)} ${stageLabel}</td>
             <td class="coachMono">${esc(r.result || '')}</td>
-            <td class="coachMono">${tries}</td>
+            <td class="coachMono">${esc(r.triesUsed)}</td>
             <td class="coachMono">${esc(secs)}</td>
             <td class="coachMono">${esc(r.detail || '')}</td>
-            <td>${esc(r.ts ? new Date(r.ts).toLocaleString() : '')}</td>
             <td>${playBtn}</td>
           </tr>
         `;
@@ -2458,7 +2454,7 @@ Notes:
         <table class="coachTbl">
           <thead>
             <tr>
-              <th>Time</th><th>#</th><th>Attempt</th><th>Result</th><th>Tries</th><th>Elapsed</th><th>Details</th><th>Timestamp</th><th>Playback</th>
+              <th>Time</th><th>#</th><th>Result</th><th>Tries</th><th>Elapsed</th><th>Selected Sequence</th><th>Playback</th>
             </tr>
           </thead>
           <tbody>${bodyRows}</tbody>
