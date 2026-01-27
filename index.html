@@ -1647,7 +1647,7 @@ function computeRosterPlayerId(teamObj, playerObj){
 }
 
 function isPlayerLoggedInNow(){
-  const cur = getCurrentPlayer();
+  const cur = getCurrentPlayerFromMeta();
   return !!(cur && cur.player && cur.team);
 }
   // expose for header button logic (avoids scoping quirks)
