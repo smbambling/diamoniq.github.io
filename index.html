@@ -1527,6 +1527,29 @@ function setRosterControlsEnabled(enabled){
     setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
   }
 
+  // Lightweight toast (non-blocking). Falls back to alert if DOM not ready.
+  let _toastEl = null;
+  let _toastTimer = null;
+  function toast(msg, ms=1800){
+    try{
+      if(!_toastEl){
+        _toastEl = document.createElement('div');
+        _toastEl.id = 'diqToast';
+        _toastEl.className = 'fixed left-1/2 top-4 -translate-x-1/2 z-[9999] px-4 py-2 rounded-xl border border-slate-200 bg-white shadow-lg text-sm font-semibold text-slate-800 hidden';
+        document.body.appendChild(_toastEl);
+      }
+      _toastEl.textContent = String(msg ?? '');
+      _toastEl.classList.remove('hidden');
+      if(_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(()=>{ try{ _toastEl.classList.add('hidden'); }catch(e){} }, Math.max(800, ms||0));
+    }catch(e){
+      // last resort
+      try{ alert(String(msg ?? '')); }catch(_){}
+    }
+  }
+
+
+
 
   function copyTextToClipboard(text){
     return navigator.clipboard.writeText(text);
