@@ -2446,6 +2446,18 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
           posScoreBadge = `<span class="badge badge-mini ${cls}">${esc(r.posScore)}</span>`;
         }
 
+        const triesBadge = (num)=>{
+          if(num==null || Number.isNaN(num)) return `<span class="text-slate-400 text-xs">—</span>`;
+          const n = Math.max(0, Math.floor(num));
+          let cls = 'score-yellow';
+          if(n <= 1) cls = 'score-green';
+          else if(n >= MAX_TRIES) cls = 'score-red';
+          return `<span class="badge badge-mini ${cls}">${n}/${MAX_TRIES}</span>`;
+        };
+
+        const posTriesBadge = triesBadge(r.posTriesUsedNum==null?null:Number(r.posTriesUsedNum));
+        const seqTriesBadge = triesBadge(r.seqTriesUsedNum==null?null:Number(r.seqTriesUsedNum));
+
         let seqBadge = `<span class="text-slate-400 text-xs">—</span>`;
         const seqVal = (r.seqResult || '').trim();
         if(seqVal && seqVal !== '—'){
@@ -2464,11 +2476,11 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
 
             <td class="coachMono">${posBadge}</td>
             <td class="coachMono num">${posScoreBadge}</td>
-            <td class="coachMono num">${esc(r.posTries || '')}</td>
+            <td class="coachMono num">${posTriesBadge}</td>
             <td class="coachMono num">${esc(r.posElapsed || '')}</td>
 
             <td class="coachMono">${seqBadge}</td>
-            <td class="coachMono num">${esc(r.seqTries || '')}</td>
+            <td class="coachMono num">${seqTriesBadge}</td>
             <td class="coachMono num">${esc(r.seqElapsed || '')}</td>
 
             <td class="coachMono">${esc(r.details || '')}</td>
@@ -2671,6 +2683,8 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
         // Phase 1 (tokens/chips)
         posOk: (e.phase1Ok==null?null:!!e.phase1Ok),
         posTriesUsed: (e.phase1TriesUsed==null?'' : _safe(e.phase1TriesUsed)),
+
+        posTriesUsedNum: (e.phase1TriesUsed==null?null:Number(e.phase1TriesUsed)),
         posElapsed: (e.phase1Elapsed==null?'' : _safe(e.phase1Elapsed) + 's'),
 
         posScoreCorrect: (e.phase1ScoreCorrect==null?'' : _safe(e.phase1ScoreCorrect)),
@@ -2680,6 +2694,7 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
         seq1Ok: (e.success==null?null:!!e.success),
         seq2Ok: null,
         seqTriesUsed: (e.triesUsed==null?'' : _safe(e.triesUsed)),
+        seqTriesUsedNum: (e.triesUsed==null?null:Number(e.triesUsed)),
         seqElapsed: (e.timeElapsed==null?'' : _safe(e.timeElapsed) + 's'),
 
         seq1: Array.isArray(e.picked) ? e.picked.slice() : [],
@@ -2729,6 +2744,8 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
         // Phase 1 columns
         posResult: (a.posOk==null?'—':(a.posOk?'SUCCESS':'FAIL')),
         posTries: a.posTriesUsed,
+        posTriesUsedNum: a.posTriesUsedNum,
+        posTriesDisplay: (a.posTriesUsedNum==null||Number.isNaN(a.posTriesUsedNum)) ? '' : `${a.posTriesUsedNum}/${MAX_TRIES}`,
         posElapsed: a.posElapsed,
         posScore: (a.posScoreCorrect!=='' && a.posScoreTotal!=='') ? `${a.posScoreCorrect}/${a.posScoreTotal}` : '',
         posScoreCorrect: a.posScoreCorrect,
@@ -2737,6 +2754,8 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
         // Phase 2 columns
         seqResult: seqSummary,
         seqTries: a.seqTriesUsed,
+        seqTriesUsedNum: a.seqTriesUsedNum,
+        seqTriesDisplay: (a.seqTriesUsedNum==null||Number.isNaN(a.seqTriesUsedNum)) ? '' : `${a.seqTriesUsedNum}/${MAX_TRIES}`,
         seqElapsed: a.seqElapsed,
 
         details: detail,
