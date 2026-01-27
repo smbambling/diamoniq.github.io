@@ -2443,7 +2443,18 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
         const pt = (r.posScoreTotal==null?null:Number(r.posScoreTotal));
         if(r.posScore && pc!=null && pt!=null && !Number.isNaN(pc) && !Number.isNaN(pt) && pt>0){
           const cls = (pc>=pt) ? 'score-green' : (pc>0 ? 'score-yellow' : 'score-red');
-          posScoreBadge = `<span class="badge badge-mini ${cls}">Score: ${esc(r.posScore)}</span>`;
+          posScoreBadge = `<span class="badge badge-mini ${cls}">${esc(r.posScore)}</span>`;
+        }
+
+        let seqBadge = `<span class="text-slate-400 text-xs">—</span>`;
+        const seqVal = (r.seqResult || '').trim();
+        if(seqVal && seqVal !== '—'){
+          // If any FAIL in the summary, mark red. If both SUCCESS and no FAIL, green. Otherwise yellow.
+          const up = seqVal.toUpperCase();
+          let cls = 'score-yellow';
+          if(up.includes('FAIL')) cls = 'score-red';
+          else if(up.includes('SUCCESS') && !up.includes('FAIL')) cls = 'score-green';
+          seqBadge = `<span class="badge badge-mini ${cls}">${esc(seqVal)}</span>`;
         }
 
         bodyRows += `
@@ -2456,7 +2467,7 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
             <td class="coachMono num">${esc(r.posTries || '')}</td>
             <td class="coachMono num">${esc(r.posElapsed || '')}</td>
 
-            <td class="coachMono">${esc(r.seqResult || '—')}</td>
+            <td class="coachMono">${seqBadge}</td>
             <td class="coachMono num">${esc(r.seqTries || '')}</td>
             <td class="coachMono num">${esc(r.seqElapsed || '')}</td>
 
