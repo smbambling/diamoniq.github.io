@@ -723,14 +723,6 @@
               class="mono" style="width:100%"></textarea>
           </div>
         </div>
-
-          <div class="subhead" style="margin-top:10px;">Stage 2 Play Sequence <span class="muted">(optional)</span></div>
-          <div class="tiny muted" style="margin:-4px 0 8px">Comma-separated positions (e.g., <code>LF,SS,2B</code>). This runs immediately after Stage 1 succeeds.</div>
-          <div class="row" style="gap:8px; align-items:center">
-            <input id="seq2Input" class="inp" placeholder="LF,SS,2B" style="flex:1" />
-          </div>
-          <textarea id="seq2NoteInput" class="inp" placeholder="Stage 2 notes (optional)..." style="margin-top:8px; min-height:68px"></textarea>
-
         <!-- Export -->
 <!-- Export -->
         <div class="subsec">
@@ -2598,16 +2590,11 @@ function setPlaySeq(next){
 }
 
 
-function setPlaySeq2FromCsv(csv){
-  if(!currentSituation) return;
-  const parts = String(csv||'').split(',').map(s=>s.trim()).filter(Boolean);
-  currentSituation.playSeq2 = sanitizeSeq(parts);
-}
 
-function setSeqNote2(note){
-  if(!currentSituation) return;
-  currentSituation.seqNote2 = (typeof note === 'string') ? note : '';
-}
+
+
+
+
 
 /** Clickable grid for adding steps */
 function buildSeqPosGrid(){
@@ -2794,22 +2781,8 @@ function wireSeqBuilderOnce(){
     seqNoteInput.addEventListener('change', syncSeqNote);
   }
 
-  if (seq2Input){
-    const syncSeq2 = () => {
-      if (!currentSituation) return;
-      setPlaySeq2FromCsv(seq2Input.value);
-    };
-    seq2Input.addEventListener('input',  syncSeq2);
-    seq2Input.addEventListener('change', syncSeq2);
-  }
-  if (seq2NoteInput){
-    const syncSeq2Note = () => {
-      if (!currentSituation) return;
-      setSeqNote2(String(seq2NoteInput.value || ''));
-    };
-    seq2NoteInput.addEventListener('input',  syncSeq2Note);
-    seq2NoteInput.addEventListener('change', syncSeq2Note);
-  }
+
+
 
 }
 
@@ -5210,8 +5183,6 @@ function syncSituationInputsFromCurrent(){
   // Coach tools: keep Play Sequence + notes inputs in sync with the selected situation
   if (seqNoteInput) seqNoteInput.value = (typeof currentSituation.seqNote === 'string') ? currentSituation.seqNote : '';
   if (typeof renderSeqBuilder === 'function') renderSeqBuilder();
-  if (seq2Input) seq2Input.value = Array.isArray(currentSituation.playSeq2) ? currentSituation.playSeq2.join(',') : '';
-  if (seq2NoteInput) seq2NoteInput.value = (typeof currentSituation.seqNote2 === 'string') ? currentSituation.seqNote2 : '';
 }
 
 
