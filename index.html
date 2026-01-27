@@ -2789,22 +2789,18 @@ function shareResultsByEmail(){
 
     const subject = `Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}`;
 
+    const reviewUrl = `${window.location.origin}${window.location.pathname}#coachReview=${encodeURIComponent(code)}`;
+
     const body =
 `Hi Coach,
 
 Here are the Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}
 
-Coach Review Code:
+Open this link to view the report:
+${reviewUrl}
 
-${code}
-
-Steps to review the results:
-1) Open Diamond IQ
-2) Select Coach Tools → Coach Review
-3) Paste the Coach Review Code from above
-4) Select Open Report`;
-
-    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
+If prompted, unlock Coach Tools to view the report.`;
+const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
     window.location.href = mailto;
   }
 
@@ -4453,6 +4449,15 @@ let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts
 
 let coachUnlocked = false;
 
+// Coach Review: allow loading report code from URL fragment (e.g. #coachReview=...)
+let _pendingCoachReviewCode = null;
+try{
+  const h = String(window.location.hash || '');
+  const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
+  if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
+}catch(e){ _pendingCoachReviewCode = null; }
+
+
 let runnerEl = null;
 let runnerAnimId = null;
 let runnerLastBase = 'home';
@@ -5508,6 +5513,11 @@ function setCoachMode(enabled){
   hideTargetPanel();
   endPhase2(false);
   if (continueBtn) continueBtn.classList.add('hidden');
+
+  // If a Coach Review code was supplied via URL, try to auto-load it when coach mode is enabled
+  if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
+    try{ window._diqCoachReviewAutoload(); }catch(e){}
+  }
 }
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
 function closePwModal(){ pwModal.style.display='none'; }
