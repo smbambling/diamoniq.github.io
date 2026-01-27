@@ -2424,10 +2424,7 @@ Notes:
       })();
       bodyRows += `<tr class="grp"><td colspan="8">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
-      for(const r of g.rows){
-        n += 1;
-        const phaseLabel = (r.phase==='1' || r.phase===1) ? 'P1' : 'P2';
-                        const playMapKey = `${r.situationKey}|${r.ts || 0}|1`;
+      for(const r of g.rows){                        const playMapKey = `${r.situationKey}|${r.ts || 0}|1`;
         let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
         if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
           playMap.set(playMapKey, { key: r.situationKey, picked: r.playbackPicked.slice() });
