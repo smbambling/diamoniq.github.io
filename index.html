@@ -1682,11 +1682,13 @@ function updatePlayerHeaderButton(){
       else if(window.PLAYER && window.PLAYER.playerId) logged = true;
     }catch(_e){ logged = false; }
 
-    btn.textContent = 'Player Login';
+    // Label + color should reflect live login state
+    btn.textContent = logged ? 'Player Info' : 'Player Login';
     btn.classList.remove('btn-orange','btn-yellow','btn-green');
     btn.classList.add(logged ? 'btn-green' : 'btn-orange');
     btn.setAttribute('aria-pressed', logged ? 'true' : 'false');
-}
+    btn.title = logged ? 'View Player Info' : 'Player Login';
+  }
 
 
   function openPlayerSidebar(){
