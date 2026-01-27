@@ -4033,6 +4033,14 @@ function wireOnce(){
         _pendingCoachReviewCode = null;
       }
     };
+    // Auto-prompt coach password when opening a Coach Review link
+    if(_pendingCoachReviewCode && !coachUnlocked){
+      try{
+        if(typeof openPwModal === 'function') openPwModal();
+        if(pwMsg) pwMsg.textContent = 'Unlock Coach Tools to view the report.';
+      }catch(e){}
+    }
+
     if(coachUnlocked){ try{ window._diqCoachReviewAutoload(); }catch(e){} }
 
 
@@ -4482,7 +4490,9 @@ try{
       const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
       if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
     }catch(e){}
-    if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
+    
+    if(_pendingCoachReviewCode && !coachUnlocked){ try{ openPwModal(); }catch(e){} }
+if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
       try{ window._diqCoachReviewAutoload(); }catch(e){}
     }
   });
