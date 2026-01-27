@@ -415,8 +415,8 @@
 <body>
 <!--
   Diamond IQ patch anchors
-  - HTML anchors: <!-- @diq:begin [H_*] ... --> / <!-- @diq:end [H_*] -->
-  - JS anchors:   // @diq:begin [A*] ... / // @diq:end [A*]
+  - HTML anchors: @diq:begin [H_*] ... @diq:end [H_*]
+  - JS anchors:   @diq:begin [A*] ... @diq:end [A*]
   Keep these markers intact to enable reliable copy/paste patching.
 -->
 
@@ -1012,11 +1012,21 @@ let _timerSecs = TIMER_START_SECS;
       return { name: playerName, number: playerNumber, password, playerId };
     }).filter(p=>p.name && p.number);
 
-    out.teams.push({ id, name, coachEmail, roster });
+    out.teams.push({ id, name, coachEmail, roster: roster.map(p => ({ ...p, playerId: computeRosterPlayerId({id, name}, p) })) });
   });
 
   return out;
 }
+
+function computeRosterPlayerId(teamObj, playerObj){
+  // Deterministic, stable ID for roster entries (so player dropdown + login work)
+  const t = teamObj && teamObj.id ? String(teamObj.id) : 'team';
+  const n = playerObj && playerObj.name ? String(playerObj.name) : '';
+  const num = playerObj && playerObj.number != null ? String(playerObj.number) : '';
+  if (playerObj && playerObj.playerId) return String(playerObj.playerId);
+  return slugifyLoose([t, n, num].filter(Boolean).join('-'));
+}
+
 
   function saveTeamsToLocal(){
     try{
