@@ -990,6 +990,11 @@ let _timerSecs = TIMER_START_SECS;
   }
 
   function getPlayerId(){
+    // Prefer roster playerId when logged in; fallback to local meta-based id.
+    try{
+      const cur = getCurrentPlayerFromMeta();
+      if(cur && cur.player && cur.player.playerId) return String(cur.player.playerId);
+    }catch(_e){}
     return buildPlayerId();
   }
 
@@ -1042,12 +1047,13 @@ let _timerSecs = TIMER_START_SECS;
 }
 
 function computeRosterPlayerId(teamObj, playerObj){
-  // Deterministic, stable ID for roster entries (so player dropdown + login work)
-  const t = teamObj && teamObj.id ? String(teamObj.id) : 'team';
-  const n = playerObj && playerObj.name ? String(playerObj.name) : '';
-  const num = playerObj && playerObj.number != null ? String(playerObj.number) : '';
+  // Deterministic, stable ID for roster entries (teams.json schema has no ids).
   if (playerObj && playerObj.playerId) return String(playerObj.playerId);
-  return slugifyLoose([t, n, num].filter(Boolean).join('-'));
+  const teamSlug = slugifyLoose(teamObj && (teamObj.name || teamObj.id) ? (teamObj.name || teamObj.id) : "team") || "team";
+  const nameSlug = slugifyLoose(playerObj && playerObj.name ? playerObj.name : "") || "player";
+  const num = String(playerObj && playerObj.number != null ? playerObj.number : "").trim().replace(/\s+/g,"");
+  const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
+  return `${teamSlug}-${nameSlug}-${numSafe}`;
 }
 
 
@@ -1218,11 +1224,13 @@ function setRosterControlsEnabled(enabled){
   }
 
   function buildPlayerIdForTeam(teamName, playerName, playerNumber, baseId){
+    // Deterministic, coach-friendly ID (no random prefix): <team>-<name>-<number>
+    // baseId is kept only for backward compatibility in callers (results storage uses baseId separately).
     const teamSlug = slugifyLoose(teamName) || "team";
     const nameSlug = slugifyLoose(playerName) || "player";
     const num = String(playerNumber || "").trim().replace(/\s+/g,"");
     const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
-    return `${baseId}-${teamSlug}-${nameSlug}-${numSafe}`;
+    return `${teamSlug}-${nameSlug}-${numSafe}`;
   }
 
   function genSimplePassword(){
@@ -1280,8 +1288,7 @@ function setRosterControlsEnabled(enabled){
       existing.password = pass;
       existing.playerId = buildPlayerIdForTeam(t.name, name, number, existing.baseId);
     }else{
-      const baseId = randomId(8);
-      const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
+const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
       existing = { name, number, password: pass, baseId, playerId };
       t.roster.push(existing);
     }
@@ -1381,8 +1388,7 @@ function setRosterControlsEnabled(enabled){
       coachPlayerPass.value = genSimplePassword();
       // update preview
       const t = findTeam(coachTeamSelect.value);
-      const baseId = (coachRosterSelect.value && t) ? (findPlayer(t.id, coachRosterSelect.value)?.baseId || randomId(8)) : randomId(8);
-      coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t ? t.name : coachTeamName.value, coachPlayerName.value, coachPlayerNumber.value, baseId)}`;
+coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t ? t.name : coachTeamName.value, coachPlayerName.value, coachPlayerNumber.value, baseId)}`;
     });
   }
 
@@ -1393,8 +1399,7 @@ function setRosterControlsEnabled(enabled){
       coachPlayerIdPreview.textContent = "";
       return;
     }
-    const baseId = (coachRosterSelect.value ? (findPlayer(teamId, coachRosterSelect.value)?.baseId) : null) || randomId(8);
-    const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerNumber.value, baseId);
+const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerNumber.value, baseId);
     coachPlayerIdPreview.textContent = `Player ID preview: ${preview}`;
   }
 
