@@ -2385,7 +2385,7 @@ Notes:
     const grouped = {};
     for(const r of attempts){
       const k = r.situationKey || '(unknown)';
-      if(!grouped[k]) grouped[k] = { title: r.situationTitle || '', rows: [] };
+      if(!grouped[k]) grouped[k] = { title: r.situationTitle || '', desc: r.situationDesc || '', outs: (r.outs==null?'':r.outs), runnersOn: (r.runnersOn||null), rows: [] };
       if(r.situationTitle) grouped[k].title = r.situationTitle;
       grouped[k].rows.push(r);
     }
@@ -2408,7 +2408,22 @@ Notes:
     const playMap = [];
     for(const k of keys){
       const g = grouped[k];
-      bodyRows += `<tr class="grp"><td colspan="9">${esc(k)} — ${esc(g.title || '')}</td></tr>`;
+      {
+      const desc = g.desc ? ` • ${esc(g.desc)}` : '';
+      const outsTxt = (g.outs!=='' && g.outs!=null) ? ` • Outs: ${esc(g.outs)}` : '';
+      const runnersTxt = (()=>{ 
+        const ro = g.runnersOn || {};
+        const any = !!(ro.first || ro.second || ro.third);
+        if(!g.runnersOn) return '';
+        if(!any) return ' • Runners: —';
+        const parts = [];
+        if(ro.first) parts.push('1B');
+        if(ro.second) parts.push('2B');
+        if(ro.third) parts.push('3B');
+        return ` • Runners: ${esc(parts.join(','))}`;
+      })();
+      bodyRows += `<tr class="grp"><td colspan="9">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
+    }
       let n = 0;
       for(const r of g.rows){
         n += 1;
@@ -2582,6 +2597,9 @@ Notes:
         time: _timeLocal(e.ts),
         situationKey: _safe(e.situationKey),
         situationTitle: _safe(e.situationTitle),
+        situationDesc: _safe(e.situationDesc),
+        outs: (e.outs==null?'':_safe(e.outs)),
+        runnersOn: (e.runnersOn==null?null:e.runnersOn),
         phase: _safe(phase),
         stage: (stage==null?'':_safe(stage)),
         result,
@@ -3376,6 +3394,9 @@ function endPhase2(success = true) {
       stage: phase2Stage,
       situationKey: currentSituation ? currentSituation.key : null,
       situationTitle: currentSituation ? currentSituation.title : '',
+      situationDesc: currentSituation ? (currentSituation.desc || '') : '',
+      outs: currentSituation ? (currentSituation.outs ?? null) : null,
+      runnersOn: currentSituation ? (currentSituation.runnersOn || null) : null,
       success: !!success,
       triesUsed: (typeof phase2TriesLeft === 'number') ? (PHASE2_MAX_TRIES - phase2TriesLeft) : null,
       timeElapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
