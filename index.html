@@ -4018,6 +4018,24 @@ function wireOnce(){
         alert("Could not load Coach Review Code: " + (e && e.message ? e.message : e));
       }
     });
+    // Coach Review autoload from URL hash (#coachReview=...)
+    window._diqCoachReviewAutoload = function(){
+      if(!_pendingCoachReviewCode) return;
+      if(coachReviewInput) coachReviewInput.value = _pendingCoachReviewCode;
+      try{
+        const obj = decodeCoachReviewCode(_pendingCoachReviewCode);
+        renderCoachReview(obj);
+        openCoachReviewModal();
+        if(typeof toast === 'function') toast('Coach Review report loaded from link.');
+      }catch(e){
+        alert("Could not load Coach Review Code from link: " + (e && e.message ? e.message : e));
+      }finally{
+        _pendingCoachReviewCode = null;
+      }
+    };
+    if(coachUnlocked){ try{ window._diqCoachReviewAutoload(); }catch(e){} }
+
+
   }
   if(coachReviewClearBtn){
     coachReviewClearBtn.addEventListener('click', ()=>{
@@ -4456,6 +4474,20 @@ try{
   const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
   if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
 }catch(e){ _pendingCoachReviewCode = null; }
+
+try{
+  window.addEventListener('hashchange', ()=>{
+    try{
+      const h = String(window.location.hash || '');
+      const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
+      if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
+    }catch(e){}
+    if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
+      try{ window._diqCoachReviewAutoload(); }catch(e){}
+    }
+  });
+}catch(e){}
+
 
 
 let runnerEl = null;
