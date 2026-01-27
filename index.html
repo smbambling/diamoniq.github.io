@@ -1287,8 +1287,10 @@ function setRosterControlsEnabled(enabled){
       existing.number = number;
       existing.password = pass;
       existing.playerId = buildPlayerIdForTeam(t.name, name, number, existing.baseId);
-    }else{
-const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
+    }
+    else{
+      const baseId = randomId(8);
+      const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
       existing = { name, number, password: pass, baseId, playerId };
       t.roster.push(existing);
     }
