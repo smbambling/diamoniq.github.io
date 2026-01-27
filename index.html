@@ -409,6 +409,27 @@
   line-height:1.1;
 }
 
+
+  /* --- Coach TEAMS section tweaks --- */
+  .sectionTitle{
+    font-weight:900;
+    color:#111827;
+    letter-spacing:.02em;
+  }
+  #teamsSubsec .coachGrid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    align-items:end;
+  }
+  #teamsSubsec .coachGrid .span2{ grid-column:1 / span 2; }
+  #teamsSubsec .coachGrid .field > span{
+    font-size:12px;
+    font-weight:700;
+    color:#64748b;
+    line-height:1.1;
+  }
+
 </style>
 
 </head>
@@ -688,11 +709,10 @@
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
           <button id="teamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
           <button id="teamsCopyBtn" class="btn btn-ghost" type="button">Copy teams.json</button>
-          <button id="teamsImportBtn" class="btn btn-ghost" type="button">Import teams JSON</button>
-          <button id="teamsResetBtn" class="btn btn-ghost" type="button" title="Clear locally saved teams (does not affect teams.json on disk)">Clear local teams</button>
-        </div>
+</div>
 
-        <div class="rowGrid">
+        
+        <div class="coachGrid">
           <label class="field">
             <span>Team</span>
             <select id="coachTeamSelect" class="select"></select>
@@ -703,11 +723,12 @@
             <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
           </label>
 
-          <label class="field">
+          <label class="field span2">
             <span>Coach Email</span>
             <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
           </label>
         </div>
+
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
           <button id="coachTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
@@ -718,7 +739,8 @@
         <div class="divider"></div>
 
         <div class="sectionTitle">Roster</div>
-        <div class="rowGrid">
+        
+        <div class="coachGrid">
           <label class="field">
             <span>Player</span>
             <select id="coachRosterSelect" class="select" disabled></select>
@@ -742,6 +764,7 @@
             </div>
           </label>
         </div>
+
 
         <div class="muted" id="coachPlayerIdPreview" style="margin-top:8px;"></div>
 
@@ -1059,7 +1082,7 @@ function computeRosterPlayerId(teamObj, playerObj){
       const data = await res.json();
       TEAMS = normalizeTeamsData(data);
       // Persist a copy so the app still works if teams.json is temporarily unavailable
-      try{ localStorage.setItem(TEAMS_STORE_KEY, JSON.stringify(TEAMS)); }catch(_e){}
+      try{ localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(TEAMS)); }catch(_e){}
       return;
     }catch(err){
       console.warn('[Teams] Unable to load teams.json, falling back to localStorage.', err);
@@ -1067,7 +1090,7 @@ function computeRosterPlayerId(teamObj, playerObj){
 
     // Fallback: localStorage copy
     try{
-      const raw = localStorage.getItem(TEAMS_STORE_KEY);
+      const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
       TEAMS = raw ? normalizeTeamsData(JSON.parse(raw)) : { teams: [] };
     }catch(_e){
       TEAMS = { teams: [] };
@@ -1075,13 +1098,19 @@ function computeRosterPlayerId(teamObj, playerObj){
 }
 
   function findTeam(teamId){
-    return (TEAMS.teams || []).find(t => t.id === teamId) || null;
-  }
+  const id = String(teamId || "").trim();
+  if(!id) return null;
+  const want = id;
+  const wantSlug = slugifyLoose(id);
+  return (TEAMS.teams || []).find(t => t.id === want || t.id === wantSlug || slugifyLoose(t.name) === wantSlug) || null;
+}
   function findPlayer(teamId, playerId){
-    const t = findTeam(teamId);
-    if(!t) return null;
-    return (t.roster || []).find(p => p.playerId === playerId) || null;
-  }
+  const t = findTeam(teamId);
+  if(!t) return null;
+  const pid = String(playerId || "").trim();
+  const pidSlug = slugifyLoose(pid);
+  return (t.roster || []).find(p => p.playerId === pid || slugifyLoose(p.playerId) === pidSlug) || null;
+}
 
   // --- Coach TEAMS UI wiring ---
   const coachTeamSelect = document.getElementById("coachTeamSelect");
@@ -1103,10 +1132,7 @@ function computeRosterPlayerId(teamObj, playerObj){
 
   const teamsDownloadBtn = document.getElementById("teamsDownloadBtn");
   const teamsCopyBtn = document.getElementById("teamsCopyBtn");
-  const teamsImportBtn = document.getElementById("teamsImportBtn");
-  const teamsResetBtn = document.getElementById("teamsResetBtn");
-
-  function setRosterControlsEnabled(enabled){
+function setRosterControlsEnabled(enabled){
     coachRosterSelect.disabled = !enabled;
     coachPlayerName.disabled = !enabled;
     coachPlayerNumber.disabled = !enabled;
@@ -1277,10 +1303,6 @@ function computeRosterPlayerId(teamObj, playerObj){
     return navigator.clipboard.writeText(text);
   }
 
-  function promptForJsonPaste(title){
-    return window.prompt(title + "\n\nPaste JSON here:");
-  }
-
   if(coachTeamSelect){
     coachTeamSelect.addEventListener("change", setCoachTeamFieldsFromSelection);
   }
@@ -1441,27 +1463,6 @@ function computeRosterPlayerId(teamObj, playerObj){
         .catch(()=>{ alert("Clipboard copy failed. Use Download teams.json instead."); });
     });
   }
-  if(teamsImportBtn){
-    teamsImportBtn.addEventListener("click", ()=>{
-      const raw = promptForJsonPaste("Import teams JSON");
-      if(!raw) return;
-      try{
-        const parsed = JSON.parse(raw);
-        TEAMS = normalizeTeamsData(parsed);
-        saveTeamsToLocal();
-        refreshTeamsUIAll();
-        alert("Teams imported.");
-      }catch(e){
-        alert("Invalid JSON.");
-      }
-    });
-  }
-  if(teamsResetBtn){
-    teamsResetBtn.addEventListener("click", ()=>{
-      if(!confirm("Clear locally saved teams? (This does not delete teams.json on disk.)")) return;
-      try{ localStorage.removeItem(TEAMS_STORAGE_KEY); }catch(e){}
-      TEAMS = normalizeTeamsData(null);
-      refreshTeamsUIAll();
     });
   }
 
