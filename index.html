@@ -776,17 +776,7 @@
       </div>
 
 
-<!-- Player Results Viewer (Coach) -->
-        <div class="subsec" id="coachResultsSubsec">
-          <div class="title">Player Results Viewer</div>
-          <div class="hint" style="margin:-6px 0 8px">Paste the JSON a player exports (Player → Export Results → Copy Results JSON). This does not modify your saved situations.</div>
-          <textarea id="coachResultsInput" class="inp mono" placeholder="Paste player results JSON here..." style="min-height:140px"></textarea>
-          <div class="row" style="gap:8px; margin-top:8px">
-            <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
-            <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
-          </div>
-          <div id="coachResultsOutput" style="margin-top:10px"></div>
-        </div>
+
 
       </div>
     </div>
@@ -853,12 +843,11 @@
         <div class="subsec" style="margin-top:14px;">
           <div class="sectionTitle">Results</div>
           <div class="muted" style="margin-bottom:8px;">
-            Share sends your results to your coach’s email (configured for your team).
+            Share sends a quick coach-friendly report to your coach’s email (configured for your team).
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button id="playerShareResultsBtn" class="btn btn-brand" type="button" disabled>Share my results</button>
-            <button id="playerCopyResultsBtn" class="btn btn-ghost" type="button" title="Fallback: Copy results JSON" disabled>Copy results JSON</button>
-          </div>
+</div>
           <div class="muted" id="playerShareHint" style="margin-top:8px;"></div>
         </div>
       </div>
@@ -1501,8 +1490,7 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
   const playerIdText = document.getElementById("playerIdText");
 
   const playerShareResultsBtn = document.getElementById("playerShareResultsBtn");
-  const playerCopyResultsBtn = document.getElementById("playerCopyResultsBtn");
-  const playerShareHint = document.getElementById("playerShareHint");
+const playerShareHint = document.getElementById("playerShareHint");
 
   function getCurrentPlayerFromMeta(){
     // PLAYER_META is global (loaded from STORAGE_PLAYER_META)
@@ -1575,9 +1563,7 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
       playerLogoutBtn.style.display = "inline-flex";
 
       playerShareResultsBtn.disabled = false;
-      playerCopyResultsBtn.disabled = false;
-
-      // set selects to match meta
+// set selects to match meta
       const teamId = cur.team.id;
       playerTeamSelect.value = teamId;
       refreshPlayerNameDropdown();
@@ -1594,8 +1580,7 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
       playerLogoutBtn.style.display = "none";
 
       playerShareResultsBtn.disabled = true;
-      playerCopyResultsBtn.disabled = true;
-      playerShareHint.textContent = "";
+playerShareHint.textContent = "";
     }
   }
 
@@ -1682,7 +1667,6 @@ function updatePlayerHeaderButton(){
       else if(window.PLAYER && window.PLAYER.playerId) logged = true;
     }catch(_e){ logged = false; }
 
-    // Label + color should reflect live login state
     btn.textContent = logged ? 'Player Info' : 'Player Login';
     btn.classList.remove('btn-orange','btn-yellow','btn-green');
     btn.classList.add(logged ? 'btn-green' : 'btn-orange');
@@ -1811,28 +1795,102 @@ function updatePlayerHeaderButton(){
     return encodeURIComponent(str).replace(/%20/g, "+");
   }
 
-  function shareResultsByEmail(){
+  
+  function _fmtSecs(v){
+    const n = Number(v);
+    if(!Number.isFinite(n)) return '—';
+    return (Math.round(n*10)/10).toFixed(1)+'s';
+  }
+  function _fmtIsoLocal(ts){
+    if(!ts) return '—';
+    try{ return new Date(ts).toLocaleString(); }catch(e){ return String(ts); }
+  }
+  function _padRight(s, w){
+    s = String(s==null?'':s);
+    return s.length >= w ? s.slice(0, w-1)+'…' : (s + ' '.repeat(w - s.length));
+  }
+
+  // Option A: Quick Summary + Situations Table (plain-text email friendly)
+  function buildQuickCoachReportOptionA(cur){
+    const teamName = (cur && cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
+    const playerName = (cur && cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
+    const playerNum  = (cur && cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
+
+    const exportedAtStr = new Date().toLocaleString();
+    const attempts = (RESULTS && Array.isArray(RESULTS.log)) ? RESULTS.log.length : 0;
+
+    const by = (RESULTS && RESULTS.bySituation && typeof RESULTS.bySituation === 'object') ? RESULTS.bySituation : {};
+    const keys = Object.keys(by);
+    keys.sort((a,b)=>{
+      const ta = (by[a] && by[a].lastTs) ? Date.parse(by[a].lastTs) : 0;
+      const tb = (by[b] && by[b].lastTs) ? Date.parse(by[b].lastTs) : 0;
+      return tb - ta || String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'});
+    });
+
+    const rows = keys.map(k=>{
+      const s = by[k] || {};
+      const title = s.title || '';
+      const p1 = s.bestPhase1 ? `${s.bestPhase1.score}/${s.bestPhase1.total} • t${s.bestPhase1.triesUsed ?? '—'} • ${_fmtSecs(s.bestPhase1.timeElapsed)}` : '—';
+      const p2s1 = s.lastPhase2Stage1 ? `${s.lastPhase2Stage1.success ? '✅' : '❌'} • t${s.lastPhase2Stage1.triesUsed ?? '—'} • ${_fmtSecs(s.lastPhase2Stage1.timeElapsed)}` : '—';
+      const p2s2 = s.lastPhase2Stage2 ? `${s.lastPhase2Stage2.success ? '✅' : '❌'} • t${s.lastPhase2Stage2.triesUsed ?? '—'} • ${_fmtSecs(s.lastPhase2Stage2.timeElapsed)}` : '—';
+      const att = s.attempts != null ? String(s.attempts) : '0';
+      const last = s.lastTs ? _fmtIsoLocal(s.lastTs) : '—';
+      return { key:String(k), title:String(title), p1, p2s1, p2s2, attempts:att, last };
+    });
+
+    const subject = `Diamond IQ Results — ${teamName} — #${playerNum} ${playerName}`;
+
+    const header = [
+      _padRight('Key', 10),
+      _padRight('Title', 22),
+      _padRight('Phase 1', 20),
+      _padRight('P2 Seq', 18),
+      _padRight('P2 S2', 18),
+      _padRight('Att', 4),
+      'Last'
+    ].join(' | ');
+    const sep = '-'.repeat(header.length);
+
+    const table = rows.length ? rows.map(r=>[
+      _padRight(r.key, 10),
+      _padRight(r.title, 22),
+      _padRight(r.p1, 20),
+      _padRight(r.p2s1, 18),
+      _padRight(r.p2s2, 18),
+      _padRight(r.attempts, 4),
+      r.last
+    ].join(' | ')).join('\n') : '(No attempts recorded yet.)';
+
+    const body =
+`Diamond IQ — Quick Report
+
+Player: ${teamName} — #${playerNum} ${playerName}
+Date: ${exportedAtStr}
+Attempts recorded: ${attempts}
+
+Situations:
+${header}
+${sep}
+${table}
+
+Notes:
+- (Coach can add notes here after reviewing.)`;
+
+    return { subject, body };
+  }
+
+function shareResultsByEmail(){
     const cur = getCurrentPlayerFromMeta();
     if(!cur) return alert("Login first.");
+
     const coachEmail = String(cur.team.coachEmail || "").trim();
     if(!coachEmail){
       alert("No coach email configured for your team. Ask your coach to add one in TEAMS.");
       return;
     }
 
-    const payload = buildResultsExportPayload();
-    // add extra context
-    payload.playerMeta = deepClone(PLAYER_META);
-    payload.teamId = cur.team.id;
-    payload.coachEmail = coachEmail;
-
-    const summary = formatCoachFriendlySummary(payload);
-    const body = summary + "\n\nJSON:\n" + JSON.stringify(payload, null, 2);
-
-    const subject = `Diamond IQ Results - ${cur.player.name} #${cur.player.number} (${cur.team.name})`;
-    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
-
-    // open mail app
+    const report = buildQuickCoachReportOptionA(cur);
+    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(report.subject)}&body=${mailtoEncode(report.body)}`;
     window.location.href = mailto;
   }
 
@@ -1840,21 +1898,7 @@ function updatePlayerHeaderButton(){
     playerShareResultsBtn.addEventListener("click", shareResultsByEmail);
   }
 
-  if(playerCopyResultsBtn){
-    playerCopyResultsBtn.addEventListener("click", ()=>{
-      const payload = buildResultsExportPayload();
-      const cur = getCurrentPlayerFromMeta();
-      if(cur){
-        payload.playerMeta = deepClone(PLAYER_META);
-        payload.teamId = cur.team.id;
-        payload.coachEmail = String(cur.team.coachEmail || "").trim();
-      }
-      const txt = JSON.stringify(payload, null, 2);
-      copyTextToClipboard(txt)
-        .then(()=> alert("Results JSON copied."))
-        .catch(()=>{ alert("Clipboard copy failed. Use Share my results or download from your browser settings."); });
-    });
-  }
+
 
 
   function resultsStorageKey(){
@@ -3364,27 +3408,7 @@ function lockCorrectPrefix(k){
   });
 
 
-      // Coach: Player Results Viewer
-      const coachParseResultsBtn = document.getElementById('coachParseResultsBtn');
-      const coachClearResultsBtn = document.getElementById('coachClearResultsBtn');
-      const coachResultsInput = document.getElementById('coachResultsInput');
-      const coachResultsOutput = document.getElementById('coachResultsOutput');
-
-      if (coachParseResultsBtn && coachResultsInput && coachResultsOutput) {
-        coachParseResultsBtn.addEventListener('click', () => {
-          const txt = coachResultsInput.value || '';
-          const parsed = parsePlayerResultsPayload(txt);
-          renderPlayerResultsForCoach(coachResultsOutput, parsed);
-        });
-      }
-      if (coachClearResultsBtn && coachResultsInput && coachResultsOutput) {
-        coachClearResultsBtn.addEventListener('click', () => {
-          coachResultsInput.value = '';
-          coachResultsOutput.innerHTML = '';
-        });
-      }
-
-  // Results export buttons (avoid relying on id->window globals)
+      // Results export buttons (avoid relying on id->window globals)
   const copyResultsBtn = document.getElementById('copyResultsBtn');
   const downloadResultsBtn = document.getElementById('downloadResultsBtn');
   const copyResultsTopBtn = document.getElementById('copyResultsTopBtn'); // optional
