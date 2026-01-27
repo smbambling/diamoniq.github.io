@@ -1879,8 +1879,8 @@ function updatePlayerHeaderButton(){
     return lines.join("\n");
   }
 
-  function mailtoEncode(str){
-    return encodeURIComponent(str).replace(/%20/g, "+");
+  function mailtoEncode(s){
+    return encodeURIComponent(String(s ?? '')).replace(/%0D%0A/g,'%0A');
   }
 
   
@@ -2290,27 +2290,28 @@ function shareResultsByEmail(){
     const dayKey = _dayKeyLocal(new Date());
     const payload = buildCoachReviewPayload(dayKey);
     const code = encodeCoachReviewCode(payload);
-    const summary = buildQuickCoachReportOptionA(cur);
+
+    const teamName = (cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
+    const playerName = (cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
+    const playerNum  = (cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
+
+    const subject = `Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}`;
 
     const body =
 `Hi Coach,
 
-Diamond IQ results for ${dayKey}.
-
-Quick Summary:
-${summary.body}
+Here are the Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}
 
 Coach Review Code:
+
 ${code}
 
-To view as a clean table + playback:
+Steps to review the results:
 1) Open Diamond IQ
-2) Coach Tools → Coach Review
-3) Paste the Coach Review Code
+2) Select Coach Tools → Coach Review
+3) Paste the Coach Review Code from above
+4) Select Open Report`;
 
-Thanks`;
-
-    const subject = summary.subject + ` — ${dayKey}`;
     const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
     window.location.href = mailto;
   }
