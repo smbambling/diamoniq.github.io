@@ -1620,6 +1620,10 @@ function computeRosterPlayerId(teamObj, playerObj){
 
     // Do NOT clear password here; only clear on successful login / explicit actions.
     setPlayerUIForLoggedIn();
+
+    // keep header Player Login button state in sync (no refresh needed)
+    updatePlayerHeaderButton();
+
   }
 
   
@@ -1725,6 +1729,7 @@ function updatePlayerHeaderButton(){
     loadResults();
 
     refreshPlayerLoginUI();
+    updatePlayerHeaderButton();
     alert("Logged in.");
   
   // Ensure dropdowns are populated once the sidebar is mounted
@@ -1741,6 +1746,7 @@ function updatePlayerHeaderButton(){
     loadResults();
 
     refreshPlayerLoginUI();
+    updatePlayerHeaderButton();
   }
 
   if(playerLoginBtn) playerLoginBtn.addEventListener("click", doPlayerLogin);
