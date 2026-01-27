@@ -1249,6 +1249,15 @@ function computeRosterPlayerId(teamObj, playerObj){
       return '';
     };
 
+    const findTeamByNameLocal = (name)=>{
+      const n = String(name||'').trim().toLowerCase();
+      const list = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams : [];
+      for(const t of list){
+        if(String(t.name||'').trim().toLowerCase() === n) return t;
+      }
+      return null;
+    };
+
     let teamAdds=0, playerAdds=0;
 
     for(const r of rows){
@@ -1260,15 +1269,23 @@ function computeRosterPlayerId(teamObj, playerObj){
       const playerNum  = String(get(r,'Player Number',['Number','PlayerNumber','Jersey','Jersey Number'])).trim();
       const password   = String(get(r,'Player Password',['Password','Passcode','PIN','Pin'])).trim();
 
-      const t = upsertTeam(teamName, coachEmail);
-      if(t && coachEmail) t.coachEmail = coachEmail;
+      // Team upsert rules:
+      // - if team exists: only update coachEmail when provided (non-empty)
+      // - if team new: set coachEmail if provided
+      let t = findTeamByNameLocal(teamName);
+      if(!t){
+        t = upsertTeam(teamName, coachEmail || '');
+        teamAdds++;
+      }else{
+        if(coachEmail) t.coachEmail = coachEmail; // do NOT clear when blank
+      }
+
       if(t && playerName && playerNum && password){
         const before = (t.roster||[]).length;
         upsertPlayer(t.id, playerName, playerNum, password);
         const after = (t.roster||[]).length;
         if(after >= before) playerAdds++;
       }
-      if(t) teamAdds += 0; // handled by upsertTeam
     }
 
     // normalize + persist + refresh
