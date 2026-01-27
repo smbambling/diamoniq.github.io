@@ -2422,7 +2422,7 @@ Notes:
         if(ro.third) parts.push('3B');
         return ` • Runners: ${esc(parts.join(','))}`;
       })();
-      bodyRows += `<tr class="grp"><td colspan="8">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
+      bodyRows += `<tr class="grp"><td colspan="10">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
       for(const r of g.rows){                        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
         if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
@@ -2435,14 +2435,20 @@ bodyRows += `
           <tr>
             <td class="coachMono">${esc(r.time || '')}</td>
             <td class="coachMono num">${esc(r.attemptNo || '')}</td>
-            <td class="coachMono">${(r.tokensOk==null?'—':(r.tokensOk?'SUCCESS':'FAIL'))}</td>
-            <td class="coachMono">${esc(r.relaySummary || '—')}</td>
-            <td class="coachMono num">${esc(r.triesUsed || '')}</td>
-            <td class="coachMono num">${esc(r.elapsed || '')}</td>
+
+            <td class="coachMono">${esc(r.posResult || '—')}</td>
+            <td class="coachMono num">${esc(r.posTries || '')}</td>
+            <td class="coachMono num">${esc(r.posElapsed || '')}</td>
+
+            <td class="coachMono">${esc(r.seqResult || '—')}</td>
+            <td class="coachMono num">${esc(r.seqTries || '')}</td>
+            <td class="coachMono num">${esc(r.seqElapsed || '')}</td>
+
             <td class="coachMono">${esc(r.details || '')}</td>
             <td class="num">${playBtn}</td>
           </tr>
         `;
+
       }
     }
 
@@ -2451,7 +2457,16 @@ bodyRows += `
         <table class="coachTbl">
           <thead>
             <tr>
-              <th>Time</th><th>#</th><th>Result</th><th>Tries</th><th>Elapsed</th><th>Selected Sequence</th><th>Playback</th>
+              <th>Time</th>
+              <th class="num">#</th>
+              <th>Position Result</th>
+              <th class="num">Pos Tries</th>
+              <th class="num">Pos Time</th>
+              <th>Sequence Result</th>
+              <th class="num">Seq Tries</th>
+              <th class="num">Seq Time</th>
+              <th>Selected Sequence</th>
+              <th class="num">Playback</th>
             </tr>
           </thead>
           <tbody>${bodyRows}</tbody>
@@ -2625,12 +2640,16 @@ bodyRows += `
         time: fmtTime(e.ts || 0),
         attemptNo: g.attemptNo,
 
-        tokensOk: (e.phase1Ok==null?null:!!e.phase1Ok),
-        relay1Ok: (e.success==null?null:!!e.success),
-        relay2Ok: null,
+        // Phase 1 (tokens/chips)
+        posOk: (e.phase1Ok==null?null:!!e.phase1Ok),
+        posTriesUsed: (e.phase1TriesUsed==null?'' : _safe(e.phase1TriesUsed)),
+        posElapsed: (e.phase1Elapsed==null?'' : _safe(e.phase1Elapsed) + 's'),
 
-        triesUsed: (e.triesUsed==null?'' : _safe(e.triesUsed)),
-        elapsed: (e.timeElapsed==null?'' : _safe(e.timeElapsed) + 's'),
+        // Phase 2 (sequence/relay) stage 1 + stage 2
+        seq1Ok: (e.success==null?null:!!e.success),
+        seq2Ok: null,
+        seqTriesUsed: (e.triesUsed==null?'' : _safe(e.triesUsed)),
+        seqElapsed: (e.timeElapsed==null?'' : _safe(e.timeElapsed) + 's'),
 
         seq1: Array.isArray(e.picked) ? e.picked.slice() : [],
         seq2: []
@@ -2644,7 +2663,7 @@ bodyRows += `
       // Stage 2 record attaches to the last attempt for this situationKey
       const last = g.attempts[g.attempts.length-1];
       if(last){
-        last.relay2Ok = (e.success==null?null:!!e.success);
+        last.seq2Ok = (e.success==null?null:!!e.success);
         last.seq2 = Array.isArray(e.picked) ? e.picked.slice() : [];
       }
       continue;
@@ -2659,10 +2678,11 @@ bodyRows += `
       let detail = s1;
       if(s2) detail = `${s1}  |  S2: ${s2}`;
 
-      let relaySummary = '';
-      if(a.relay1Ok==null) relaySummary = '';
-      else if(a.relay2Ok==null) relaySummary = (a.relay1Ok ? 'SUCCESS' : 'FAIL');
-      else relaySummary = `S1:${a.relay1Ok?'SUCCESS':'FAIL'} / S2:${a.relay2Ok?'SUCCESS':'FAIL'}`;
+      // Sequence result summary
+      let seqSummary = '—';
+      if(a.seq1Ok==null) seqSummary = '—';
+      else if(a.seq2Ok==null) seqSummary = (a.seq1Ok ? 'SUCCESS' : 'FAIL');
+      else seqSummary = `S1:${a.seq1Ok?'SUCCESS':'FAIL'} / S2:${a.seq2Ok?'SUCCESS':'FAIL'}`;
 
       rows.push({
         situationKey: a.situationKey,
@@ -2675,10 +2695,16 @@ bodyRows += `
         time: a.time,
         attemptNo: a.attemptNo,
 
-        tokensOk: a.tokensOk,
-        relaySummary,
-        triesUsed: a.triesUsed,
-        elapsed: a.elapsed,
+        // Phase 1 columns
+        posResult: (a.posOk==null?'—':(a.posOk?'SUCCESS':'FAIL')),
+        posTries: a.posTriesUsed,
+        posElapsed: a.posElapsed,
+
+        // Phase 2 columns
+        seqResult: seqSummary,
+        seqTries: a.seqTriesUsed,
+        seqElapsed: a.seqElapsed,
+
         details: detail,
 
         playbackPicked: a.seq1
@@ -6164,7 +6190,7 @@ function renderPlayerResultsForCoach(outEl, parsed){
               <th style="text-align:left">Last</th>
             </tr>
           </thead>
-          <tbody>${tableRows || `<tr><td colspan="7" class="hint">No situations found in this export.</td></tr>`}</tbody>
+          <tbody>${tableRows || `<tr><td colspan="10" class="hint">No situations found in this export.</td></tr>`}</tbody>
         </table>
       </div>
       <details style="margin-top:10px">
