@@ -2424,12 +2424,13 @@ Notes:
       })();
       bodyRows += `<tr class="grp"><td colspan="8">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
-      for(const r of g.rows){                        const playMapKey = `${r.situationKey}|${r.ts || 0}|1`;
-        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
+      for(const r of g.rows){                        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
         if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
-          playMap.set(playMapKey, { key: r.situationKey, picked: r.playbackPicked.slice() });
-          playBtn = `<button class="btn btn-white btn-xs" data-play="${esc(playMapKey)}">Play</button>`;
+          const playIndex = playMap.length;
+          playMap.push({ attempt: { picked: r.playbackPicked.slice() }, label: `${r.situationKey} #${r.attemptNo || ''}` });
+          playBtn = `<button class="btn btn-white btn-xs" data-play-index="${playIndex}">Play</button>`;
         }
+
 bodyRows += `
           <tr>
             <td class="coachMono">${esc(r.time || '')}</td>
