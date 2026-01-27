@@ -413,11 +413,19 @@
 
 </head>
 <body>
+<!--
+  Diamond IQ patch anchors
+  - HTML anchors: <!-- @diq:begin [H_*] ... --> / <!-- @diq:end [H_*] -->
+  - JS anchors:   // @diq:begin [A*] ... / // @diq:end [A*]
+  Keep these markers intact to enable reliable copy/paste patching.
+-->
 
 <header>
   <h1>Diamond IQ</h1>
     
+  <!-- @diq:begin [H_PLAYER_BTN] Player Login button -->
       <button id="playerBtn" class="btn-yellow btn-small" title="Player login">Player Login</button>
+  <!-- @diq:end [H_PLAYER_BTN] -->
 
 
   
@@ -432,8 +440,10 @@
     <!-- @diq:begin control:startBtn -->
 <button id="startBtn" class="btn-green">Start Situation</button>
     <button id="resetBtn" class="btn-orange">Reset</button>
+    <!-- @diq:end control:startBtn -->
     <!-- @diq:begin control:checkBtn -->
 <button id="checkBtn" class="btn-green" disabled data-testid="check-btn">Check Positions</button>
+    <!-- @diq:end control:checkBtn -->
     <!-- @diq:begin control:continueBtn -->
 <button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button>
   </div>
@@ -445,6 +455,7 @@
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
   </div><button id="coachBtn" class="btn-slate">Coach Tools</button>
+    <!-- @diq:end control:continueBtn -->
 </header>
 
 <main class="app">
@@ -834,6 +845,16 @@
 
 <script>
 /// @diq:begin [A0] Constants & pure helpers
+// Patch map (JS):
+// [A0] Boot / globals
+// [A1] Utilities + storage
+// [A2] Marker scaling + layout
+// [A3] Situation model + selection
+// [A4] Targets + tolerance + notes
+// [A5] Export / import (situations, results, teams)
+// [A6] Player login + results sharing
+// [A7] Coach tools + teams/roster editor + results viewer
+// Keep begin/end markers intact for patching.
 /** @typedef {{ x:number, y:number }} Pt */
 /** @typedef {{ [posId:string]: Pt }} Starts */
 /** @typedef {{ [posId:string]: {x:number,y:number,tol:number} }} Targets */
@@ -3546,6 +3567,7 @@ function tolToCssDiameter(tol, allowTiny=false){
   return Math.round(Math.max(dCss, minByChip));
 }
 
+// @diq:end [A0]
 /// @diq:begin [A1] Resize & Layout (single source of truth)
 /* schedule layout on next frame (avoid resize jank) */
 let _resizeRaf = null;
@@ -3576,6 +3598,7 @@ window.addEventListener('resize', updateDescriptionHudText);
 window.addEventListener('orientationchange', updateDescriptionHudText);
 
 
+// @diq:end [A1]
 /// @diq:begin [A2] Marker Scaling (single copy)
 // Increased starting sizes; still scale down/up responsively
 const BASE_MARKER_SIZES = {
@@ -3636,6 +3659,7 @@ function scaleMarkers(){
   }
 }
 
+// @diq:end [A2]
 /// @diq:begin [A3] Chips (tokens) — core drag/drop
 /* Token registry: id -> { el, pos:{x,y} } */
 const tokens = new Map();
@@ -3747,6 +3771,7 @@ function makeChipDraggable(el,id){
 
 }
 
+// @diq:end [A3]
 /// @diq:begin [A4] Targets (rings)
 function getRingEl(id){ return wrap.querySelector(`.tgt[data-id="${id}"]`); }
 function getAllRings(){ return Array.from(wrap.querySelectorAll('.tgt')); }
@@ -3870,6 +3895,7 @@ function onRingClick(e){
 function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
 function hideTargetPanel(){ if (targetPanel) targetPanel.classList.add('hidden'); }
 
+// @diq:end [A4]
 /// @diq:begin [A5] Runners & Outs
 function normalizeRunnersOn(obj){ const src=obj||{}; return { first:!!src.first, second:!!src.second, third:!!src.third }; }
 function runnersStateToArray(r){ const out=[]; if(r.first)out.push('1B'); if(r.second)out.push('2B'); if(r.third)out.push('3B'); return out; }
@@ -3941,6 +3967,7 @@ function advanceRunnersState(state,bases){
   return { first:!!dest[1], second:!!dest[2], third:!!dest[3] };
 }
 
+// @diq:end [A5]
 /// @diq:begin [A6] Ball & Hit
 function buildBallGraphics(){
   ballLayer.innerHTML = '';
@@ -4290,6 +4317,7 @@ function animateExistingRunnersAdvance(advance, onDone){
     });
 }
 
+// @diq:end [A6]
 /// @diq:begin [A7] Coach tools & visibility
 const CALIB_PASSWORD='coach';
 function applyCoachVisibility(){
@@ -4404,6 +4432,7 @@ function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwIn
 function closePwModal(){ pwModal.style.display='none'; }
 function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
 
+// @diq:end [A7]
 /// @diq:begin [A8] Situations I/O & helpers
 const STORAGE_VERSION = 1;
 const STORAGE_STARTS = `bb_iq_starts_v${STORAGE_VERSION}`;
@@ -4571,6 +4600,7 @@ document.addEventListener('click', (e)=>{
 });
 
 
+// @diq:end [A8]
 /// @diq:begin [A9] Situation lifecycle
 function updateCurrentOptionLabel(){
   if (!sitSelect || !currentSituation) return;
@@ -4889,6 +4919,7 @@ function setSituation(key){
   setHowToPhase('p1');
 }
 
+// @diq:end [A9]
 /// @diq:begin [A10] Export helpers
 function getOnscreenStarts(){ const out={}; POS_IDS.forEach(id=>{ const rec=tokens.get(id); if(rec&&rec.pos) out[id]={x:Math.round(rec.pos.x),y:Math.round(rec.pos.y)}; }); return out; }
 function getRenderedTargets(){
@@ -5257,6 +5288,7 @@ function refreshSituationAll(){
 // Use one canonical saver; keep alias for any internal callers.
 const saveCurrentSituation = refreshSituationAll;
 
+// @diq:end [A10]
 /// @diq:begin [A11] Game flow
 function checkPositions(){
   if (!coachUnlocked && !gameActive) return;
@@ -5415,6 +5447,7 @@ function resetPlayers(){
   setHowToPhase('p1');
 }
 
+// @diq:end [A11]
 /// @diq:begin [A12] Init & events
 async function init(){
   ensurePlayerMeta();
