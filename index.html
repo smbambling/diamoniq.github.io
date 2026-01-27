@@ -847,6 +847,7 @@
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button id="playerShareResultsBtn" class="btn btn-brand" type="button" disabled>Share my results</button>
+            <button id="playerPdfBtn" class="btn btn-white w-full">Create PDF Report (Print/Save)</button>
 </div>
           <div class="muted" id="playerShareHint" style="margin-top:8px;"></div>
         </div>
@@ -1490,6 +1491,8 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
   const playerIdText = document.getElementById("playerIdText");
 
   const playerShareResultsBtn = document.getElementById("playerShareResultsBtn");
+
+  const playerPdfBtn = document.getElementById("playerPdfBtn");
 const playerShareHint = document.getElementById("playerShareHint");
 
   function getCurrentPlayerFromMeta(){
@@ -1878,6 +1881,211 @@ Notes:
 
     return { subject, body };
   }
+  function _dayKeyLocal(d){
+    const dt = (d instanceof Date) ? d : new Date(d);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const da = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${da}`;
+  }
+  function _timeLocal(ts){
+    try{
+      const d = new Date(ts);
+      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    }catch(e){ return '—'; }
+  }
+  function _safe(s){ return String(s==null?'':s); }
+
+  function buildDailyAttemptRows(dayKey){
+    const log = (RESULTS && Array.isArray(RESULTS.log)) ? RESULTS.log : [];
+    const rows = [];
+    for(const e of log){
+      const dk = _dayKeyLocal(e.ts || Date.now());
+      if(dk !== dayKey) continue;
+      const phase = e.phase;
+      const stage = e.stage;
+      let result = '';
+      let detail = '';
+      if(phase === 1){
+        if(Number.isFinite(e.score) && Number.isFinite(e.total)) result = `${e.score}/${e.total}`;
+      }else if(phase === 2){
+        result = e.success ? 'SUCCESS' : 'FAIL';
+        if(Array.isArray(e.picked) && e.picked.length) detail = e.picked.join(' → ');
+      }
+      rows.push({
+        ts: e.ts,
+        time: _timeLocal(e.ts),
+        situationKey: _safe(e.situationKey),
+        situationTitle: _safe(e.situationTitle),
+        phase: _safe(phase),
+        stage: (stage==null?'':_safe(stage)),
+        result,
+        triesUsed: (e.triesUsed==null?'':_safe(e.triesUsed)),
+        timeElapsed: (e.timeElapsed==null?'':_safe(e.timeElapsed)),
+        detail
+      });
+    }
+    rows.sort((a,b)=> String(a.ts).localeCompare(String(b.ts)));
+    return rows;
+  }
+
+  function openPrintableDailyReport(dayKey){
+    const cur = getCurrentPlayerFromMeta();
+    if(!cur) return alert("Login first.");
+
+    const teamName = (cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
+    const playerName = (cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
+    const playerNum = (cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
+
+    const rows = buildDailyAttemptRows(dayKey);
+    const attemptedSituations = new Set(rows.map(r=>r.situationKey).filter(Boolean));
+
+    const title = `Diamond IQ Report — ${teamName} — #${playerNum} ${playerName} — ${dayKey}`;
+    const w = window.open('', '_blank');
+    if(!w) return alert("Pop-up blocked. Allow pop-ups to generate the report.");
+
+    const esc = (s)=> String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    const grouped = {};
+    for(const r of rows){
+      const k = r.situationKey || '(unknown)';
+      if(!grouped[k]) grouped[k] = { title: r.situationTitle, rows: [] };
+      if(r.situationTitle) grouped[k].title = r.situationTitle;
+      grouped[k].rows.push(r);
+    }
+    const keys = Object.keys(grouped);
+    keys.sort((a,b)=> a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+
+    let bodyHtml = '';
+    if(keys.length === 0){
+      bodyHtml = `<p class="muted">No attempts recorded for ${esc(dayKey)}.</p>`;
+    }else{
+      let tbody = '';
+      for(const k of keys){
+        const g = grouped[k];
+        tbody += `
+          <tr class="group"><td colspan="8">
+            <div class="gline">
+              <div class="gkey">${esc(k)}</div>
+              <div class="gtitle">${esc(g.title || '')}</div>
+            </div>
+          </td></tr>
+        `;
+        let n = 0;
+        for(const r of g.rows){
+          n += 1;
+          const phaseLabel = (r.phase==='1' || r.phase===1) ? 'Phase 1' : 'Phase 2';
+          const stageLabel = (phaseLabel==='Phase 2' && r.stage) ? `Stage ${esc(r.stage)}` : '';
+          const tries = esc(r.triesUsed);
+          const secs = (r.timeElapsed==='' ? '' : `${Number(r.timeElapsed).toFixed ? Number(r.timeElapsed).toFixed(1) : esc(r.timeElapsed)}s`);
+          tbody += `
+            <tr>
+              <td class="mono">${esc(r.time)}</td>
+              <td class="mono">${esc(n)}</td>
+              <td>${esc(phaseLabel)} ${stageLabel}</td>
+              <td class="mono">${esc(r.result)}</td>
+              <td class="mono">${tries}</td>
+              <td class="mono">${esc(secs)}</td>
+              <td class="mono">${esc(r.detail)}</td>
+              <td class="mono">${esc(r.ts ? new Date(r.ts).toLocaleString() : '')}</td>
+            </tr>
+          `;
+        }
+      }
+
+      bodyHtml = `
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>#</th>
+              <th>Attempt</th>
+              <th>Result</th>
+              <th>Tries</th>
+              <th>Elapsed</th>
+              <th>Details</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>${tbody}</tbody>
+        </table>
+      `;
+    }
+
+    const doc = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${esc(title)}</title>
+<style>
+  :root{ --ink:#111827; --muted:#6b7280; --rule:#e5e7eb; --bg:#ffffff; --chip:#f3f4f6; }
+  *{ box-sizing:border-box; }
+  body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color:var(--ink); background:var(--bg); margin:0; padding:24px; }
+  .wrap{ max-width: 980px; margin: 0 auto; }
+  .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:14px; }
+  h1{ font-size:20px; margin:0; }
+  .meta{ font-size:12px; color:var(--muted); line-height:1.5; }
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--rule); border-radius:999px; background:#fff; font-size:12px; }
+  .btnrow{ display:flex; gap:8px; margin: 12px 0 18px; }
+  button{ appearance:none; border:1px solid var(--rule); background:#fff; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600; }
+  button.primary{ border-color: rgba(22,163,74,.35); background: rgba(22,163,74,.08); }
+  .tbl{ width:100%; border-collapse:collapse; border:1px solid var(--rule); border-radius:12px; overflow:hidden; }
+  .tbl th, .tbl td{ padding:10px 10px; border-bottom:1px solid var(--rule); vertical-align:top; }
+  .tbl th{ background: var(--chip); text-align:left; font-size:12px; color:#374151; }
+  .tbl td{ font-size:12px; }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .group td{ background:#fafafa; border-bottom:1px solid var(--rule); }
+  .gline{ display:flex; align-items:baseline; gap:10px; }
+  .gkey{ font-weight:800; color:#111827; }
+  .gtitle{ color:#374151; font-weight:600; }
+  .muted{ color:var(--muted); }
+  @media print{
+    body{ padding:0; }
+    .btnrow{ display:none !important; }
+    .wrap{ max-width:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>${esc(title)}</h1>
+        <div class="meta">
+          <div><span class="pill">Team</span> ${esc(teamName)}</div>
+          <div><span class="pill">Player</span> #${esc(playerNum)} ${esc(playerName)}</div>
+          <div><span class="pill">Date</span> ${esc(dayKey)}</div>
+          <div><span class="pill">Attempts</span> ${esc(rows.length)} &nbsp; <span class="pill">Situations</span> ${esc(attemptedSituations.size)}</div>
+        </div>
+      </div>
+      <div class="meta" style="text-align:right">
+        <div class="pill">Generated</div>
+        <div>${esc(new Date().toLocaleString())}</div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary" onclick="window.print()">Print / Save as PDF</button>
+      <button onclick="window.close()">Close</button>
+    </div>
+
+    ${bodyHtml}
+
+    <p class="muted" style="margin-top:14px">
+      Tip: Use <b>Print → Save as PDF</b> to create a file you can attach to an email.
+    </p>
+  </div>
+</body>
+</html>`;
+
+    w.document.open();
+    w.document.write(doc);
+    w.document.close();
+
+    setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 350);
+  }
+
 
 function shareResultsByEmail(){
     const cur = getCurrentPlayerFromMeta();
@@ -1889,8 +2097,22 @@ function shareResultsByEmail(){
       return;
     }
 
+    const dayKey = _dayKeyLocal(new Date());
     const report = buildQuickCoachReportOptionA(cur);
-    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(report.subject)}&body=${mailtoEncode(report.body)}`;
+
+    const body =
+`Hi Coach,
+
+Attached: Diamond IQ Report (PDF) for ${dayKey}.
+(Generate it in Diamond IQ via "Create PDF Report (Print/Save)" and attach the saved PDF.)
+
+Quick Summary:
+${report.body}
+
+Thanks`;
+
+    const subject = report.subject + ` — ${dayKey}`;
+    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
     window.location.href = mailto;
   }
 
@@ -1904,6 +2126,14 @@ function shareResultsByEmail(){
   function resultsStorageKey(){
     return STORAGE_RESULTS_PREFIX + PLAYER_BASE_ID;
   }
+
+  if(playerPdfBtn){
+    playerPdfBtn.addEventListener('click', ()=>{
+      const dayKey = _dayKeyLocal(new Date());
+      openPrintableDailyReport(dayKey);
+    });
+  }
+
   function loadResults(){
     try{
       const raw = localStorage.getItem(resultsStorageKey());
