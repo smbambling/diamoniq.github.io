@@ -2422,7 +2422,7 @@ Notes:
         if(ro.third) parts.push('3B');
         return ` • Runners: ${esc(parts.join(','))}`;
       })();
-      bodyRows += `<tr class="grp"><td colspan="10">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
+      bodyRows += `<tr class="grp"><td colspan="11">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
     }
       for(const r of g.rows){                        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
         if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
@@ -2437,6 +2437,7 @@ bodyRows += `
             <td class="coachMono num">${esc(r.attemptNo || '')}</td>
 
             <td class="coachMono">${esc(r.posResult || '—')}</td>
+            <td class="coachMono num">${esc(r.posScore || '')}</td>
             <td class="coachMono num">${esc(r.posTries || '')}</td>
             <td class="coachMono num">${esc(r.posElapsed || '')}</td>
 
@@ -2460,6 +2461,7 @@ bodyRows += `
               <th>Time</th>
               <th class="num">#</th>
               <th>Position Result</th>
+              <th class="num">Pos Score</th>
               <th class="num">Pos Tries</th>
               <th class="num">Pos Time</th>
               <th>Sequence Result</th>
@@ -2645,6 +2647,9 @@ bodyRows += `
         posTriesUsed: (e.phase1TriesUsed==null?'' : _safe(e.phase1TriesUsed)),
         posElapsed: (e.phase1Elapsed==null?'' : _safe(e.phase1Elapsed) + 's'),
 
+        posScoreCorrect: (e.phase1ScoreCorrect==null?'' : _safe(e.phase1ScoreCorrect)),
+        posScoreTotal: (e.phase1ScoreTotal==null?'' : _safe(e.phase1ScoreTotal)),
+
         // Phase 2 (sequence/relay) stage 1 + stage 2
         seq1Ok: (e.success==null?null:!!e.success),
         seq2Ok: null,
@@ -2699,6 +2704,7 @@ bodyRows += `
         posResult: (a.posOk==null?'—':(a.posOk?'SUCCESS':'FAIL')),
         posTries: a.posTriesUsed,
         posElapsed: a.posElapsed,
+        posScore: (a.posScoreCorrect!=='' && a.posScoreTotal!=='') ? `${a.posScoreCorrect}/${a.posScoreTotal}` : '',
 
         // Phase 2 columns
         seqResult: seqSummary,
@@ -3503,6 +3509,8 @@ function endPhase2(success = true) {
       phase1Ok: _phase1Summary ? !!_phase1Summary.ok : null,
       phase1TriesUsed: _phase1Summary ? _phase1Summary.triesUsed : null,
       phase1Elapsed: _phase1Summary ? _phase1Summary.elapsed : null,
+      phase1ScoreCorrect: _phase1Summary ? _phase1Summary.scoreCorrect : null,
+      phase1ScoreTotal: _phase1Summary ? _phase1Summary.scoreTotal : null,
 
       success: !!success,
       triesUsed: (typeof phase2TriesLeft === 'number') ? (PHASE2_MAX_TRIES - phase2TriesLeft) : null,
@@ -6190,7 +6198,7 @@ function renderPlayerResultsForCoach(outEl, parsed){
               <th style="text-align:left">Last</th>
             </tr>
           </thead>
-          <tbody>${tableRows || `<tr><td colspan="10" class="hint">No situations found in this export.</td></tr>`}</tbody>
+          <tbody>${tableRows || `<tr><td colspan="11" class="hint">No situations found in this export.</td></tr>`}</tbody>
         </table>
       </div>
       <details style="margin-top:10px">
@@ -6393,6 +6401,8 @@ function checkPositions(){
       try{
         _phase1Summary = {
           ok: !!allCorrectNow,
+          scoreCorrect: correct,
+          scoreTotal: (Array.isArray(POS_IDS) ? POS_IDS.length : 9),
           triesUsed: (MAX_TRIES - remainingTries),
           elapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
           ts: Date.now()
