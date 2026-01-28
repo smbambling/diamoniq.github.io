@@ -515,6 +515,20 @@
 .tokenPill{display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-size:12px; font-weight:700; color:#0f172a;}
 .tokenPill.active{background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.45); color:#065f46;}
 
+
+
+
+/* --- Sidebar overflow hardening (Coach Review / Teams) --- */
+#rightPanel, #sidebar, .rightPanel { overflow-x:hidden; }
+#coachCard, #coachCard * { box-sizing:border-box; }
+#coachCard .subsec { overflow:hidden; }
+#coachCard .coachGrid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+#coachCard .coachGrid > * { min-width:0; }
+#coachCard input, #coachCard select, #coachCard textarea { max-width:100%; min-width:0; }
+#coachCard .rowFlex { display:flex; gap:8px; align-items:center; min-width:0; }
+#coachCard .rowFlex > * { min-width:0; }
+#coachCard .rowFlex input { flex:1 1 auto; width:auto; }
+#coachCard .rowFlex button { flex:0 0 auto; white-space:nowrap; }
 </style>
 
 </head>
@@ -853,7 +867,7 @@
 
           <label class="field">
             <span>Password</span>
-            <div style="display:flex; gap:8px;">
+            <div class="rowFlex" >
               <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
               <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
             </div>
