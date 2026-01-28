@@ -424,6 +424,11 @@
     gap:12px;
     align-items:end;
   }
+
+  /* Stack Team / Team Name / Coach Email within TEAMS */
+  #teamsSubsec .teamsTeamGrid{ grid-template-columns:1fr; }
+  #teamsSubsec .teamsTeamGrid .span2{ grid-column:auto; }
+
   #teamsSubsec .coachGrid .span2{ grid-column:1 / span 2; }
   #teamsSubsec .coachGrid .field > span{
     font-size:12px;
@@ -716,7 +721,7 @@
             </div>
           </div>
 
-<div class="coachGrid">
+<div class="coachGrid teamsTeamGrid">
           <label class="field">
             <span>Team</span>
             <select id="coachTeamSelect" class="select"></select>
