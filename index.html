@@ -535,14 +535,9 @@
 #coachCard .rowFlex input { flex:1 1 auto; width:auto; }
 #coachCard .rowFlex button { flex:0 0 auto; white-space:nowrap; }
 
-
-/* --- DIQ patch: Teams fields stacked (Team / Team Name / Coach Email) --- */
-#coachCard #teamsSubsec .teamsTeamGrid{
-  grid-template-columns:1fr !important;
-}
-#coachCard #teamsSubsec .teamsTeamGrid .span2{
-  grid-column:auto !important;
-}
+  /* Targets & Tolerance: stack Target / Tolerance controls vertically */
+  .diq-tt-stack{flex-direction:column !important; align-items:stretch !important;}
+  .diq-tt-stack > *{width:100%;}
 </style>
 
 </head>
@@ -776,7 +771,7 @@
 
           <label class="field">
             <span>Password</span>
-            <div class="rowFlex" >
+            <div class="diq-tt-stack rowFlex" >
               <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
               <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
             </div>
