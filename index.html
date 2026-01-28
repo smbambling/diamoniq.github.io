@@ -538,6 +538,10 @@
   /* Targets & Tolerance: stack Target / Tolerance controls vertically */
   .diq-tt-stack{flex-direction:column !important; align-items:stretch !important;}
   .diq-tt-stack > *{width:100%;}
+
+  /* Targets & Tolerance: stack Target / Tolerance vertically (no side-by-side) */
+  .diq-tt-fields{display:flex;flex-direction:column;gap:10px;}
+  .diq-tt-fields .field{display:flex;flex-direction:column;gap:6px;}
 </style>
 
 </head>
@@ -832,27 +836,28 @@
           <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
           <div class="row" id="runnersRow">
             <label class="hint">Select base runners:</label>
-            <label><input id="run1B" type="checkbox"> 1B</label>
-            <label><input id="run2B" type="checkbox"> 2B</label>
-            <label><input id="run3B" type="checkbox"> 3B</label>
-          </div>
-        </div>
-
-      <div class="subsec" id="sbTargetsSubsec">
+            <label<div class="subsec" id="sbTargetsSubsec">
           <div class="title">Targets & Tolerance</div>
-          <div class="row">
-            <label class="hint">Target:</label>
+                  <div class="diq-tt-fields">
+          <label class="field"><span>Target:</span></label>
             <select id="tolTargetSel"></select>
-            <label class="hint">Tolerance:</label>
+            <label class="hint"></label>
+          <label class="field"><span>Tolerance:</span></label>
             <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
             <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
-          </div>
+          </div></label>
+        </div>
           <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
-            <textarea id="tolNotes" rows="3"
+                    <div class="field">
+          <span>Target Note <span class="muted tiny">(optional)</span></span>
+          <textarea id="tolNotes" rows="3"
               placeholder="Enter coaching notes for this target…"
               style="width:100%; min-height:72px; resize:vertical"></textarea>
-            <span class="hint">Saved per target (based on the Target dropdown above).</span>
-          </div>
+        </div>
+</div>
+        </div>his target…"
+              style="width:100%; min-height:72px; resize:vertical"></textarea>
+</div>
         </div>
 
       <div class="subsec" id="sbBallHitSubsec">
