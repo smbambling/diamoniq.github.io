@@ -534,6 +534,15 @@
 #coachCard .rowFlex > * { min-width:0; }
 #coachCard .rowFlex input { flex:1 1 auto; width:auto; }
 #coachCard .rowFlex button { flex:0 0 auto; white-space:nowrap; }
+
+
+/* --- DIQ patch: Teams fields stacked (Team / Team Name / Coach Email) --- */
+#coachCard #teamsSubsec .teamsTeamGrid{
+  grid-template-columns:1fr !important;
+}
+#coachCard #teamsSubsec .teamsTeamGrid .span2{
+  grid-column:auto !important;
+}
 </style>
 
 </head>
