@@ -4471,24 +4471,37 @@ let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts
 
 let coachUnlocked = false;
 
-// Coach Review: allow loading report code from URL fragment (e.g. #coachReview=...)
+// Coach Review: allow loading report code from URL (#coachReview=... OR ?coachReview=...)
 let _pendingCoachReviewCode = null;
-try{
-  const h = String(window.location.hash || '');
-  const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
-  if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
-}catch(e){ _pendingCoachReviewCode = null; }
+function _getCoachReviewCodeFromUrl(){
+  try{
+    // Prefer query-string if present (supports future hosting changes / routing)
+    const qs = new URLSearchParams(window.location.search || '');
+    const qv = qs.get('coachReview');
+    if(qv) return String(qv);
+
+    // Also support hash fragments like: #coachReview=... (or #x&coachReview=...)
+    const h = String(window.location.hash || '').replace(/^#/, '');
+    const hs = new URLSearchParams(h);
+    const hv = hs.get('coachReview');
+    if(hv) return String(hv);
+
+    // Fallback: legacy regex scan
+    const m = ('#' + h).match(/(?:^#|&)coachReview=([^&]+)/);
+    if(m && m[1]) return decodeURIComponent(m[1]);
+  }catch(e){}
+  return null;
+}
+_pendingCoachReviewCode = _getCoachReviewCodeFromUrl();
 
 try{
   window.addEventListener('hashchange', ()=>{
-    try{
-      const h = String(window.location.hash || '');
-      const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
-      if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
-    }catch(e){}
-    
-    if(_pendingCoachReviewCode && !coachUnlocked){ try{ openPwModal(); }catch(e){} }
-if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
+    _pendingCoachReviewCode = _getCoachReviewCodeFromUrl();
+
+    if(_pendingCoachReviewCode && !coachUnlocked){
+      try{ openPwModal(); }catch(e){}
+    }
+    if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
       try{ window._diqCoachReviewAutoload(); }catch(e){}
     }
   });
@@ -5559,7 +5572,19 @@ function setCoachMode(enabled){
 }
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
 function closePwModal(){ pwModal.style.display='none'; }
-function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
+function tryUnlock(){
+  if(pwInput.value===CALIB_PASSWORD){
+    closePwModal();
+    setCoachMode(true);
+
+    // If the coach arrived via a Coach Review link, load + open the report immediately after unlock.
+    if(_pendingCoachReviewCode && typeof window._diqCoachReviewAutoload === 'function'){
+      try{ window._diqCoachReviewAutoload(); }catch(e){}
+    }
+  } else {
+    pwMsg.textContent='Incorrect password.';
+  }
+}
 
 // @diq:end [A7]
 /// @diq:begin [A8] Situations I/O & helpers
