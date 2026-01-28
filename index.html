@@ -2524,6 +2524,28 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
     });
   }
 
+
+// Coach Review autoload helper (URL hash: #coachReview=...)
+function _diqTryAutoloadCoachReview(){
+  if(!_pendingCoachReviewCode) return false;
+  try{
+    if(coachReviewInput) coachReviewInput.value = _pendingCoachReviewCode;
+    const obj = decodeCoachReviewCode(_pendingCoachReviewCode);
+    renderCoachReview(obj);
+    if(typeof openCoachReviewModal === 'function') openCoachReviewModal();
+    if(typeof toast === 'function') toast('Coach Review report loaded from link.');
+    return true;
+  }catch(e){
+    alert("Could not load Coach Review Code from link: " + (e && e.message ? e.message : e));
+    return false;
+  }finally{
+    _pendingCoachReviewCode = null;
+  }
+}
+window._diqCoachReviewAutoload = _diqTryAutoloadCoachReview;
+
+
+
   function startCoachPlayback(attempt, label, pbId){
     const pb = document.getElementById(pbId || 'coachReviewModalPlayback') || document.getElementById('coachReviewPlayback');
     if(!pb) return;
@@ -4018,33 +4040,7 @@ function wireOnce(){
         alert("Could not load Coach Review Code: " + (e && e.message ? e.message : e));
       }
     });
-    // Coach Review autoload from URL hash (#coachReview=...)
-    window._diqCoachReviewAutoload = function(){
-      if(!_pendingCoachReviewCode) return;
-      if(coachReviewInput) coachReviewInput.value = _pendingCoachReviewCode;
-      try{
-        const obj = decodeCoachReviewCode(_pendingCoachReviewCode);
-        renderCoachReview(obj);
-        openCoachReviewModal();
-        if(typeof toast === 'function') toast('Coach Review report loaded from link.');
-      }catch(e){
-        alert("Could not load Coach Review Code from link: " + (e && e.message ? e.message : e));
-      }finally{
-        _pendingCoachReviewCode = null;
-      }
-    };
-    // Auto-prompt coach password when opening a Coach Review link
-    if(_pendingCoachReviewCode && !coachUnlocked){
-      try{
-        if(typeof openPwModal === 'function') openPwModal();
-        if(pwMsg) pwMsg.textContent = 'Unlock Coach Tools to view the report.';
-      }catch(e){}
-    }
-
-    if(coachUnlocked){ try{ window._diqCoachReviewAutoload(); }catch(e){} }
-
-
-  }
+}
   if(coachReviewClearBtn){
     coachReviewClearBtn.addEventListener('click', ()=>{
       if(coachReviewInput) coachReviewInput.value = '';
@@ -6704,6 +6700,18 @@ async function init(){
     updateDescriptionHudText();
     wireOnce();
   setCoachMode(coachUnlocked);
+    // Coach Review deep-link: if a report code is in the URL, prompt for coach password immediately
+    if(_pendingCoachReviewCode){
+      if(coachUnlocked){
+        try{ window._diqCoachReviewAutoload && window._diqCoachReviewAutoload(); }catch(e){}
+      }else{
+        try{
+          if(typeof openPwModal === 'function') openPwModal();
+          if(typeof pwMsg !== 'undefined' && pwMsg) pwMsg.textContent = 'Unlock Coach Tools to view the report.';
+        }catch(e){}
+      }
+    }
+
 // Teams UI elements are wired after JSON load; refresh dropdowns now
       refreshTeamsUIAll();
       // Mount Player panel into sidebar
