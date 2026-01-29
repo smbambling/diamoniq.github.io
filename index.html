@@ -409,13 +409,6 @@
   line-height:1.1;
 }
 
-
-
-
-/* Coach Tools nesting: Situation Builder sub-panels */
-#coachCard .subsec.nested{margin-top:10px; border-style:solid; border-color:#e5e7eb; background:#ffffff;}
-#coachCard .subsec.nested .title, #coachCard .subsec.nested .sectionTitle{font-size:13px;}
-#coachCard .coachGrid{grid-template-columns:1fr;}
 </style>
 
 </head>
@@ -533,7 +526,15 @@
     <div id="playerSidebarCard" class="card hidden">
       <div class="cardTitleRow">
         <div style="display:flex;align-items:center;gap:10px">
-       <div id="coachCard" class="card hidden">
+          <div class="cardTitle" style="margin:0">Player</div>
+          <span id="playerSidebarStatus" class="tag">not logged in</span>
+        </div>
+        <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Close</button>
+      </div>
+      <div id="playerSidebarMount"></div>
+    </div>
+
+<div id="coachCard" class="card hidden">
       <div class="coachGrid">
   <div class="row">
     <strong>Coach Tools</strong>
@@ -541,18 +542,144 @@
     <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
   </div>
 
-<div class="subsec" id="coachResultsSubsec">
-          <div class="title">COACH REVIEW</div>
-          <div class="hint" style="margin:-6px 0 8px">Paste a Coach Review Code (DIQ1:...) from a player email (preferred), or paste the player Results JSON. This does not modify your saved situations.</div>
-          <textarea id="coachResultsInput" class="inp mono" placeholder="Paste player results JSON here..." style="min-height:140px"></textarea>
-          <div class="row" style="gap:8px; margin-top:8px">
-            <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
-            <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
+  <!-- Situation Builder -->
+  <div class="subsec">
+    <div class="title">Situation Builder</div>
+    <div class="row">
+      <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
+    </div>
+    <div class="row">
+      <label class="hint">Title:</label>
+      <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
+    </div>
+    <div class="row">
+      <label class="hint">Description:</label>
+      <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
+    </div>
+    <div class="row">
+      <label class="hint">Outs:</label>
+      <select id="outsSelSituation">
+        <option value="0">0 outs</option>
+        <option value="1">1 out</option>
+        <option value="2">2 outs</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
+      <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
+      <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
+      <span id="situationMsg" class="hint" style="margin-left:auto"></span>
+    </div>
+  </div>
+</div>
+
+        <!-- Runners on Base -->
+        <div class="subsec">
+          <div class="title">Runners on Base</div>
+          <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
+          <div class="row" id="runnersRow">
+            <label class="hint">Select base runners:</label>
+            <label><input id="run1B" type="checkbox"> 1B</label>
+            <label><input id="run2B" type="checkbox"> 2B</label>
+            <label><input id="run3B" type="checkbox"> 3B</label>
           </div>
-          <div id="coachResultsOutput" style="margin-top:10px"></div>
         </div>
 
-<div class="subsec" id="teamsSubsec" style="margin-top:14px;">
+        <!-- Targets & Tolerance -->
+        <div class="subsec">
+          <div class="title">Targets & Tolerance</div>
+          <div class="row">
+            <label class="hint">Target:</label>
+            <select id="tolTargetSel"></select>
+            <label class="hint">Tolerance:</label>
+            <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
+            <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
+          </div>
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
+            <textarea id="tolNotes" rows="3"
+              placeholder="Enter coaching notes for this target…"
+              style="width:100%; min-height:72px; resize:vertical"></textarea>
+            <span class="hint">Saved per target (based on the Target dropdown above).</span>
+          </div>
+        </div>
+
+        <!-- Ball Hit (single) -->
+        <div class="subsec">
+          <div class="title">Ball Hit</div>
+          <div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div>
+            <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
+          <div class="row">
+            <label class="hint">Hit type:</label>
+            <select id="hitTypeSel">
+              <option value="line">Line drive</option>
+              <option value="popup">Pop up</option>
+              <option value="grounder">Grounder</option>
+            </select>
+            <select id="advanceSel" title="Batter bases to advance (0–3)">
+              <option value="0">0 (Out)</option>
+              <option value="1">1 (Single)</option>
+              <option value="2">2 (Double)</option>
+              <option value="3">3 (Triple)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Play Sequence (Phase 2) — Click + Drag Builder -->
+        <div class="subsec" id="seqSubsec">
+          <div class="title">Play Sequence</div>
+          <span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span>
+          <div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div>
+
+          <!-- Click-to-add grid -->
+          <div id="seqPosGrid" class="pos-grid" style="margin-top:6px"></div>
+
+          <!-- Sequence list (draggable items) -->
+          <div id="seqList" class="seq-list" aria-live="polite"></div>
+
+          <!-- Toolbar: templates / clear -->
+          <div class="seq-toolbar">
+            <select id="seqTemplateSel" title="Load a common relay">
+              <option value="">Template…</option>
+              <option value="LF,SS,2B,C">LF → SS → 2B → C (relay home)</option>
+              <option value="CF,SS,3B">CF → SS → 3B (hold runner)</option>
+              <option value="RF,1B">RF → 1B (hold at first)</option>
+              <option value="SS,2B,1B">SS → 2B → 1B (6-4-3 DP)</option>
+            </select>
+            <button id="seqClearBtn" class="btn-slate btn-small">Clear sequence</button>
+            <span class="hint">Total steps: <b id="seqCountHud">0</b></span>
+          </div>
+
+          <!-- Optional overall coach note (keeps the same id you already use) -->
+          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
+            <textarea id="seqNoteInput" rows="3"
+              placeholder="Optional coach note shown to players on the Play Sequence card…"
+              class="mono" style="width:100%"></textarea>
+          </div>
+        </div>
+
+
+
+        <div class="subsec" style="margin-top:10px">
+          <div class="subhead">Stage 2 Play Sequence <span class="muted">(optional)</span></div>
+          <div class="tiny muted" style="margin:-4px 0 8px">Comma-separated positions (e.g., <code>LF,SS,2B</code>). This runs immediately after Stage 1 succeeds.</div>
+          <div class="row" style="gap:8px; align-items:center">
+            <input id="seq2Input" class="inp" placeholder="LF,SS,2B" style="flex:1" />
+          </div>
+          <textarea id="seq2NoteInput" class="inp" placeholder="Stage 2 notes (optional)..." style="margin-top:8px; min-height:68px"></textarea>
+        </div>
+
+        <!-- Export -->
+        <div class="subsec">
+          <div class="title">Export</div>
+          <div class="row">
+            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
+            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
+            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
+</div>
+        </div>
+        
+      <!-- TEAMS (Coach) -->
+      <div class="subsec" id="teamsSubsec" style="margin-top:14px;">
         <div class="sectionTitle">TEAMS</div>
         <div class="muted" style="margin-bottom:10px;">
           Manage teams & rosters. Export <code>teams.json</code> and place it next to <code>index.html</code> and <code>situations.json</code>.
@@ -625,176 +752,13 @@
         </div>
       </div>
 
-<div class="subsec">
-    <div class="title">Situation Builder</div>
-    <div class="row">
-      <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
-    </div>
-    <div class="row">
-      <label class="hint">Title:</label>
-      <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
-    </div>
-    <div class="row">
-      <label class="hint">Description:</label>
-      <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
-    </div>
-    <div class="row">
-      <label class="hint">Outs:</label>
-      <select id="outsSelSituation">
-        <option value="0">0 outs</option>
-        <option value="1">1 out</option>
-        <option value="2">2 outs</option>
-      </select>
-    </div>
-    <div class="row">
-      <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
-      <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
-      <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
-      <span id="situationMsg" class="hint" style="margin-left:auto"></span>
-    </div>
-  
-
-<div class="subsec nested">
-          <div class="title">Runners on Base</div>
-          <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
-          <div class="row" id="runnersRow">
-            <label class="hint">Select base runners:</label>
-            <label><input id="run1B" type="checkbox"> 1B</label>
-            <label><input id="run2B" type="checkbox"> 2B</label>
-            <label><input id="run3B" type="checkbox"> 3B</label>
-          </div>
-        </div>
-
-<div class="subsec nested">
-          <div class="title">Targets & Tolerance</div>
-          <div class="row">
-            <label class="hint">Target:</label>
-            <select id="tolTargetSel"></select>
-            <label class="hint">Tolerance:</label>
-            <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
-            <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
-          </div>
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
-            <textarea id="tolNotes" rows="3"
-              placeholder="Enter coaching notes for this target…"
-              style="width:100%; min-height:72px; resize:vertical"></textarea>
-            <span class="hint">Saved per target (based on the Target dropdown above).</span>
-          </div>
-        </div>
-
-<div class="subsec nested">
-          <div class="title">Ball Hit</div>
-          <div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div>
-            <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
-          <div class="row">
-            <label class="hint">Hit type:</label>
-            <select id="hitTypeSel">
-              <option value="line">Line drive</option>
-              <option value="popup">Pop up</option>
-              <option value="grounder">Grounder</option>
-            </select>
-            <select id="advanceSel" title="Batter bases to advance (0–3)">
-              <option value="0">0 (Out)</option>
-              <option value="1">1 (Single)</option>
-              <option value="2">2 (Double)</option>
-              <option value="3">3 (Triple)</option>
-            </select>
-          </div>
-        </div>
-
-<div class="subsec nested" id="seqSubsec">
-          <div class="title">Play Sequence</div>
-          <span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span>
-          <div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div>
-
-          <!-- Click-to-add grid -->
-          <div id="seqPosGrid" class="pos-grid" style="margin-top:6px"></div>
-
-          <!-- Sequence list (draggable items) -->
-          <div id="seqList" class="seq-list" aria-live="polite"></div>
-
-          <!-- Toolbar: templates / clear -->
-          <div class="seq-toolbar">
-            <select id="seqTemplateSel" title="Load a common relay">
-              <option value="">Template…</option>
-              <option value="LF,SS,2B,C">LF → SS → 2B → C (relay home)</option>
-              <option value="CF,SS,3B">CF → SS → 3B (hold runner)</option>
-              <option value="RF,1B">RF → 1B (hold at first)</option>
-              <option value="SS,2B,1B">SS → 2B → 1B (6-4-3 DP)</option>
-            </select>
-            <button id="seqClearBtn" class="btn-slate btn-small">Clear sequence</button>
-            <span class="hint">Total steps: <b id="seqCountHud">0</b></span>
-          </div>
-
-          <!-- Optional overall coach note (keeps the same id you already use) -->
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
-            <textarea id="seqNoteInput" rows="3"
-              placeholder="Optional coach note shown to players on the Play Sequence card…"
-              class="mono" style="width:100%"></textarea>
-          </div>
-        </div>
-
-<div class="subsec nested" style="margin-top:10px">
-          <div class="subhead">Stage 2 Play Sequence <span class="muted">(optional)</span></div>
-          <div class="tiny muted" style="margin:-4px 0 8px">Comma-separated positions (e.g., <code>LF,SS,2B</code>). This runs immediately after Stage 1 succeeds.</div>
-          <div class="row" style="gap:8px; align-items:center">
-            <input id="seq2Input" class="inp" placeholder="LF,SS,2B" style="flex:1" />
-          </div>
-          <textarea id="seq2NoteInput" class="inp" placeholder="Stage 2 notes (optional)..." style="margin-top:8px; min-height:68px"></textarea>
-        </div>
-
-<div class="subsec nested">
-          <div class="title">Export</div>
-          <div class="row">
-            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
-            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
-            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
-</div>
-        </div>
-</div>
-
-
-
-  <!-- Situation Builder -->
-  
-
-</div>
-
-        <!-- Runners on Base -->
-        
-
-
-        <!-- Targets & Tolerance -->
-        
-
-
-        <!-- Ball Hit (single) -->
-        
-
-
-        <!-- Play Sequence (Phase 2) — Click + Drag Builder -->
-        
-
-
-
-
-        
-
-
-        <!-- Export -->
-        
-
-        
-      <!-- TEAMS (Coach) -->
-      
-
-
 
 <!-- Player Results Viewer (Coach) -->
-        
-
-
-      </div>x; margin-top:8px">
+        <div class="subsec" id="coachResultsSubsec">
+          <div class="title">Player Results Viewer</div>
+          <div class="hint" style="margin:-6px 0 8px">Paste the JSON a player exports (Player → Export Results → Copy Results JSON). This does not modify your saved situations.</div>
+          <textarea id="coachResultsInput" class="inp mono" placeholder="Paste player results JSON here..." style="min-height:140px"></textarea>
+          <div class="row" style="gap:8px; margin-top:8px">
             <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
             <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
           </div>
@@ -1821,13 +1785,14 @@ function updatePlayerHeaderButton(){
   }
 
   function mailtoEncode(str){
-    return encodeURIComponent(str);
+    return encodeURIComponent(str).replace(/%20/g, "+");
   }
 
   
 
 
   function _b64uEncodeUtf8(str){
+    // base64url(utf8)
     const b64 = btoa(unescape(encodeURIComponent(str)));
     return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   }
@@ -1855,33 +1820,33 @@ function shareResultsByEmail(){
     }
 
     const payload = buildResultsExportPayload();
+    // add extra context
     payload.playerMeta = deepClone(PLAYER_META);
     payload.teamId = cur.team.id;
     payload.coachEmail = coachEmail;
 
     const code = makeCoachReviewCode(payload);
     if(!code){
-      alert("Could not build Coach Review Code.");
+      alert("Could not generate Coach Review Code.");
       return;
     }
 
-    const dayKey = (payload && payload.dayKey) ? String(payload.dayKey) : (new Date().toISOString().slice(0,10));
-    const subject = `Diamond IQ Results ${cur.team.name} #${cur.player.number} ${cur.player.name} - ${dayKey}`;
+    const subject = `Diamond IQ Results - ${cur.player.name} #${cur.player.number} (${cur.team.name})`;
     const body =
 `Hi Coach,
 
-Diamond IQ Results ${cur.team.name} #${cur.player.number} ${cur.player.name} - ${dayKey}
+Here is the Coach Review Code for Diamond IQ:
 
-Coach Review Code:
 ${code}
 
-Steps to review:
+Steps:
 1) Open Diamond IQ
 2) Coach Tools → COACH REVIEW
-3) Paste the Coach Review Code and click “Parse & View”
+3) Paste the code and click “Parse & View”
 `;
 
     const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
+
     window.location.href = mailto;
   }
 
@@ -5112,21 +5077,11 @@ async function copyResults(){
 
 function parsePlayerResultsPayload(rawText){
   const txt = String(rawText || '').trim();
-  if(!txt) return { ok:false, error:'Paste a Coach Review Code (DIQ1:...) or player results JSON first.' };
-
-  // Accept Coach Review Code (DIQ1:...) as well as raw JSON
-  let normalized = txt;
-  if(/^DIQ1:/i.test(normalized)){
-    try{
-      normalized = _b64uDecodeUtf8(normalized.replace(/^DIQ1:/i,''));
-    }catch(e){
-      return { ok:false, error:'Invalid Coach Review Code.', detail: String((e && e.message) || e) };
-    }
-  }
+  if(!txt) return { ok:false, error:'Paste a player results JSON first.' };
 
   let obj;
   try{
-    obj = JSON.parse(normalized);
+    obj = JSON.parse(txt);
   }catch(e){
     return { ok:false, error:'Invalid JSON. Make sure you copied the full exported JSON.', detail: String((e && e.message) || e) };
   }
