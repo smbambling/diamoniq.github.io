@@ -2861,17 +2861,16 @@ function shareResultsByEmail(){
 
     const subject = `Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}`;
 
-    const reviewUrl = `${window.location.origin}${window.location.pathname}#coachReview=${encodeURIComponent(code)}`;
-
+    
     const body =
 `Hi Coach,
 
 Here are the Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}
 
-Open this link to view the report:
-${reviewUrl}
+Coach Review Code:
+${code}
 
-If prompted, unlock Coach Tools to view the report.`;
+(Use Coach Tools → Coach Review to paste this code.)`; 
 const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
     window.location.href = mailto;
   }
