@@ -126,8 +126,6 @@
     border:1px solid rgba(0,0,0,.08); box-shadow:0 1px 2px rgba(0,0,0,.06);
     background:#f8fafc;color:#0b1321;
   }
-
-  .badge-mini{padding:3px 8px;font-size:12px;font-weight:900;}
   .badge-score{background:#ecfeff;border-color:#a5f3fc}
   .badge-tries{background:#eef2ff;border-color:#c7d2fe}
   .tries-green{background:#dcfce7;border-color:#86efac}
@@ -412,128 +410,12 @@
 }
 
 
-  /* --- Coach TEAMS section tweaks --- */
-  .sectionTitle{
-    font-weight:900;
-    color:#111827;
-    letter-spacing:.02em;
-  }
-  #teamsSubsec .coachGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    align-items:end;
-  }
-
-  /* Stack Team / Team Name / Coach Email within TEAMS */
-  #teamsSubsec .teamsTeamGrid{ grid-template-columns:1fr; }
-  #teamsSubsec .teamsTeamGrid .span2{ grid-column:auto; }
-
-  #teamsSubsec .coachGrid .span2{ grid-column:1 / span 2; }
-  #teamsSubsec .coachGrid .field > span{
-    font-size:12px;
-    font-weight:700;
-    color:#64748b;
-    line-height:1.1;
-  }
-
-  /* --- Sidebar overflow safety (Coach Review + Teams) --- */
-  #coachCard{overflow:hidden;}
-  #coachCard .subsec, #coachCard .diq-body{max-width:100%; overflow-x:hidden;}
-  #coachCard input, #coachCard select, #coachCard textarea{max-width:100%; box-sizing:border-box;}
-  #coachCard textarea{width:100%;}
-  #coachCard .row{flex-wrap:wrap;}
-
-  /* Coach Tools form grid (matches Player panel alignment) */
-  #coachCard .rowGrid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-    align-items:end;
-    max-width:100%;
-  }
-  @media (max-width:420px){
-    #coachCard .rowGrid{ grid-template-columns:1fr; }
-  }
-  #coachCard .rowGrid > *{min-width:0;}
-  #coachCard .rowGrid .field{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-    min-width:0;
-  }
-  #coachCard .rowGrid .field > span{
-    font-size:12px;
-    font-weight:700;
-    color:#64748b;
-    line-height:1.1;
-  }
-  #coachCard .rowGrid .input,
-  #coachCard .rowGrid .select,
-  #coachCard .rowGrid .inp{
-    width:100%;
-    max-width:100%;
-    box-sizing:border-box;
-  }
-  /* Password row: keep Gen inside card */
-  #teamsSubsec .rowGrid .field div{max-width:100%;}
-  #teamsSubsec .rowGrid .field div input{flex:1 1 auto; min-width:0;}
-  #teamsSubsec .rowGrid .field div button{flex:0 0 auto;}
-
-/* Coach Tools collapsible sections */
-#coachCard .subsec{position:relative;}
-#coachCard .subsec.diq-collapsible .title,
-#coachCard .subsec.diq-collapsible .sectionTitle{
-  cursor:pointer;
-  user-select:none;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-#coachCard .subsec.diq-collapsible .diq-chevron{
-  width:18px;height:18px;
-  display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid #e5e7eb;border-radius:8px;
-  color:#64748b;background:#fff;
-  font-size:12px;line-height:1;
-}
-#coachCard .subsec.diq-collapsible.diq-collapsed .diq-chevron{transform:rotate(-90deg);}
-#coachCard .subsec.diq-collapsible .diq-body{margin-top:8px;}
-#coachCard .subsec.diq-collapsible.diq-collapsed .diq-body{display:none;}
 
 
-/* Coach Review modal + table */
-.diq-modal{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;}
-.diq-modal.hidden{display:none;}
-.diq-modal-backdrop{position:absolute; inset:0; background:rgba(15,23,42,.55);}
-.diq-modal-panel{position:relative; width:min(980px, calc(100vw - 24px)); max-height:calc(100vh - 24px); overflow:auto;
-  background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 18px 40px rgba(2,6,23,.18); padding:14px 14px 18px;}
-.diq-modal-head{display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:10px; border-bottom:1px solid #e5e7eb;}
-
-.coachTblWrap{border:1px solid #e5e7eb; border-radius:14px; overflow:auto; background:#fff;}
-.coachTbl{width:100%; border-collapse:separate; border-spacing:0; min-width:780px;}
-.coachTbl thead th{position:sticky; top:0; background:#f3f4f6; z-index:1; font-size:12px; color:#334155; text-align:left; padding:10px 10px; border-bottom:1px solid #e5e7eb;}
-.coachTbl tbody td{font-size:12px; padding:9px 10px; border-bottom:1px solid #eef2f7; vertical-align:top;}
-.coachTbl .grp td{background:#fafafa; font-weight:800; color:#0f172a; border-bottom:1px solid #e5e7eb;}
-.coachMono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-.tokenPill{display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-size:12px; font-weight:700; color:#0f172a;}
-.tokenPill.active{background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.45); color:#065f46;}
-
-
-
-
-/* --- Sidebar overflow hardening (Coach Review / Teams) --- */
-#rightPanel, #sidebar, .rightPanel { overflow-x:hidden; }
-#coachCard, #coachCard * { box-sizing:border-box; }
-#coachCard .subsec { overflow:hidden; }
-#coachCard .coachGrid { grid-template-columns: 1fr; }
-#coachCard .coachGrid > * { min-width:0; }
-#coachCard input, #coachCard select, #coachCard textarea { max-width:100%; min-width:0; }
-#coachCard .rowFlex { display:flex; gap:8px; align-items:center; min-width:0; }
-#coachCard .rowFlex > * { min-width:0; }
-#coachCard .rowFlex input { flex:1 1 auto; width:auto; }
-#coachCard .rowFlex button { flex:0 0 auto; white-space:nowrap; }
+/* Coach Tools nesting: Situation Builder sub-panels */
+#coachCard .subsec.nested{margin-top:10px; border-style:solid; border-color:#e5e7eb; background:#ffffff;}
+#coachCard .subsec.nested .title, #coachCard .subsec.nested .sectionTitle{font-size:13px;}
+#coachCard .coachGrid{grid-template-columns:1fr;}
 </style>
 
 </head>
@@ -549,7 +431,7 @@
   <h1>Diamond IQ</h1>
     
   <!-- @diq:begin [H_PLAYER_BTN] Player Login button -->
-      <button id="playerBtn" class="btn-orange btn-small" title="Player login">Player Login</button>
+      <button id="playerBtn" class="btn-yellow btn-small" title="Player login">Player Login</button>
   <!-- @diq:end [H_PLAYER_BTN] -->
 
 
@@ -651,77 +533,39 @@
     <div id="playerSidebarCard" class="card hidden">
       <div class="cardTitleRow">
         <div style="display:flex;align-items:center;gap:10px">
-          <div class="cardTitle" style="margin:0">Player</div>
-          <span id="playerSidebarStatus" class="tag">not logged in</span>
-        </div>
-        <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Close</button>
-      </div>
-      <div id="playerSidebarMount"></div>
-    </div>
-
-<div id="coachCard" class="card hidden">
+       <div id="coachCard" class="card hidden">
       <div class="coachGrid">
   <div class="row">
     <strong>Coach Tools</strong>
     <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
     <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
-  
-    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
-      <button id="coachCollapseAllBtn" class="btn-slate" type="button" title="Collapse sections">Collapse all</button>
-      <button id="coachExpandAllBtn" class="btn-slate" type="button" title="Expand sections">Expand all</button>
-    </span>
-</div>
+  </div>
 
-  <div class="subsec" id="coachReviewSubsec" style="margin-top:14px;">
-        <div class="title">Coach Review</div>
+<div class="subsec" id="coachResultsSubsec">
+          <div class="title">COACH REVIEW</div>
+          <div class="hint" style="margin:-6px 0 8px">Paste a Coach Review Code (DIQ1:...) from a player email (preferred), or paste the player Results JSON. This does not modify your saved situations.</div>
+          <textarea id="coachResultsInput" class="inp mono" placeholder="Paste player results JSON here..." style="min-height:140px"></textarea>
+          <div class="row" style="gap:8px; margin-top:8px">
+            <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
+            <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
+          </div>
+          <div id="coachResultsOutput" style="margin-top:10px"></div>
+        </div>
+
+<div class="subsec" id="teamsSubsec" style="margin-top:14px;">
+        <div class="sectionTitle">TEAMS</div>
         <div class="muted" style="margin-bottom:10px;">
-          Paste a Coach Review Code from a player email to view a clean table + Phase 2 playback.
+          Manage teams & rosters. Export <code>teams.json</code> and place it next to <code>index.html</code> and <code>situations.json</code>.
         </div>
 
-        <div class="grid" style="gap:10px;">
-          <label class="field">
-            <span>Coach Review Code</span>
-            <textarea id="coachReviewInput" class="textarea mono" rows="5" placeholder="DIQ1:..."></textarea>
-          </label>
-
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button id="coachReviewLoadBtn" class="btn btn-brand" type="button">Load Review</button>
-            <button id="coachReviewClearBtn" class="btn btn-ghost" type="button">Clear</button>
-          </div>
-
-          
-          <div id="coachReviewMini" class="card" style="padding:10px; background:#fafafa; border:1px solid #e5e7eb; border-radius:12px; display:none;">
-            <div class="tiny muted" style="margin-bottom:6px;">Loaded review</div>
-            <div id="coachReviewMiniText" style="font-size:13px; line-height:1.35;"></div>
-            <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-              <button id="coachReviewOpenBtn" class="btn btn-brand" type="button">Open Report</button>
-              <button id="coachReviewCopyCodeBtn" class="btn btn-ghost" type="button">Copy Code</button>
-            </div>
-          </div>
-<div id="coachReviewOutput"></div>
-          <div id="coachReviewPlayback"></div>
-        </div>
-      </div>
-
-  <div class="subsec" id="teamsSubsec" style="margin-top:14px;">
-        <div class="title">Teams</div>
-<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
           <button id="teamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
           <button id="teamsCopyBtn" class="btn btn-ghost" type="button">Copy teams.json</button>
-          <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div class="mt-2 flex flex-wrap gap-2">
-              <input id="teamsCsvFile" type="file" accept=".csv,.tsv,.txt,.xlsx" class="hidden"/>
-              <button id="teamsCsvUploadBtn" class="btn btn-white">Upload CSV</button>
-              <button id="teamsCsvTemplateBtn" class="btn btn-white">Download CSV Template</button>
-              <button id="teamsCsvExportBtn" class="btn btn-white">Export Current CSV</button>
-            </div>
+          <button id="teamsImportBtn" class="btn btn-ghost" type="button">Import teams JSON</button>
+          <button id="teamsResetBtn" class="btn btn-ghost" type="button" title="Clear locally saved teams (does not affect teams.json on disk)">Clear local teams</button>
+        </div>
 
-            <div class="mt-2 text-[11px] text-slate-600">
-              Excel tip: File → Save As → CSV (UTF-8).
-            </div>
-          </div>
-
-<div class="coachGrid teamsTeamGrid">
+        <div class="rowGrid">
           <label class="field">
             <span>Team</span>
             <select id="coachTeamSelect" class="select"></select>
@@ -732,12 +576,11 @@
             <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
           </label>
 
-          <label class="field span2">
+          <label class="field">
             <span>Coach Email</span>
             <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
           </label>
         </div>
-
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
           <button id="coachTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
@@ -747,9 +590,8 @@
 
         <div class="divider"></div>
 
-        <div class="title">Roster</div>
-        
-        <div class="coachGrid">
+        <div class="sectionTitle">Roster</div>
+        <div class="rowGrid">
           <label class="field">
             <span>Player</span>
             <select id="coachRosterSelect" class="select" disabled></select>
@@ -767,13 +609,12 @@
 
           <label class="field">
             <span>Password</span>
-            <div class="rowFlex" >
+            <div style="display:flex; gap:8px;">
               <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
               <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
             </div>
           </label>
         </div>
-
 
         <div class="muted" id="coachPlayerIdPreview" style="margin-top:8px;"></div>
 
@@ -783,18 +624,8 @@
           <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
         </div>
       </div>
-      <!-- COACH REVIEW (paste code from player email) -->
-      
 
-
-
-
-
-
-      </div>
-
-  <!-- Situation Builder (parent + nested) -->
-  <div class="subsec" id="situationBuilderSubsec">
+<div class="subsec">
     <div class="title">Situation Builder</div>
     <div class="row">
       <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
@@ -823,7 +654,7 @@
     </div>
   
 
-      <div class="subsec" id="sbRunnersSubsec">
+<div class="subsec nested">
           <div class="title">Runners on Base</div>
           <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
           <div class="row" id="runnersRow">
@@ -834,28 +665,24 @@
           </div>
         </div>
 
-      <div class="subsec" id="sbTargetsSubsec">
+<div class="subsec nested">
           <div class="title">Targets & Tolerance</div>
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:8px">
-            <div class="row">
-              <label class="hint">Target:</label>
-              <select id="tolTargetSel"></select>
-            </div>
-            <div class="row">
-              <label class="hint">Tolerance:</label>
-              <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
-              <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
-            </div>
+          <div class="row">
+            <label class="hint">Target:</label>
+            <select id="tolTargetSel"></select>
+            <label class="hint">Tolerance:</label>
+            <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
+            <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
           </div>
           <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
-            <label class="hint" style="font-weight:800">Target Note <span style="font-weight:600; opacity:.8">(optional)</span></label>
             <textarea id="tolNotes" rows="3"
               placeholder="Enter coaching notes for this target…"
               style="width:100%; min-height:72px; resize:vertical"></textarea>
-</div>
+            <span class="hint">Saved per target (based on the Target dropdown above).</span>
+          </div>
         </div>
 
-      <div class="subsec" id="sbBallHitSubsec">
+<div class="subsec nested">
           <div class="title">Ball Hit</div>
           <div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div>
             <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
@@ -875,7 +702,7 @@
           </div>
         </div>
 
-      <div class="subsec" id="seqSubsec">
+<div class="subsec nested" id="seqSubsec">
           <div class="title">Play Sequence</div>
           <span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span>
           <div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div>
@@ -907,7 +734,16 @@
           </div>
         </div>
 
-      <div class="subsec" id="sbExportSubsec">
+<div class="subsec nested" style="margin-top:10px">
+          <div class="subhead">Stage 2 Play Sequence <span class="muted">(optional)</span></div>
+          <div class="tiny muted" style="margin:-4px 0 8px">Comma-separated positions (e.g., <code>LF,SS,2B</code>). This runs immediately after Stage 1 succeeds.</div>
+          <div class="row" style="gap:8px; align-items:center">
+            <input id="seq2Input" class="inp" placeholder="LF,SS,2B" style="flex:1" />
+          </div>
+          <textarea id="seq2NoteInput" class="inp" placeholder="Stage 2 notes (optional)..." style="margin-top:8px; min-height:68px"></textarea>
+        </div>
+
+<div class="subsec nested">
           <div class="title">Export</div>
           <div class="row">
             <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
@@ -915,8 +751,55 @@
             <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
 </div>
         </div>
+</div>
 
-  </div>
+
+
+  <!-- Situation Builder -->
+  
+
+</div>
+
+        <!-- Runners on Base -->
+        
+
+
+        <!-- Targets & Tolerance -->
+        
+
+
+        <!-- Ball Hit (single) -->
+        
+
+
+        <!-- Play Sequence (Phase 2) — Click + Drag Builder -->
+        
+
+
+
+
+        
+
+
+        <!-- Export -->
+        
+
+        
+      <!-- TEAMS (Coach) -->
+      
+
+
+
+<!-- Player Results Viewer (Coach) -->
+        
+
+
+      </div>x; margin-top:8px">
+            <button id="coachParseResultsBtn" class="btn-green">🔎 Parse &amp; View</button>
+            <button id="coachClearResultsBtn" class="btn-slate">Clear</button>
+          </div>
+          <div id="coachResultsOutput" style="margin-top:10px"></div>
+        </div>
 
       </div>
     </div>
@@ -983,12 +866,12 @@
         <div class="subsec" style="margin-top:14px;">
           <div class="sectionTitle">Results</div>
           <div class="muted" style="margin-bottom:8px;">
-            Share sends a quick coach-friendly report to your coach’s email (configured for your team).
+            Share sends your results to your coach’s email (configured for your team).
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button id="playerShareResultsBtn" class="btn btn-brand" type="button" disabled>Share my results</button>
-            <button id="playerCopyReviewCodeBtn" class="btn btn-white w-full">Copy Coach Review Code</button>
-</div>
+            <button id="playerCopyResultsBtn" class="btn btn-ghost" type="button" title="Fallback: Copy results JSON" disabled>Copy results JSON</button>
+          </div>
           <div class="muted" id="playerShareHint" style="margin-top:8px;"></div>
         </div>
       </div>
@@ -1120,11 +1003,6 @@ let _timerSecs = TIMER_START_SECS;
   }
 
   function getPlayerId(){
-    // Prefer roster playerId when logged in; fallback to local meta-based id.
-    try{
-      const cur = getCurrentPlayerFromMeta();
-      if(cur && cur.player && cur.player.playerId) return String(cur.player.playerId);
-    }catch(_e){}
     return buildPlayerId();
   }
 
@@ -1177,13 +1055,12 @@ let _timerSecs = TIMER_START_SECS;
 }
 
 function computeRosterPlayerId(teamObj, playerObj){
-  // Deterministic, stable ID for roster entries (teams.json schema has no ids).
+  // Deterministic, stable ID for roster entries (so player dropdown + login work)
+  const t = teamObj && teamObj.id ? String(teamObj.id) : 'team';
+  const n = playerObj && playerObj.name ? String(playerObj.name) : '';
+  const num = playerObj && playerObj.number != null ? String(playerObj.number) : '';
   if (playerObj && playerObj.playerId) return String(playerObj.playerId);
-  const teamSlug = slugifyLoose(teamObj && (teamObj.name || teamObj.id) ? (teamObj.name || teamObj.id) : "team") || "team";
-  const nameSlug = slugifyLoose(playerObj && playerObj.name ? playerObj.name : "") || "player";
-  const num = String(playerObj && playerObj.number != null ? playerObj.number : "").trim().replace(/\s+/g,"");
-  const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
-  return `${teamSlug}-${nameSlug}-${numSafe}`;
+  return slugifyLoose([t, n, num].filter(Boolean).join('-'));
 }
 
 
@@ -1218,7 +1095,7 @@ function computeRosterPlayerId(teamObj, playerObj){
       const data = await res.json();
       TEAMS = normalizeTeamsData(data);
       // Persist a copy so the app still works if teams.json is temporarily unavailable
-      try{ localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(TEAMS)); }catch(_e){}
+      try{ localStorage.setItem(TEAMS_STORE_KEY, JSON.stringify(TEAMS)); }catch(_e){}
       return;
     }catch(err){
       console.warn('[Teams] Unable to load teams.json, falling back to localStorage.', err);
@@ -1226,246 +1103,21 @@ function computeRosterPlayerId(teamObj, playerObj){
 
     // Fallback: localStorage copy
     try{
-      const raw = localStorage.getItem(TEAMS_STORAGE_KEY);
+      const raw = localStorage.getItem(TEAMS_STORE_KEY);
       TEAMS = raw ? normalizeTeamsData(JSON.parse(raw)) : { teams: [] };
     }catch(_e){
       TEAMS = { teams: [] };
     }
 }
 
-  // @diq:begin [A13] Teams CSV upload
-  function _csvParseLine(line, delim){
-    const out = [];
-    let cur = '';
-    let inQ = false;
-    for(let i=0;i<line.length;i++){
-      const ch = line[i];
-      if(inQ){
-        if(ch === '"'){
-          if(line[i+1] === '"'){ cur += '"'; i++; }
-          else inQ = false;
-        }else{
-          cur += ch;
-        }
-      }else{
-        if(ch === '"') inQ = true;
-        else if(ch === delim){ out.push(cur); cur=''; }
-        else cur += ch;
-      }
-    }
-    out.push(cur);
-    return out;
-  }
-
-  function parseDelimited(text){
-    const raw = String(text || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-    const lines = raw.split('\n').filter(l=>l.trim().length>0);
-    if(lines.length === 0) return { headers: [], rows: [] };
-
-    const first = lines[0];
-    const comma = (first.match(/,/g)||[]).length;
-    const tab = (first.match(/\t/g)||[]).length;
-    const delim = tab > comma ? '\t' : ',';
-
-    const headers = _csvParseLine(lines[0], delim).map(h=>String(h||'').trim());
-    const rows = [];
-    for(let i=1;i<lines.length;i++){
-      const cols = _csvParseLine(lines[i], delim);
-      if(cols.every(c=>String(c||'').trim()==='')) continue;
-      const obj = {};
-      for(let j=0;j<headers.length;j++){
-        obj[headers[j]] = (cols[j]==null ? '' : String(cols[j]).trim());
-      }
-      rows.push(obj);
-    }
-    return { headers, rows };
-  }
-
-  function applyTeamsRosterRows(rows, headers){
-    if(!Array.isArray(rows) || rows.length===0) return { teams:0, players:0, removedTeams:0, removedPlayers:0 };
-
-    const headerMap = {};
-    (headers||[]).forEach(h=>{
-      const k = String(h||'').trim().toLowerCase();
-      if(k) headerMap[k]=h;
-    });
-
-    const get = (row, key, alts=[])=>{
-      const lk = String(key).toLowerCase();
-      if(headerMap[lk]) return row[headerMap[lk]];
-      for(const a of alts){
-        const la = String(a).toLowerCase();
-        if(headerMap[la]) return row[headerMap[la]];
-      }
-      // fallback: direct scan
-      for(const k in row){
-        if(String(k).trim().toLowerCase()===lk) return row[k];
-        for(const a of alts){
-          if(String(k).trim().toLowerCase()===String(a).trim().toLowerCase()) return row[k];
-        }
-      }
-      return '';
-    };
-
-    const findTeamByNameLocal = (name)=>{
-      const n = String(name||'').trim().toLowerCase();
-      const list = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams : [];
-      for(const t of list){
-        if(String(t.name||'').trim().toLowerCase() === n) return t;
-      }
-      return null;
-    };
-
-    const normAction = (a)=>{
-      const v = String(a||'').trim().toLowerCase();
-      if(!v) return '';
-      if(v==='remove' || v==='delete' || v==='del' || v==='rm') return 'remove';
-      if(v==='add' || v==='update' || v==='upsert') return 'add';
-      return v;
-    };
-
-    let teamAdds=0, playerAdds=0, removedTeams=0, removedPlayers=0;
-
-    for(const r of rows){
-      const teamName = String(get(r,'Team Name',['Team','TeamName'])).trim();
-      if(!teamName) continue;
-
-      const coachEmail = String(get(r,'Coach Email',['CoachEmail','Email'])).trim();
-      const playerName = String(get(r,'Player Name',['Player','Name','PlayerName'])).trim();
-      const playerNum  = String(get(r,'Player Number',['Number','PlayerNumber','Jersey','Jersey Number'])).trim();
-      const password   = String(get(r,'Player Password',['Password','Passcode','PIN','Pin'])).trim();
-      const actionRaw  = get(r,'Action',['Op','Operation','Mode']);
-      const action = normAction(actionRaw);
-
-      let t = findTeamByNameLocal(teamName);
-
-      // Team removal: Action=REMOVE and no player info -> remove team
-      const hasAnyPlayerFields = !!(playerName || playerNum);
-      if(action === 'remove' && !hasAnyPlayerFields){
-        if(t){
-          removeTeam(t.id);
-          removedTeams++;
-        }
-        continue;
-      }
-
-      // Team upsert rules:
-      // - if team exists: only update coachEmail when provided (non-empty)
-      // - if team new: set coachEmail if provided
-      if(!t){
-        t = upsertTeam(teamName, coachEmail || '');
-        teamAdds++;
-      }else{
-        if(coachEmail) t.coachEmail = coachEmail; // do NOT clear when blank
-      }
-
-      // Player removal: Action=REMOVE with player identifier (prefer number+name)
-      if(action === 'remove' && t){
-        const roster = Array.isArray(t.roster) ? t.roster : [];
-        let target = null;
-
-        // try match by number first
-        if(playerNum){
-          target = roster.find(p => String(p.number||'').trim() === String(playerNum).trim()) || null;
-          // if multiple numbers possible, refine by name if provided
-          if(target && playerName){
-            const t2 = roster.find(p => String(p.number||'').trim() === String(playerNum).trim() && String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase());
-            if(t2) target = t2;
-          }
-        }
-        // fallback match by name only
-        if(!target && playerName){
-          target = roster.find(p => String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase()) || null;
-        }
-
-        if(target && target.playerId){
-          removePlayer(t.id, target.playerId);
-          removedPlayers++;
-        }
-        continue;
-      }
-
-      // Upsert player (ADD/UPDATE/default): require all 3 fields
-      if(t && playerName && playerNum && password){
-        const before = (t.roster||[]).length;
-        upsertPlayer(t.id, playerName, playerNum, password);
-        const after = (t.roster||[]).length;
-        if(after >= before) playerAdds++;
-      }
-    }
-
-    TEAMS = normalizeTeamsData(TEAMS);
-    saveTeamsToLocal();
-    refreshTeamsUIAll();
-    return { teams:teamAdds, players:playerAdds, removedTeams, removedPlayers };
-  }
-
-  function downloadTeamsCsvTemplate(){
-    // Excel-friendly template (save/export as CSV)
-    // Action:
-    //  - ADD    : add/update a player row (requires Player Name, Player Number, Player Password)
-    //  - REMOVE : remove a player (Team Name + Player Number; Player Name optional)
-    //  - REMOVE : remove a team (Team Name only; leave player fields blank)
-    const csv = [
-      'Team Name,Coach Email,Player Name,Player Number,Player Password,Action',
-      // Add / update a player (team will be created if missing)
-      '13U Black,coach@example.com,John Smith,12,1234,ADD',
-      // Remove a player (do not include password)
-      '13U Black,,John Smith,12,,REMOVE',
-      // Remove an entire team (leave player fields blank)
-      '13U Black,,,,,REMOVE'
-    ].join('\n');
-    downloadText('diamondiq_teams_roster_template.csv', csv, 'text/csv');
-  }
-
-  function _csvEscape(v){
-    const s = String(v ?? '');
-    if(/[",\n\r\t]/.test(s)){
-      return '"' + s.replace(/"/g,'""') + '"';
-    }
-    return s;
-  }
-
-  function downloadTeamsCsvExport(){
-    const teams = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams.slice() : [];
-    teams.sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), undefined, {numeric:true, sensitivity:'base'}));
-    const lines = [];
-    lines.push('Team Name,Coach Email,Player Name,Player Number,Player Password,Action');
-    for(const t of teams){
-      const coachEmail = t.coachEmail || '';
-      const roster = Array.isArray(t.roster) ? t.roster : [];
-      if(roster.length === 0){
-        lines.push([t.name||'', coachEmail, '', '', '', ''].map(_csvEscape).join(','));
-        continue;
-      }
-      // stable order by number then name
-      const r2 = roster.slice().sort((a,b)=> String(a.number||'').localeCompare(String(b.number||''), undefined, {numeric:true, sensitivity:'base'}) || String(a.name||'').localeCompare(String(b.name||'')));
-      for(const p of r2){
-        lines.push([t.name||'', coachEmail, p.name||'', p.number||'', p.password||'', ''].map(_csvEscape).join(','));
-      }
-    }
-    downloadText('diamondiq_teams_roster_export.csv', lines.join('\n'), 'text/csv');
-  }
-
-
-  // @diq:end [A13] Teams CSV upload
-
-
-
   function findTeam(teamId){
-  const id = String(teamId || "").trim();
-  if(!id) return null;
-  const want = id;
-  const wantSlug = slugifyLoose(id);
-  return (TEAMS.teams || []).find(t => t.id === want || t.id === wantSlug || slugifyLoose(t.name) === wantSlug) || null;
-}
+    return (TEAMS.teams || []).find(t => t.id === teamId) || null;
+  }
   function findPlayer(teamId, playerId){
-  const t = findTeam(teamId);
-  if(!t) return null;
-  const pid = String(playerId || "").trim();
-  const pidSlug = slugifyLoose(pid);
-  return (t.roster || []).find(p => p.playerId === pid || slugifyLoose(p.playerId) === pidSlug) || null;
-}
+    const t = findTeam(teamId);
+    if(!t) return null;
+    return (t.roster || []).find(p => p.playerId === playerId) || null;
+  }
 
   // --- Coach TEAMS UI wiring ---
   const coachTeamSelect = document.getElementById("coachTeamSelect");
@@ -1474,16 +1126,6 @@ function computeRosterPlayerId(teamObj, playerObj){
   const coachTeamAddBtn = document.getElementById("coachTeamAddBtn");
   const coachTeamUpdateBtn = document.getElementById("coachTeamUpdateBtn");
   const coachTeamRemoveBtn = document.getElementById("coachTeamRemoveBtn");
-
-  const coachReviewInput = document.getElementById("coachReviewInput");
-  const coachReviewLoadBtn = document.getElementById("coachReviewLoadBtn");
-  const coachReviewClearBtn = document.getElementById("coachReviewClearBtn");
-  const coachReviewOutput = document.getElementById("coachReviewOutput");
-  const coachReviewPlayback = document.getElementById("coachReviewPlayback");
-
-  const coachCollapseAllBtn = document.getElementById("coachCollapseAllBtn");
-  const coachExpandAllBtn = document.getElementById("coachExpandAllBtn");
-
 
   const coachRosterSelect = document.getElementById("coachRosterSelect");
   const coachPlayerName = document.getElementById("coachPlayerName");
@@ -1497,13 +1139,10 @@ function computeRosterPlayerId(teamObj, playerObj){
 
   const teamsDownloadBtn = document.getElementById("teamsDownloadBtn");
   const teamsCopyBtn = document.getElementById("teamsCopyBtn");
+  const teamsImportBtn = document.getElementById("teamsImportBtn");
+  const teamsResetBtn = document.getElementById("teamsResetBtn");
 
-  const teamsCsvFile = document.getElementById("teamsCsvFile");
-  const teamsCsvUploadBtn = document.getElementById("teamsCsvUploadBtn");
-  const teamsCsvTemplateBtn = document.getElementById("teamsCsvTemplateBtn");
-
-  const teamsCsvExportBtn = document.getElementById("teamsCsvExportBtn");
-function setRosterControlsEnabled(enabled){
+  function setRosterControlsEnabled(enabled){
     coachRosterSelect.disabled = !enabled;
     coachPlayerName.disabled = !enabled;
     coachPlayerNumber.disabled = !enabled;
@@ -1589,28 +1228,17 @@ function setRosterControlsEnabled(enabled){
   }
 
   function buildPlayerIdForTeam(teamName, playerName, playerNumber, baseId){
-    // Deterministic, coach-friendly ID (no random prefix): <team>-<name>-<number>
-    // baseId is kept only for backward compatibility in callers (results storage uses baseId separately).
     const teamSlug = slugifyLoose(teamName) || "team";
     const nameSlug = slugifyLoose(playerName) || "player";
     const num = String(playerNumber || "").trim().replace(/\s+/g,"");
     const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
-    return `${teamSlug}-${nameSlug}-${numSafe}`;
+    return `${baseId}-${teamSlug}-${nameSlug}-${numSafe}`;
   }
 
   function genSimplePassword(){
     // 4-digit numeric
     return String(Math.floor(1000 + Math.random()*9000));
   }
-
-  function randomId(len){
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let out = "";
-    for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
-    return out;
-  }
-
-
 
   function upsertTeam(name, email){
     const teamName = String(name || "").trim();
@@ -1652,8 +1280,7 @@ function setRosterControlsEnabled(enabled){
       existing.number = number;
       existing.password = pass;
       existing.playerId = buildPlayerIdForTeam(t.name, name, number, existing.baseId);
-    }
-    else{
+    }else{
       const baseId = randomId(8);
       const playerId = buildPlayerIdForTeam(t.name, name, number, baseId);
       existing = { name, number, password: pass, baseId, playerId };
@@ -1682,42 +1309,12 @@ function setRosterControlsEnabled(enabled){
     setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
   }
 
-  function downloadText(filename, text, mime='text/plain'){
-    const blob = new Blob([String(text ?? '')], { type: mime });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
-  }
-
-  // Lightweight toast (non-blocking). Falls back to alert if DOM not ready.
-  let _toastEl = null;
-  let _toastTimer = null;
-  function toast(msg, ms=1800){
-    try{
-      if(!_toastEl){
-        _toastEl = document.createElement('div');
-        _toastEl.id = 'diqToast';
-        _toastEl.className = 'fixed left-1/2 top-4 -translate-x-1/2 z-[9999] px-4 py-2 rounded-xl border border-slate-200 bg-white shadow-lg text-sm font-semibold text-slate-800 hidden';
-        document.body.appendChild(_toastEl);
-      }
-      _toastEl.textContent = String(msg ?? '');
-      _toastEl.classList.remove('hidden');
-      if(_toastTimer) clearTimeout(_toastTimer);
-      _toastTimer = setTimeout(()=>{ try{ _toastEl.classList.add('hidden'); }catch(e){} }, Math.max(800, ms||0));
-    }catch(e){
-      // last resort
-      try{ alert(String(msg ?? '')); }catch(_){}
-    }
-  }
-
-
-
-
   function copyTextToClipboard(text){
     return navigator.clipboard.writeText(text);
+  }
+
+  function promptForJsonPaste(title){
+    return window.prompt(title + "\n\nPaste JSON here:");
   }
 
   if(coachTeamSelect){
@@ -1789,7 +1386,8 @@ function setRosterControlsEnabled(enabled){
       coachPlayerPass.value = genSimplePassword();
       // update preview
       const t = findTeam(coachTeamSelect.value);
-coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t ? t.name : coachTeamName.value, coachPlayerName.value, coachPlayerNumber.value, baseId)}`;
+      const baseId = (coachRosterSelect.value && t) ? (findPlayer(t.id, coachRosterSelect.value)?.baseId || randomId(8)) : randomId(8);
+      coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t ? t.name : coachTeamName.value, coachPlayerName.value, coachPlayerNumber.value, baseId)}`;
     });
   }
 
@@ -1800,7 +1398,8 @@ coachPlayerIdPreview.textContent = `Player ID preview: ${buildPlayerIdForTeam(t 
       coachPlayerIdPreview.textContent = "";
       return;
     }
-const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerNumber.value, baseId);
+    const baseId = (coachRosterSelect.value ? (findPlayer(teamId, coachRosterSelect.value)?.baseId) : null) || randomId(8);
+    const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerNumber.value, baseId);
     coachPlayerIdPreview.textContent = `Player ID preview: ${preview}`;
   }
 
@@ -1878,53 +1477,29 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
         .catch(()=>{ alert("Clipboard copy failed. Use Download teams.json instead."); });
     });
   }
-
-
-  // Teams CSV upload (Excel-friendly)
-  if(teamsCsvUploadBtn && teamsCsvFile){
-    teamsCsvUploadBtn.addEventListener("click", ()=> teamsCsvFile.click());
-    teamsCsvFile.addEventListener("change", ()=>{
-      const f = teamsCsvFile.files && teamsCsvFile.files[0];
-      if(!f) return;
-      const name = String(f.name||'').toLowerCase();
-      if(name.endsWith(".xlsx")){
-        alert("Please export your Excel file as CSV first (File → Save As → CSV), then upload the CSV.");
-        teamsCsvFile.value = "";
-        return;
+  if(teamsImportBtn){
+    teamsImportBtn.addEventListener("click", ()=>{
+      const raw = promptForJsonPaste("Import teams JSON");
+      if(!raw) return;
+      try{
+        const parsed = JSON.parse(raw);
+        TEAMS = normalizeTeamsData(parsed);
+        saveTeamsToLocal();
+        refreshTeamsUIAll();
+        alert("Teams imported.");
+      }catch(e){
+        alert("Invalid JSON.");
       }
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        try{
-          const text = String(reader.result || "");
-          const parsed = parseDelimited(text);
-          const res = applyTeamsRosterRows(parsed.rows, parsed.headers);
-          toast(`Roster import complete. Added/updated: ${res.players}. Removed players: ${res.removedPlayers||0}. Removed teams: ${res.removedTeams||0}.`);
-        }catch(e){
-          alert("Could not import CSV: " + (e && e.message ? e.message : e));
-        }finally{
-          teamsCsvFile.value = "";
-        }
-      };
-      reader.onerror = ()=>{
-        alert("Could not read file.");
-        teamsCsvFile.value = "";
-      };
-      reader.readAsText(f);
     });
   }
-  if(teamsCsvTemplateBtn){
-    teamsCsvTemplateBtn.addEventListener("click", ()=>{
-      downloadTeamsCsvTemplate();
+  if(teamsResetBtn){
+    teamsResetBtn.addEventListener("click", ()=>{
+      if(!confirm("Clear locally saved teams? (This does not delete teams.json on disk.)")) return;
+      try{ localStorage.removeItem(TEAMS_STORAGE_KEY); }catch(e){}
+      TEAMS = normalizeTeamsData(null);
+      refreshTeamsUIAll();
     });
   }
-
-  if(teamsCsvExportBtn){
-    teamsCsvExportBtn.addEventListener("click", ()=>{
-      downloadTeamsCsvExport();
-    });
-  }
-
-
 
   function refreshTeamsUIAll(){
     refreshCoachTeamSelect();
@@ -1947,9 +1522,8 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
   const playerIdText = document.getElementById("playerIdText");
 
   const playerShareResultsBtn = document.getElementById("playerShareResultsBtn");
-
-  const playerCopyReviewCodeBtn = document.getElementById("playerCopyReviewCodeBtn");
-const playerShareHint = document.getElementById("playerShareHint");
+  const playerCopyResultsBtn = document.getElementById("playerCopyResultsBtn");
+  const playerShareHint = document.getElementById("playerShareHint");
 
   function getCurrentPlayerFromMeta(){
     // PLAYER_META is global (loaded from STORAGE_PLAYER_META)
@@ -2022,7 +1596,9 @@ const playerShareHint = document.getElementById("playerShareHint");
       playerLogoutBtn.style.display = "inline-flex";
 
       playerShareResultsBtn.disabled = false;
-// set selects to match meta
+      playerCopyResultsBtn.disabled = false;
+
+      // set selects to match meta
       const teamId = cur.team.id;
       playerTeamSelect.value = teamId;
       refreshPlayerNameDropdown();
@@ -2039,7 +1615,8 @@ const playerShareHint = document.getElementById("playerShareHint");
       playerLogoutBtn.style.display = "none";
 
       playerShareResultsBtn.disabled = true;
-playerShareHint.textContent = "";
+      playerCopyResultsBtn.disabled = true;
+      playerShareHint.textContent = "";
     }
   }
 
@@ -2079,10 +1656,6 @@ playerShareHint.textContent = "";
 
     // Do NOT clear password here; only clear on successful login / explicit actions.
     setPlayerUIForLoggedIn();
-
-    // keep header Player Login button state in sync (no refresh needed)
-    updatePlayerHeaderButton();
-
   }
 
   
@@ -2110,7 +1683,7 @@ playerShareHint.textContent = "";
 }
 
 function isPlayerLoggedInNow(){
-  const cur = getCurrentPlayerFromMeta();
+  const cur = getCurrentPlayer();
   return !!(cur && cur.player && cur.team);
 }
   // expose for header button logic (avoids scoping quirks)
@@ -2126,12 +1699,11 @@ function updatePlayerHeaderButton(){
       else if(window.PLAYER && window.PLAYER.playerId) logged = true;
     }catch(_e){ logged = false; }
 
-    btn.textContent = logged ? 'Player Info' : 'Player Login';
-    btn.classList.remove('btn-orange','btn-yellow','btn-green');
-    btn.classList.add(logged ? 'btn-green' : 'btn-orange');
+    btn.textContent = 'Player Login';
+    btn.classList.remove('btn-yellow','btn-green');
+    btn.classList.add(logged ? 'btn-green' : 'btn-yellow');
     btn.setAttribute('aria-pressed', logged ? 'true' : 'false');
-    btn.title = logged ? 'View Player Info' : 'Player Login';
-  }
+}
 
 
   function openPlayerSidebar(){
@@ -2189,7 +1761,6 @@ function updatePlayerHeaderButton(){
     loadResults();
 
     refreshPlayerLoginUI();
-    updatePlayerHeaderButton();
     alert("Logged in.");
   
   // Ensure dropdowns are populated once the sidebar is mounted
@@ -2206,7 +1777,6 @@ function updatePlayerHeaderButton(){
     loadResults();
 
     refreshPlayerLoginUI();
-    updatePlayerHeaderButton();
   }
 
   if(playerLoginBtn) playerLoginBtn.addEventListener("click", doPlayerLogin);
@@ -2250,629 +1820,68 @@ function updatePlayerHeaderButton(){
     return lines.join("\n");
   }
 
-  function mailtoEncode(s){
-    return encodeURIComponent(String(s ?? '')).replace(/%0D%0A/g,'%0A');
+  function mailtoEncode(str){
+    return encodeURIComponent(str);
   }
 
   
-  function _fmtSecs(v){
-    const n = Number(v);
-    if(!Number.isFinite(n)) return '—';
-    return (Math.round(n*10)/10).toFixed(1)+'s';
+
+
+  function _b64uEncodeUtf8(str){
+    const b64 = btoa(unescape(encodeURIComponent(str)));
+    return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   }
-  function _fmtIsoLocal(ts){
-    if(!ts) return '—';
-    try{ return new Date(ts).toLocaleString(); }catch(e){ return String(ts); }
+  function _b64uDecodeUtf8(b64u){
+    const b64 = String(b64u||'').replace(/-/g,'+').replace(/_/g,'/');
+    const pad = b64.length % 4 ? '='.repeat(4 - (b64.length % 4)) : '';
+    const txt = atob(b64 + pad);
+    return decodeURIComponent(escape(txt));
   }
-  function _padRight(s, w){
-    s = String(s==null?'':s);
-    return s.length >= w ? s.slice(0, w-1)+'…' : (s + ' '.repeat(w - s.length));
-  }
-
-  // Option A: Quick Summary + Situations Table (plain-text email friendly)
-  function buildQuickCoachReportOptionA(cur){
-    const teamName = (cur && cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
-    const playerName = (cur && cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
-    const playerNum  = (cur && cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
-
-    const exportedAtStr = new Date().toLocaleString();
-    const attempts = (RESULTS && Array.isArray(RESULTS.log)) ? RESULTS.log.length : 0;
-
-    const by = (RESULTS && RESULTS.bySituation && typeof RESULTS.bySituation === 'object') ? RESULTS.bySituation : {};
-    const keys = Object.keys(by);
-    keys.sort((a,b)=>{
-      const ta = (by[a] && by[a].lastTs) ? Date.parse(by[a].lastTs) : 0;
-      const tb = (by[b] && by[b].lastTs) ? Date.parse(by[b].lastTs) : 0;
-      return tb - ta || String(a).localeCompare(String(b), undefined, {numeric:true, sensitivity:'base'});
-    });
-
-    const rows = keys.map(k=>{
-      const s = by[k] || {};
-      const title = s.title || '';
-      const p1 = s.bestPhase1 ? `${s.bestPhase1.score}/${s.bestPhase1.total} • t${s.bestPhase1.triesUsed ?? '—'} • ${_fmtSecs(s.bestPhase1.timeElapsed)}` : '—';
-      const p2s1 = s.lastPhase2Stage1 ? `${s.lastPhase2Stage1.success ? '✅' : '❌'} • t${s.lastPhase2Stage1.triesUsed ?? '—'} • ${_fmtSecs(s.lastPhase2Stage1.timeElapsed)}` : '—';
-      const p2s2 = s.lastPhase2Stage2 ? `${s.lastPhase2Stage2.success ? '✅' : '❌'} • t${s.lastPhase2Stage2.triesUsed ?? '—'} • ${_fmtSecs(s.lastPhase2Stage2.timeElapsed)}` : '—';
-      const att = s.attempts != null ? String(s.attempts) : '0';
-      const last = s.lastTs ? _fmtIsoLocal(s.lastTs) : '—';
-      return { key:String(k), title:String(title), p1, p2s1, p2s2, attempts:att, last };
-    });
-
-    const subject = `Diamond IQ Results — ${teamName} — #${playerNum} ${playerName}`;
-
-    const header = [
-      _padRight('Key', 10),
-      _padRight('Title', 22),
-      _padRight('Phase 1', 20),
-      _padRight('P2 Seq', 18),
-      _padRight('P2 S2', 18),
-      _padRight('Att', 4),
-      'Last'
-    ].join(' | ');
-    const sep = '-'.repeat(header.length);
-
-    const table = rows.length ? rows.map(r=>[
-      _padRight(r.key, 10),
-      _padRight(r.title, 22),
-      _padRight(r.p1, 20),
-      _padRight(r.p2s1, 18),
-      _padRight(r.p2s2, 18),
-      _padRight(r.attempts, 4),
-      r.last
-    ].join(' | ')).join('\n') : '(No attempts recorded yet.)';
-
-    const body =
-`Diamond IQ — Quick Report
-
-Player: ${teamName} — #${playerNum} ${playerName}
-Date: ${exportedAtStr}
-Attempts recorded: ${attempts}
-
-Situations:
-${header}
-${sep}
-${table}
-
-Notes:
-- (Coach can add notes here after reviewing.)`;
-
-    return { subject, body };
-  }
-  // Option B: Coach Review Code (paste into Coach Tools)
-  function _b64urlEncode(str){
-    const utf8 = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m,p)=> String.fromCharCode(parseInt(p,16)));
-    return btoa(utf8).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  }
-  function _b64urlDecode(b64url){
-    let b64 = String(b64url || '').replace(/-/g,'+').replace(/_/g,'/');
-    while(b64.length % 4) b64 += '=';
-    const bin = atob(b64);
-    const esc = bin.split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('');
-    return decodeURIComponent(esc);
-  }
-
-  function buildCoachReviewPayload(dayKey){
-    const cur = getCurrentPlayerFromMeta();
-    if(!cur) return null;
-
-    const teamName = (cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
-    const playerName = (cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
-    const playerNum  = (cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
-
-    const rows = buildDailyAttemptRows(dayKey);
-    return {
-      v: 1,
-      exportedAt: new Date().toISOString(),
-      dayKey,
-      team: { name: teamName, id: cur.team && cur.team.teamId ? cur.team.teamId : undefined },
-      player: { name: playerName, number: playerNum, id: cur.player && cur.player.playerId ? cur.player.playerId : undefined },
-      attempts: rows
-    };
-  }
-
-  function encodeCoachReviewCode(payload){
-    const json = JSON.stringify(payload);
-    return `DIQ1:${_b64urlEncode(json)}`;
-  }
-
-  function decodeCoachReviewCode(code){
-    const raw = String(code || '').trim();
-    if(!raw) throw new Error('Empty code');
-    const cleaned = raw.replace(/\s+/g,''); // allow pasted with line breaks
-    if(!cleaned.startsWith('DIQ1:')) throw new Error('Not a DIQ1 code');
-    const json = _b64urlDecode(cleaned.slice(5));
-    const obj = JSON.parse(json);
-    if(!obj || obj.v !== 1) throw new Error('Unsupported version');
-    return obj;
-  }
-
-  function copyTextToClipboard(txt){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      return navigator.clipboard.writeText(txt);
-    }
-    const ta = document.createElement('textarea');
-    ta.value = txt;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try{ document.execCommand('copy'); }catch(e){}
-    document.body.removeChild(ta);
-    return Promise.resolve();
-  }
-
-  // Coach Review render + playback (Phase 2 sequence)
-  let _coachPlayTimer = null;
-  function _stopCoachPlayback(pbId){
-    if(_coachPlayTimer){ clearInterval(_coachPlayTimer); _coachPlayTimer = null; }
-    const wrap = document.getElementById(pbId || 'coachReviewModalPlayback') || document.getElementById('coachReviewPlayback');
-    if(wrap) wrap.innerHTML = '';
-  }
-
-  function renderCoachReview(obj){
-    const esc = (s)=> String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    const teamName = obj.team && obj.team.name ? obj.team.name : '—';
-    const playerName = obj.player && obj.player.name ? obj.player.name : '—';
-    const playerNum = obj.player && obj.player.number!=null ? obj.player.number : '—';
-    const dayKey = obj.dayKey || '—';
-
-    const attempts = Array.isArray(obj.attempts) ? obj.attempts : [];
-    const attemptedSituations = new Set(attempts.map(r=>r.situationKey).filter(Boolean));
-
-    // Mini summary in sidebar
-    const mini = document.getElementById('coachReviewMini');
-    const miniText = document.getElementById('coachReviewMiniText');
-    if(mini && miniText){
-      mini.style.display = 'block';
-      miniText.innerHTML = `
-        <div><span class="muted">Team:</span> <b>${esc(teamName)}</b></div>
-        <div><span class="muted">Player:</span> <b>#${esc(playerNum)} ${esc(playerName)}</b></div>
-        <div><span class="muted">Date:</span> <b>${esc(dayKey)}</b></div>
-        <div><span class="muted">Attempts:</span> <b>${esc(attempts.length)}</b> &nbsp; <span class="muted">Situations:</span> <b>${esc(attemptedSituations.size)}</b></div>
-      `;
-    }
-
-    // Group by situation
-    const grouped = {};
-    for(const r of attempts){
-      const k = r.situationKey || '(unknown)';
-      if(!grouped[k]) grouped[k] = { title: r.situationTitle || '', desc: r.situationDesc || '', outs: (r.outs==null?'':r.outs), runnersOn: (r.runnersOn||null), rows: [] };
-      if(r.situationTitle) grouped[k].title = r.situationTitle;
-      grouped[k].rows.push(r);
-    }
-    const keys = Object.keys(grouped).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
-
-    const meta = document.getElementById('coachReviewModalMeta');
-    const out = document.getElementById('coachReviewModalOutput');
-    if(meta) meta.textContent = `${teamName} — #${playerNum} ${playerName} — ${dayKey} — Attempts ${attempts.length}`;
-    if(out) out.innerHTML = '';
-    _stopCoachPlayback('coachReviewModalPlayback');
-
-    if(!out) return;
-
-    if(keys.length === 0){
-      out.innerHTML = '<div class="tiny muted">No attempts in this code.</div>';
-      return;
-    }
-
-    let bodyRows = '';
-    const playMap = [];
-    for(const k of keys){
-      const g = grouped[k];
-      {
-      const desc = g.desc ? ` • ${esc(g.desc)}` : '';
-      const outsTxt = (g.outs!=='' && g.outs!=null) ? ` • Outs: ${esc(g.outs)}` : '';
-      const runnersTxt = (()=>{ 
-        const ro = g.runnersOn || {};
-        const any = !!(ro.first || ro.second || ro.third);
-        if(!g.runnersOn) return '';
-        if(!any) return ' • Runners: —';
-        const parts = [];
-        if(ro.first) parts.push('1B');
-        if(ro.second) parts.push('2B');
-        if(ro.third) parts.push('3B');
-        return ` • Runners: ${esc(parts.join(','))}`;
-      })();
-      bodyRows += `<tr class="grp"><td colspan="11">${esc(k)} — ${esc(g.title || '')}${desc}${outsTxt}${runnersTxt}</td></tr>`;
-    }
-      for(const r of g.rows){                        let playBtn = `<span class="text-slate-400 text-xs">—</span>`;
-        if(Array.isArray(r.playbackPicked) && r.playbackPicked.length){
-          const playIndex = playMap.length;
-          playMap.push({ attempt: { picked: r.playbackPicked.slice() }, label: `${r.situationKey} #${r.attemptNo || ''}` });
-          playBtn = `<button class="btn btn-white btn-xs" data-play-index="${playIndex}">Play</button>`;
-        }
-
-const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='FAIL' ? 'score-red' : 'score-yellow');
-        const posBadge = (r.posResult && r.posResult!=='—')
-          ? `<span class="badge badge-mini ${posBadgeCls}">${esc(r.posResult)}</span>`
-          : `<span class="text-slate-400 text-xs">—</span>`;
-
-        let posScoreBadge = `<span class="text-slate-400 text-xs">—</span>`;
-        const pc = (r.posScoreCorrect==null?null:Number(r.posScoreCorrect));
-        const pt = (r.posScoreTotal==null?null:Number(r.posScoreTotal));
-        if(r.posScore && pc!=null && pt!=null && !Number.isNaN(pc) && !Number.isNaN(pt) && pt>0){
-          const cls = (pc>=pt) ? 'score-green' : (pc>0 ? 'score-yellow' : 'score-red');
-          posScoreBadge = `<span class="badge badge-mini ${cls}">${esc(r.posScore)}</span>`;
-        }
-
-        const triesBadge = (num)=>{
-          if(num==null || Number.isNaN(num)) return `<span class="text-slate-400 text-xs">—</span>`;
-          const n = Math.max(0, Math.floor(num));
-          let cls = 'score-yellow';
-          if(n <= 1) cls = 'score-green';
-          else if(n >= MAX_TRIES) cls = 'score-red';
-          return `<span class="badge badge-mini ${cls}">${n}/${MAX_TRIES}</span>`;
-        };
-
-        const posTriesBadge = triesBadge(r.posTriesUsedNum==null?null:Number(r.posTriesUsedNum));
-        const seqTriesBadge = triesBadge(r.seqTriesUsedNum==null?null:Number(r.seqTriesUsedNum));
-
-        let seqBadge = `<span class="text-slate-400 text-xs">—</span>`;
-        const seqVal = (r.seqResult || '').trim();
-        if(seqVal && seqVal !== '—'){
-          // If any FAIL in the summary, mark red. If both SUCCESS and no FAIL, green. Otherwise yellow.
-          const up = seqVal.toUpperCase();
-          let cls = 'score-yellow';
-          if(up.includes('FAIL')) cls = 'score-red';
-          else if(up.includes('SUCCESS') && !up.includes('FAIL')) cls = 'score-green';
-          seqBadge = `<span class="badge badge-mini ${cls}">${esc(seqVal)}</span>`;
-        }
-
-        bodyRows += `
-          <tr>
-            <td class="coachMono">${esc(r.time || '')}</td>
-            <td class="coachMono num">${esc(r.attemptNo || '')}</td>
-
-            <td class="coachMono">${posBadge}</td>
-            <td class="coachMono num">${posScoreBadge}</td>
-            <td class="coachMono num">${posTriesBadge}</td>
-            <td class="coachMono num">${esc(r.posElapsed || '')}</td>
-
-            <td class="coachMono">${seqBadge}</td>
-            <td class="coachMono num">${seqTriesBadge}</td>
-            <td class="coachMono num">${esc(r.seqElapsed || '')}</td>
-
-            <td class="coachMono">${esc(r.details || '')}</td>
-            <td class="num">${playBtn}</td>
-          </tr>
-        `;
-
-      }
-    }
-
-    out.innerHTML = `
-      <div class="coachTblWrap">
-        <table class="coachTbl">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th class="num">#</th>
-              <th>Position Result</th>
-              <th class="num">Pos Score</th>
-              <th class="num">Pos Tries</th>
-              <th class="num">Pos Time</th>
-              <th>Sequence Result</th>
-              <th class="num">Seq Tries</th>
-              <th class="num">Seq Time</th>
-              <th>Selected Sequence</th>
-              <th class="num">Playback</th>
-            </tr>
-          </thead>
-          <tbody>${bodyRows}</tbody>
-        </table>
-      </div>
-    `;
-
-    out.querySelectorAll('button[data-play-index]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const i = Number(btn.getAttribute('data-play-index'));
-        const item = playMap[i];
-        if(!item) return;
-        startCoachPlayback(item.attempt, item.label, 'coachReviewModalPlayback');
-      });
-    });
-  }
-
-
-// Coach Review autoload helper (URL hash: #coachReview=...)
-function _diqTryAutoloadCoachReview(){
-  if(!_pendingCoachReviewCode) return false;
-  try{
-    if(coachReviewInput) coachReviewInput.value = _pendingCoachReviewCode;
-    const obj = decodeCoachReviewCode(_pendingCoachReviewCode);
-    renderCoachReview(obj);
-    if(typeof openCoachReviewModal === 'function') openCoachReviewModal();
-    if(typeof toast === 'function') toast('Coach Review report loaded from link.');
-    return true;
-  }catch(e){
-    alert("Could not load Coach Review Code from link: " + (e && e.message ? e.message : e));
-    return false;
-  }finally{
-    _pendingCoachReviewCode = null;
-  }
-}
-window._diqCoachReviewAutoload = _diqTryAutoloadCoachReview;
-
-
-
-  function startCoachPlayback(attempt, label, pbId){
-    const pb = document.getElementById(pbId || 'coachReviewModalPlayback') || document.getElementById('coachReviewPlayback');
-    if(!pb) return;
-    _stopCoachPlayback(pbId);
-
-    const tokens = Array.isArray(attempt.picked) ? attempt.picked.slice() : [];
-    if(tokens.length === 0){
-      pb.innerHTML = '<div class="tiny muted">No sequence data to play.</div>';
-      return;
-    }
-
-    let idx = 0;
-
-    const render = ()=>{
-      const pills = tokens.map((t, i)=>{
-        const cls = (i === idx) ? 'tokenPill active' : 'tokenPill';
-        return `<span class="${cls}">${String(t)}</span>`;
-      }).join(' ');
-
-      pb.innerHTML = `
-        <div class="card" style="padding:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-weight:900;">Playback <span class="muted coachMono" style="font-weight:700; font-size:12px;">${String(label||'')}</span></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-              <button id="coachPlayPrev" class="btn btn-ghost" type="button">Prev</button>
-              <button id="coachPlayToggle" class="btn btn-ghost" type="button">${_coachPlayTimer ? 'Pause' : 'Play'}</button>
-              <button id="coachPlayNext" class="btn btn-ghost" type="button">Next</button>
-              <button id="coachPlayStop" class="btn btn-ghost" type="button">Stop</button>
-            </div>
-          </div>
-          <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">${pills}</div>
-        </div>
-      `;
-
-      const prev = pb.querySelector('#coachPlayPrev');
-      const next = pb.querySelector('#coachPlayNext');
-      const stop = pb.querySelector('#coachPlayStop');
-      const tog  = pb.querySelector('#coachPlayToggle');
-
-      if(prev) prev.onclick = ()=>{ idx = Math.max(0, idx-1); render(); };
-      if(next) next.onclick = ()=>{ idx = Math.min(tokens.length-1, idx+1); render(); };
-      if(stop) stop.onclick = ()=>{ _stopCoachPlayback(pbId); };
-
-      if(tog){
-        tog.onclick = ()=>{
-          if(_coachPlayTimer){
-            clearInterval(_coachPlayTimer); _coachPlayTimer = null;
-            tog.textContent = 'Play';
-          }else{
-            tog.textContent = 'Pause';
-            _coachPlayTimer = setInterval(()=>{
-              idx += 1;
-              if(idx >= tokens.length){
-                clearInterval(_coachPlayTimer); _coachPlayTimer = null;
-                idx = tokens.length-1;
-                render();
-              }else{
-                render();
-              }
-            }, 650);
-          }
-        };
-      }
-    };
-
-    render();
-
-    // Autoplay once started via Play button for a "replay" feel
-    _coachPlayTimer = setInterval(()=>{
-      idx += 1;
-      if(idx >= tokens.length){
-        clearInterval(_coachPlayTimer); _coachPlayTimer = null;
-        idx = tokens.length-1;
-        render();
-      }else{
-        render();
-      }
-    }, 650);
-  }
-
-  function _dayKeyLocal(d){
-    const dt = (d instanceof Date) ? d : new Date(d);
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth()+1).padStart(2,'0');
-    const da = String(dt.getDate()).padStart(2,'0');
-    return `${y}-${m}-${da}`;
-  }
-  function _timeLocal(ts){
+  function makeCoachReviewCode(payloadObj){
     try{
-      const dd = new Date(ts);
-      return dd.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    }catch(e){ return '—'; }
-  }
-  function _safe(s){ return String(s==null?'':s); }
-
-  function buildDailyAttemptRows(dayKey){
-  // Build per-situation, per-attempt rows for the given day (one row per full attempt)
-  const rows = [];
-  if(!RESULTS?.log?.length) return rows;
-
-  const start = new Date(`${dayKey}T00:00:00`);
-  const end   = new Date(`${dayKey}T23:59:59.999`);
-
-  const evts = RESULTS.log
-    .filter(e=>{
-      const ts = new Date(e.ts || 0);
-      return ts >= start && ts <= end;
-    })
-    .sort((a,b)=> (new Date(a.ts||0).getTime()) - (new Date(b.ts||0).getTime()));
-
-  const byKey = {}; // situationKey -> { title, desc, outs, runnersOn, attempts:[], attemptNo:number }
-
-  const fmtTime = (ts)=>{
-    try{ return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}); }
-    catch{ return ''; }
-  };
-
-  const seqStr = (arr)=>{
-    if(!Array.isArray(arr) || !arr.length) return '';
-    return arr.join(' → ');
-  };
-
-  for(const e of evts){
-    // Coach Review rows are anchored on Phase 2 attempts (which may include Phase 1 outcome)
-    if(e.phase !== 2) continue;
-    if(!e.situationKey) continue;
-
-    const k = e.situationKey;
-    if(!byKey[k]){
-      byKey[k] = {
-        title: _safe(e.situationTitle),
-        desc: _safe(e.situationDesc),
-        outs: (e.outs==null?'':_safe(e.outs)),
-        runnersOn: (e.runnersOn==null?null:e.runnersOn),
-        attempts: [],
-        attemptNo: 0
-      };
-    }
-
-    const g = byKey[k];
-
-    if(Number(e.stage) === 1){
-      // Stage 1 record begins a new attempt
-      g.attemptNo += 1;
-
-      const attempt = {
-        situationKey: k,
-        situationTitle: g.title,
-        situationDesc: g.desc,
-        outs: g.outs,
-        runnersOn: g.runnersOn,
-
-        ts: e.ts || 0,
-        time: fmtTime(e.ts || 0),
-        attemptNo: g.attemptNo,
-
-        // Phase 1 (tokens/chips)
-        posOk: (e.phase1Ok==null?null:!!e.phase1Ok),
-        posTriesUsed: (e.phase1TriesUsed==null?'' : _safe(e.phase1TriesUsed)),
-
-        posTriesUsedNum: (e.phase1TriesUsed==null?null:Number(e.phase1TriesUsed)),
-        posElapsed: (e.phase1Elapsed==null?'' : _safe(e.phase1Elapsed) + 's'),
-
-        posScoreCorrect: (e.phase1ScoreCorrect==null?'' : _safe(e.phase1ScoreCorrect)),
-        posScoreTotal: (e.phase1ScoreTotal==null?'' : _safe(e.phase1ScoreTotal)),
-
-        // Phase 2 (sequence/relay) stage 1 + stage 2
-        seq1Ok: (e.success==null?null:!!e.success),
-        seq2Ok: null,
-        seqTriesUsed: (e.triesUsed==null?'' : _safe(e.triesUsed)),
-        seqTriesUsedNum: (e.triesUsed==null?null:Number(e.triesUsed)),
-        seqElapsed: (e.timeElapsed==null?'' : _safe(e.timeElapsed) + 's'),
-
-        seq1: Array.isArray(e.picked) ? e.picked.slice() : [],
-        seq2: []
-      };
-
-      g.attempts.push(attempt);
-      continue;
-    }
-
-    if(Number(e.stage) === 2){
-      // Stage 2 record attaches to the last attempt for this situationKey
-      const last = g.attempts[g.attempts.length-1];
-      if(last){
-        last.seq2Ok = (e.success==null?null:!!e.success);
-        last.seq2 = Array.isArray(e.picked) ? e.picked.slice() : [];
-      }
-      continue;
+      return 'DIQ1:' + _b64uEncodeUtf8(JSON.stringify(payloadObj));
+    }catch(e){
+      return '';
     }
   }
-
-  // Flatten into rows
-  Object.keys(byKey).sort().forEach(k=>{
-    byKey[k].attempts.forEach(a=>{
-      const s1 = seqStr(a.seq1);
-      const s2 = seqStr(a.seq2);
-      let detail = s1;
-      if(s2) detail = `${s1}  |  S2: ${s2}`;
-
-      // Sequence result summary
-      let seqSummary = '—';
-      if(a.seq1Ok==null) seqSummary = '—';
-      else if(a.seq2Ok==null) seqSummary = (a.seq1Ok ? 'SUCCESS' : 'FAIL');
-      else seqSummary = `S1:${a.seq1Ok?'SUCCESS':'FAIL'} / S2:${a.seq2Ok?'SUCCESS':'FAIL'}`;
-
-      rows.push({
-        situationKey: a.situationKey,
-        situationTitle: a.situationTitle,
-        situationDesc: a.situationDesc,
-        outs: a.outs,
-        runnersOn: a.runnersOn,
-
-        ts: a.ts,
-        time: a.time,
-        attemptNo: a.attemptNo,
-
-        // Phase 1 columns
-        posResult: (a.posOk==null?'—':(a.posOk?'SUCCESS':'FAIL')),
-        posTries: a.posTriesUsed,
-        posTriesUsedNum: a.posTriesUsedNum,
-        posTriesDisplay: (a.posTriesUsedNum==null||Number.isNaN(a.posTriesUsedNum)) ? '' : `${a.posTriesUsedNum}/${MAX_TRIES}`,
-        posElapsed: a.posElapsed,
-        posScore: (a.posScoreCorrect!=='' && a.posScoreTotal!=='') ? `${a.posScoreCorrect}/${a.posScoreTotal}` : '',
-        posScoreCorrect: a.posScoreCorrect,
-        posScoreTotal: a.posScoreTotal,
-
-        // Phase 2 columns
-        seqResult: seqSummary,
-        seqTries: a.seqTriesUsed,
-        seqTriesUsedNum: a.seqTriesUsedNum,
-        seqTriesDisplay: (a.seqTriesUsedNum==null||Number.isNaN(a.seqTriesUsedNum)) ? '' : `${a.seqTriesUsedNum}/${MAX_TRIES}`,
-        seqElapsed: a.seqElapsed,
-
-        details: detail,
-
-        playbackPicked: a.seq1
-      });
-    });
-  });
-
-  return rows;
-}
-
 
 function shareResultsByEmail(){
     const cur = getCurrentPlayerFromMeta();
     if(!cur) return alert("Login first.");
-
     const coachEmail = String(cur.team.coachEmail || "").trim();
     if(!coachEmail){
       alert("No coach email configured for your team. Ask your coach to add one in TEAMS.");
       return;
     }
 
-    const dayKey = _dayKeyLocal(new Date());
-    const payload = buildCoachReviewPayload(dayKey);
-    const code = encodeCoachReviewCode(payload);
+    const payload = buildResultsExportPayload();
+    payload.playerMeta = deepClone(PLAYER_META);
+    payload.teamId = cur.team.id;
+    payload.coachEmail = coachEmail;
 
-    const teamName = (cur.team && cur.team.name) ? cur.team.name : (PLAYER_META.team || '—');
-    const playerName = (cur.player && cur.player.name) ? cur.player.name : (PLAYER_META.name || '—');
-    const playerNum  = (cur.player && cur.player.number!=null) ? cur.player.number : (PLAYER_META.number || '—');
+    const code = makeCoachReviewCode(payload);
+    if(!code){
+      alert("Could not build Coach Review Code.");
+      return;
+    }
 
-    const subject = `Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}`;
-
-    const reviewUrl = `${window.location.origin}${window.location.pathname}#coachReview=${encodeURIComponent(code)}`;
-
+    const dayKey = (payload && payload.dayKey) ? String(payload.dayKey) : (new Date().toISOString().slice(0,10));
+    const subject = `Diamond IQ Results ${cur.team.name} #${cur.player.number} ${cur.player.name} - ${dayKey}`;
     const body =
 `Hi Coach,
 
-Here are the Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}
+Diamond IQ Results ${cur.team.name} #${cur.player.number} ${cur.player.name} - ${dayKey}
 
-Open this link to view the report:
-${reviewUrl}
+Coach Review Code:
+${code}
 
-If prompted, unlock Coach Tools to view the report.`;
-const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
+Steps to review:
+1) Open Diamond IQ
+2) Coach Tools → COACH REVIEW
+3) Paste the Coach Review Code and click “Parse & View”
+`;
+
+    const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(subject)}&body=${mailtoEncode(body)}`;
     window.location.href = mailto;
   }
 
@@ -2880,26 +1889,26 @@ const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(
     playerShareResultsBtn.addEventListener("click", shareResultsByEmail);
   }
 
-
+  if(playerCopyResultsBtn){
+    playerCopyResultsBtn.addEventListener("click", ()=>{
+      const payload = buildResultsExportPayload();
+      const cur = getCurrentPlayerFromMeta();
+      if(cur){
+        payload.playerMeta = deepClone(PLAYER_META);
+        payload.teamId = cur.team.id;
+        payload.coachEmail = String(cur.team.coachEmail || "").trim();
+      }
+      const txt = JSON.stringify(payload, null, 2);
+      copyTextToClipboard(txt)
+        .then(()=> alert("Results JSON copied."))
+        .catch(()=>{ alert("Clipboard copy failed. Use Share my results or download from your browser settings."); });
+    });
+  }
 
 
   function resultsStorageKey(){
     return STORAGE_RESULTS_PREFIX + PLAYER_BASE_ID;
   }
-
-
-  if(playerCopyReviewCodeBtn){
-    playerCopyReviewCodeBtn.addEventListener('click', async ()=>{
-      const cur = getCurrentPlayerFromMeta();
-      if(!cur) return alert("Login first.");
-      const dayKey = _dayKeyLocal(new Date());
-      const payload = buildCoachReviewPayload(dayKey);
-      const code = encodeCoachReviewCode(payload);
-      await copyTextToClipboard(code);
-      toast("Coach Review Code copied.");
-    });
-  }
-
   function loadResults(){
     try{
       const raw = localStorage.getItem(resultsStorageKey());
@@ -3158,11 +2167,16 @@ function setPlaySeq(next){
 }
 
 
+function setPlaySeq2FromCsv(csv){
+  if(!currentSituation) return;
+  const parts = String(csv||'').split(',').map(s=>s.trim()).filter(Boolean);
+  currentSituation.playSeq2 = sanitizeSeq(parts);
+}
 
-
-
-
-
+function setSeqNote2(note){
+  if(!currentSituation) return;
+  currentSituation.seqNote2 = (typeof note === 'string') ? note : '';
+}
 
 /** Clickable grid for adding steps */
 function buildSeqPosGrid(){
@@ -3349,8 +2363,22 @@ function wireSeqBuilderOnce(){
     seqNoteInput.addEventListener('change', syncSeqNote);
   }
 
-
-
+  if (seq2Input){
+    const syncSeq2 = () => {
+      if (!currentSituation) return;
+      setPlaySeq2FromCsv(seq2Input.value);
+    };
+    seq2Input.addEventListener('input',  syncSeq2);
+    seq2Input.addEventListener('change', syncSeq2);
+  }
+  if (seq2NoteInput){
+    const syncSeq2Note = () => {
+      if (!currentSituation) return;
+      setSeqNote2(String(seq2NoteInput.value || ''));
+    };
+    seq2NoteInput.addEventListener('input',  syncSeq2Note);
+    seq2NoteInput.addEventListener('change', syncSeq2Note);
+  }
 
 }
 
@@ -3617,16 +2645,6 @@ function endPhase2(success = true) {
       stage: phase2Stage,
       situationKey: currentSituation ? currentSituation.key : null,
       situationTitle: currentSituation ? currentSituation.title : '',
-      situationDesc: currentSituation ? (currentSituation.desc || '') : '',
-      outs: currentSituation ? (currentSituation.outs ?? null) : null,
-      runnersOn: currentSituation ? (currentSituation.runnersOn || null) : null,
-      // Phase 1 outcome (tokens)
-      phase1Ok: _phase1Summary ? !!_phase1Summary.ok : null,
-      phase1TriesUsed: _phase1Summary ? _phase1Summary.triesUsed : null,
-      phase1Elapsed: _phase1Summary ? _phase1Summary.elapsed : null,
-      phase1ScoreCorrect: _phase1Summary ? _phase1Summary.scoreCorrect : null,
-      phase1ScoreTotal: _phase1Summary ? _phase1Summary.scoreTotal : null,
-
       success: !!success,
       triesUsed: (typeof phase2TriesLeft === 'number') ? (PHASE2_MAX_TRIES - phase2TriesLeft) : null,
       timeElapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
@@ -4050,78 +3068,6 @@ function wireOnce(){
   if (_wired) return;
   _wired = true;
 
-  // Coach tools collapsible sections
-  initCoachToolsCollapsibles();
-  if(coachCollapseAllBtn) coachCollapseAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(true));
-  if(coachExpandAllBtn) coachExpandAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(false));
-
-  // Coach Review (paste code → modal table + playback)
-  const coachReviewModal = document.getElementById('coachReviewModal');
-  const coachReviewModalClose = document.getElementById('coachReviewModalClose');
-  const coachReviewOpenBtn = document.getElementById('coachReviewOpenBtn');
-  const coachReviewCopyCodeBtn = document.getElementById('coachReviewCopyCodeBtn');
-
-  function openCoachReviewModal(){
-    if(!coachReviewModal) return;
-    coachReviewModal.classList.remove('hidden');
-  }
-  function closeCoachReviewModal(){
-    if(!coachReviewModal) return;
-    coachReviewModal.classList.add('hidden');
-    _stopCoachPlayback('coachReviewModalPlayback');
-  }
-
-  if(coachReviewModalClose) coachReviewModalClose.addEventListener('click', closeCoachReviewModal);
-  if(coachReviewModal){
-    const backdrop = coachReviewModal.querySelector('.diq-modal-backdrop');
-    if(backdrop) backdrop.addEventListener('click', closeCoachReviewModal);
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'Escape' && !coachReviewModal.classList.contains('hidden')) closeCoachReviewModal();
-    });
-  }
-
-  if(coachReviewLoadBtn){
-    coachReviewLoadBtn.addEventListener('click', ()=>{
-      try{
-        const obj = decodeCoachReviewCode(coachReviewInput ? coachReviewInput.value : '');
-        renderCoachReview(obj);
-        openCoachReviewModal();
-      }catch(e){
-        alert("Could not load Coach Review Code: " + (e && e.message ? e.message : e));
-      }
-    });
-}
-  if(coachReviewClearBtn){
-    coachReviewClearBtn.addEventListener('click', ()=>{
-      if(coachReviewInput) coachReviewInput.value = '';
-      const mini = document.getElementById('coachReviewMini');
-      if(mini) mini.style.display = 'none';
-      const miniText = document.getElementById('coachReviewMiniText');
-      if(miniText) miniText.innerHTML = '';
-      if(coachReviewOutput) coachReviewOutput.innerHTML = '';
-      if(coachReviewPlayback) coachReviewPlayback.innerHTML = '';
-      const mout = document.getElementById('coachReviewModalOutput');
-      if(mout) mout.innerHTML = '';
-      const mpb = document.getElementById('coachReviewModalPlayback');
-      if(mpb) mpb.innerHTML = '';
-      closeCoachReviewModal();
-    });
-  }
-  if(coachReviewOpenBtn){
-    coachReviewOpenBtn.addEventListener('click', ()=> openCoachReviewModal());
-  }
-  if(coachReviewCopyCodeBtn){
-    coachReviewCopyCodeBtn.addEventListener('click', async ()=>{
-      try{
-        const txt = (coachReviewInput && coachReviewInput.value) ? coachReviewInput.value.trim() : '';
-        if(!txt) return alert('No code to copy.');
-        await copyTextToClipboard(txt);
-        toast('Coach Review Code copied.');
-      }catch(e){}
-    });
-  }
-
-
   // --- everything from your “/* Wiring */” block goes here ---
   if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
   if (randomSitBtn) randomSitBtn.addEventListener('click', pickRandomSituation);
@@ -4139,7 +3085,6 @@ function wireOnce(){
     // --- Set game state up front ---
     gameActive = true;
     resetTimer(TIMER_START_SECS);
-    _phase1Summary = null;
     remainingTries = MAX_TRIES;
     updateHud(0);
     _allTargetsCorrect = false;
@@ -4247,28 +3192,7 @@ function lockCorrectPrefix(k){
   phase2Picks = lockIds.slice();
   rerenderPickMarkers();
 
-  
-  // Coach Review (paste code → table + playback)
-  if(coachReviewLoadBtn){
-    coachReviewLoadBtn.addEventListener('click', ()=>{
-      try{
-        const obj = decodeCoachReviewCode(coachReviewInput ? coachReviewInput.value : '');
-        renderCoachReview(obj);
-      }catch(e){
-        alert("Could not load Coach Review Code: " + (e && e.message ? e.message : e));
-      }
-    });
-  }
-  if(coachReviewClearBtn){
-    coachReviewClearBtn.addEventListener('click', ()=>{
-      if(coachReviewInput) coachReviewInput.value = '';
-      if(coachReviewOutput) coachReviewOutput.innerHTML = '';
-      if(coachReviewPlayback) coachReviewPlayback.innerHTML = '';
-      _stopCoachPlayback();
-    });
-  }
-
-wireSeqBuilderOnce();
+  wireSeqBuilderOnce();
 }
 
   // --- Verify Sequence (Phase 2) ---
@@ -4489,7 +3413,27 @@ wireSeqBuilderOnce();
   });
 
 
-      // Results export buttons (avoid relying on id->window globals)
+      // Coach: Player Results Viewer
+      const coachParseResultsBtn = document.getElementById('coachParseResultsBtn');
+      const coachClearResultsBtn = document.getElementById('coachClearResultsBtn');
+      const coachResultsInput = document.getElementById('coachResultsInput');
+      const coachResultsOutput = document.getElementById('coachResultsOutput');
+
+      if (coachParseResultsBtn && coachResultsInput && coachResultsOutput) {
+        coachParseResultsBtn.addEventListener('click', () => {
+          const txt = coachResultsInput.value || '';
+          const parsed = parsePlayerResultsPayload(txt);
+          renderPlayerResultsForCoach(coachResultsOutput, parsed);
+        });
+      }
+      if (coachClearResultsBtn && coachResultsInput && coachResultsOutput) {
+        coachClearResultsBtn.addEventListener('click', () => {
+          coachResultsInput.value = '';
+          coachResultsOutput.innerHTML = '';
+        });
+      }
+
+  // Results export buttons (avoid relying on id->window globals)
   const copyResultsBtn = document.getElementById('copyResultsBtn');
   const downloadResultsBtn = document.getElementById('downloadResultsBtn');
   const copyResultsTopBtn = document.getElementById('copyResultsTopBtn'); // optional
@@ -4515,36 +3459,7 @@ const MAX_TRIES = 3;
 
 let _allTargetsCorrect = false;
 
-// Phase 1 (chip placement) summary for the most recently completed round
-let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts:number }
-
-
 let coachUnlocked = false;
-
-// Coach Review: allow loading report code from URL fragment (e.g. #coachReview=...)
-let _pendingCoachReviewCode = null;
-try{
-  const h = String(window.location.hash || '');
-  const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
-  if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
-}catch(e){ _pendingCoachReviewCode = null; }
-
-try{
-  window.addEventListener('hashchange', ()=>{
-    try{
-      const h = String(window.location.hash || '');
-      const m = h.match(/(?:^#|&)coachReview=([^&]+)/);
-      if(m && m[1]) _pendingCoachReviewCode = decodeURIComponent(m[1]);
-    }catch(e){}
-    
-    if(_pendingCoachReviewCode && !coachUnlocked){ try{ openPwModal(); }catch(e){} }
-if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
-      try{ window._diqCoachReviewAutoload(); }catch(e){}
-    }
-  });
-}catch(e){}
-
-
 
 let runnerEl = null;
 let runnerAnimId = null;
@@ -5588,24 +4503,12 @@ function setCoachMode(enabled){
   coachUnlocked = !!enabled;
   coachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
   coachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
-
-  // Ensure Coach Tools panel is only visible when unlocked
-  if (typeof coachCard !== 'undefined' && coachCard){
-    if (coachUnlocked) coachCard.classList.remove('hidden');
-    else coachCard.classList.add('hidden');
-  }
-
   if (coachUnlocked) setChipsLocked(false); else setChipsLocked(!gameActive || remainingTries===0);
   buildTargets(); applyCoachVisibility(); updateHud(Number(scoreVal.textContent)||0);
   disableTargetSelection();
   hideTargetPanel();
   endPhase2(false);
   if (continueBtn) continueBtn.classList.add('hidden');
-
-  // If a Coach Review code was supplied via URL, try to auto-load it when coach mode is enabled
-  if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
-    try{ window._diqCoachReviewAutoload(); }catch(e){}
-  }
 }
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
 function closePwModal(){ pwModal.style.display='none'; }
@@ -5803,6 +4706,8 @@ function syncSituationInputsFromCurrent(){
   // Coach tools: keep Play Sequence + notes inputs in sync with the selected situation
   if (seqNoteInput) seqNoteInput.value = (typeof currentSituation.seqNote === 'string') ? currentSituation.seqNote : '';
   if (typeof renderSeqBuilder === 'function') renderSeqBuilder();
+  if (seq2Input) seq2Input.value = Array.isArray(currentSituation.playSeq2) ? currentSituation.playSeq2.join(',') : '';
+  if (seq2NoteInput) seq2NoteInput.value = (typeof currentSituation.seqNote2 === 'string') ? currentSituation.seqNote2 : '';
 }
 
 
@@ -6207,11 +5112,21 @@ async function copyResults(){
 
 function parsePlayerResultsPayload(rawText){
   const txt = String(rawText || '').trim();
-  if(!txt) return { ok:false, error:'Paste a player results JSON first.' };
+  if(!txt) return { ok:false, error:'Paste a Coach Review Code (DIQ1:...) or player results JSON first.' };
+
+  // Accept Coach Review Code (DIQ1:...) as well as raw JSON
+  let normalized = txt;
+  if(/^DIQ1:/i.test(normalized)){
+    try{
+      normalized = _b64uDecodeUtf8(normalized.replace(/^DIQ1:/i,''));
+    }catch(e){
+      return { ok:false, error:'Invalid Coach Review Code.', detail: String((e && e.message) || e) };
+    }
+  }
 
   let obj;
   try{
-    obj = JSON.parse(txt);
+    obj = JSON.parse(normalized);
   }catch(e){
     return { ok:false, error:'Invalid JSON. Make sure you copied the full exported JSON.', detail: String((e && e.message) || e) };
   }
@@ -6343,7 +5258,7 @@ function renderPlayerResultsForCoach(outEl, parsed){
               <th style="text-align:left">Last</th>
             </tr>
           </thead>
-          <tbody>${tableRows || `<tr><td colspan="11" class="hint">No situations found in this export.</td></tr>`}</tbody>
+          <tbody>${tableRows || `<tr><td colspan="7" class="hint">No situations found in this export.</td></tr>`}</tbody>
         </table>
       </div>
       <details style="margin-top:10px">
@@ -6352,21 +5267,7 @@ function renderPlayerResultsForCoach(outEl, parsed){
           <pre class="mono" style="margin:0;white-space:pre-wrap">${_escHtml(JSON.stringify(log.slice().reverse(), null, 2))}</pre>
         </div>
       </details>
-<div class="subsec-desc">Paste a Coach Review Code from a player email to view a clean report + playback (Phase 2 sequence).</div>
-
-          <div class="mt-3 grid gap-2">
-            <label class="label" for="coachReviewInput">Coach Review Code</label>
-            <textarea id="coachReviewInput" class="textarea mono" rows="5" placeholder="DIQ1:..."></textarea>
-            <div class="flex gap-2">
-              <button id="coachReviewLoadBtn" class="btn btn-white">Load Review</button>
-              <button id="coachReviewClearBtn" class="btn btn-white">Clear</button>
-            </div>
-          </div>
-
-          <div id="coachReviewOutput" class="mt-3"></div>
-          <div id="coachReviewPlayback" class="mt-3"></div>
-        </div>
-</div>`;
+    </div>`;
 
   outEl.innerHTML = header + table;
 }
@@ -6542,18 +5443,6 @@ function checkPositions(){
     if (shouldEndRound){
       // Stop timer and hide the Check button
       stopTimer();
-      // Capture Phase 1 outcome for Coach Review / exports (tokens passed or failed)
-      try{
-        _phase1Summary = {
-          ok: !!allCorrectNow,
-          scoreCorrect: correct,
-          scoreTotal: (Array.isArray(POS_IDS) ? POS_IDS.length : 9),
-          triesUsed: (MAX_TRIES - remainingTries),
-          elapsed: (typeof _timerSecs === 'number') ? Math.max(0, TIMER_START_SECS - _timerSecs) : null,
-          ts: Date.now()
-        };
-      }catch(e){ _phase1Summary = null; }
-
       if (checkBtn) checkBtn.classList.add('hidden');
 
       // Lock chips; keep round open for inspection
@@ -6652,80 +5541,6 @@ function resetPlayers(){
 
 // @diq:end [A11]
 /// @diq:begin [A12] Init & events
-
-const COACH_COLLAPSE_KEY = "diq_coachSubsecCollapsed_v1";
-
-function _loadCoachCollapseMap(){
-  try{ return JSON.parse(localStorage.getItem(COACH_COLLAPSE_KEY) || "{}") || {}; }catch(e){ return {}; }
-}
-function _saveCoachCollapseMap(map){
-  try{ localStorage.setItem(COACH_COLLAPSE_KEY, JSON.stringify(map || {})); }catch(e){}
-}
-
-function initCoachToolsCollapsibles(){
-  const card = document.getElementById("coachCard");
-  if(!card) return;
-
-  const map = _loadCoachCollapseMap();
-
-  const subsecs = Array.from(card.querySelectorAll(".subsec"));
-  subsecs.forEach(subsec=>{
-    if(subsec.dataset.diqCollapsible === "1") return;
-
-    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
-    if(!header) return;
-
-    // Mark + add chevron
-    subsec.dataset.diqCollapsible = "1";
-    subsec.classList.add("diq-collapsible");
-
-    // Chevron (visual)
-    const chev = document.createElement("span");
-    chev.className = "diq-chevron";
-    chev.textContent = "▾";
-    header.appendChild(chev);
-
-    // Wrap remaining children into body
-    const body = document.createElement("div");
-    body.className = "diq-body";
-    const kids = Array.from(subsec.children);
-    kids.forEach(el=>{
-      if(el === header) return;
-      body.appendChild(el);
-    });
-    subsec.appendChild(body);
-
-    const key = subsec.id || (header.textContent || "").trim() || ("subsec_" + Math.random());
-    const defaultCollapsed = true;
-    const collapsed = (key in map) ? !!map[key] : defaultCollapsed;
-    if(collapsed) subsec.classList.add("diq-collapsed");
-
-    header.addEventListener("click", ()=>{
-      const now = !subsec.classList.contains("diq-collapsed");
-      // now=true means expanded; store collapsed=false
-      subsec.classList.toggle("diq-collapsed");
-      map[key] = subsec.classList.contains("diq-collapsed");
-      _saveCoachCollapseMap(map);
-    });
-  });
-}
-
-function setAllCoachSubsecsCollapsed(collapsed){
-  const card = document.getElementById("coachCard");
-  if(!card) return;
-  const map = _loadCoachCollapseMap();
-  const subsecs = Array.from(card.querySelectorAll(".subsec.diq-collapsible"));
-  subsecs.forEach(subsec=>{
-    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
-    const key = subsec.id || (header && header.textContent ? header.textContent.trim() : "");
-    if(!key) return;
-    if(collapsed) subsec.classList.add("diq-collapsed");
-    else subsec.classList.remove("diq-collapsed");
-    map[key] = !!collapsed;
-  });
-  _saveCoachCollapseMap(map);
-}
-
 async function init(){
   ensurePlayerMeta();
   try{
@@ -6749,20 +5564,7 @@ async function init(){
 
     updateDescriptionHudText();
     wireOnce();
-  setCoachMode(coachUnlocked);
-    // Coach Review deep-link: if a report code is in the URL, prompt for coach password immediately
-    if(_pendingCoachReviewCode){
-      if(coachUnlocked){
-        try{ window._diqCoachReviewAutoload && window._diqCoachReviewAutoload(); }catch(e){}
-      }else{
-        try{
-          if(typeof openPwModal === 'function') openPwModal();
-          if(typeof pwMsg !== 'undefined' && pwMsg) pwMsg.textContent = 'Unlock Coach Tools to view the report.';
-        }catch(e){}
-      }
-    }
-
-// Teams UI elements are wired after JSON load; refresh dropdowns now
+      // Teams UI elements are wired after JSON load; refresh dropdowns now
       refreshTeamsUIAll();
       // Mount Player panel into sidebar
       mountPlayerSidebar();
@@ -6820,21 +5622,6 @@ else if (img){ img.addEventListener('load', init, { once:true }); window.addEven
 /// @diq:end [A12] Init & events
 else { window.addEventListener('load', init, { once:true }); }
 </script>
-
-
-<!-- Coach Review Modal (Option B) -->
-<div id="coachReviewModal" class="diq-modal hidden" role="dialog" aria-modal="true" aria-label="Coach Review">
-  <div class="diq-modal-backdrop"></div>
-  <div class="diq-modal-panel">
-    <div class="diq-modal-head">
-      <div style="font-weight:900;">Coach Review</div>
-      <button id="coachReviewModalClose" class="btn btn-ghost" type="button">Close</button>
-    </div>
-    <div id="coachReviewModalMeta" class="muted" style="margin-top:6px;"></div>
-    <div id="coachReviewModalOutput" style="margin-top:10px;"></div>
-    <div id="coachReviewModalPlayback" style="margin-top:10px;"></div>
-  </div>
-</div>
 
 </body>
 </html>
