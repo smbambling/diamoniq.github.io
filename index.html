@@ -580,6 +580,7 @@
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
   </div><button id="coachBtn" class="btn-slate">Coach Tools</button>
+    <button id="adminBtn" class="btn-slate">Admin</button>
     <!-- @diq:end control:continueBtn -->
 </header>
 
@@ -919,6 +920,18 @@
   </div>
 
       </div>
+
+<div id="adminCard" class="card hidden">
+  <div class="row" style="align-items:center; gap:8px;">
+    <strong>Admin</strong>
+    <span id="adminStatus" class="mono" style="color:#64748b">locked</span>
+    <span class="hint">(admin-only tools)</span>
+  </div>
+  <div class="subsec" style="margin-top:10px;">
+    <div class="hint">Admin section is currently empty.</div>
+  </div>
+</div>
+
     </div>
   </aside>
 </main>
@@ -936,6 +949,19 @@
   </div>
 </div>
 
+
+<!-- Admin password modal -->
+<div id="adminPwModal" style="position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:1000">
+  <div class="box" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-width:280px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
+    <div style="font-weight:800;margin-bottom:8px">Enter Admin Password</div>
+    <input id="adminPwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
+    <div id="adminPwMsg" style="color:#ef4444;margin-top:6px;min-height:1.2em"></div>
+    <div class="row" style="justify-content:flex-end;margin-top:10px">
+      <button id="adminPwOk" class="btn-green">Unlock</button>
+      <button id="adminPwCancel" class="btn-slate">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <!-- Player Info Modal -->
 
@@ -998,6 +1024,12 @@
 
 <script>
 /// @diq:begin [A0] Constants & pure helpers
+// Passwords (edit here)
+// Note: Coach Tools password is also used to unlock chip/target editing.
+// Keep these near the top for easy updates.
+const COACH_PASSWORD = 'coach';
+const ADMIN_PASSWORD = 'admin';
+
 // Patch map (JS):
 // [A0] Boot / globals
 // [A1] Utilities + storage
@@ -4413,6 +4445,59 @@ wireSeqBuilderOnce();
   });
 
 
+
+  // --- Admin button / modal (separate password) ---
+  const adminBtn = document.getElementById('adminBtn');
+  const adminCard = document.getElementById('adminCard');
+  const adminStatus = document.getElementById('adminStatus');
+
+  const adminPwModal = document.getElementById('adminPwModal');
+  const adminPwInput = document.getElementById('adminPwInput');
+  const adminPwOk = document.getElementById('adminPwOk');
+  const adminPwCancel = document.getElementById('adminPwCancel');
+  const adminPwMsg = document.getElementById('adminPwMsg');
+
+  let adminUnlocked = false;
+
+  function openAdminPwModal(){
+    if (!adminPwModal) return;
+    adminPwMsg.textContent = '';
+    adminPwInput.value = '';
+    adminPwModal.style.display = 'flex';
+    setTimeout(()=>adminPwInput.focus(), 0);
+  }
+  function closeAdminPwModal(){
+    if (!adminPwModal) return;
+    adminPwModal.style.display = 'none';
+  }
+  function setAdminMode(on){
+    adminUnlocked = !!on;
+    if (adminCard) adminCard.classList.toggle('hidden', !adminUnlocked);
+    if (adminStatus) adminStatus.textContent = adminUnlocked ? 'unlocked' : 'locked';
+  }
+  function tryUnlockAdmin(){
+    if (!adminPwInput) return;
+    if (adminPwInput.value === ADMIN_PASSWORD){
+      closeAdminPwModal();
+      setAdminMode(true);
+    } else {
+      adminPwMsg.textContent = 'Incorrect password.';
+    }
+  }
+
+  if (adminPwCancel) adminPwCancel.addEventListener('click', closeAdminPwModal);
+  if (adminPwOk) adminPwOk.addEventListener('click', tryUnlockAdmin);
+  if (adminPwInput) adminPwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlockAdmin(); });
+
+  if (adminBtn) adminBtn.addEventListener('click', ()=>{
+    if (adminUnlocked){
+      setAdminMode(false);
+      if (adminCard) adminCard.classList.add('hidden');
+    } else {
+      openAdminPwModal();
+    }
+  });
+
   // When the target dropdown changes, sync tolerance + notes
   if (tolTargetSel) {
     tolTargetSel.addEventListener('change', () => {
@@ -5485,7 +5570,7 @@ function animateExistingRunnersAdvance(advance, onDone){
 
 // @diq:end [A6]
 /// @diq:begin [A7] Coach tools & visibility
-const CALIB_PASSWORD='coach';
+const CALIB_PASSWORD = COACH_PASSWORD;
 function applyCoachVisibility(){
   coachCard.classList.toggle('hidden', !coachUnlocked);
   getAllRings().forEach(el=> el.style.display = coachUnlocked ? 'block' : 'none');
