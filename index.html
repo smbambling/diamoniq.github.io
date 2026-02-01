@@ -815,6 +815,8 @@
 
   <div class="diq-body"><div class="row">
       <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
+      <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
+      <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
     </div><div class="row">
       <label class="hint">Title:</label>
       <input id="newTitleInput" type="text" style="flex:1;min-width:120px">
@@ -828,11 +830,8 @@
         <option value="1">1 out</option>
         <option value="2">2 outs</option>
       </select>
-    </div><div class="row">
-      <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
-      <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
-      
-    </div><div class="subsec diq-collapsible diq-collapsed" id="sbRunnersSubsec" data-diq-collapsible="1">
+    </div>
+    <div class="subsec diq-collapsible diq-collapsed" id="sbRunnersSubsec" data-diq-collapsible="1">
           <div class="title">Runners on Base<span class="diq-chevron">▾</span></div>
 
         <div class="diq-body"><span class="hint" style="margin-left:auto">Updates HUD instantly</span><div class="row" id="runnersRow">
@@ -4524,7 +4523,17 @@ wireSeqBuilderOnce();
   if (tolRange)      tolRange.addEventListener('input', () => setTolLive(tolTargetSel.value, tolRange.value));
 
   if (newSituationBtn)  newSituationBtn.addEventListener('click', addNewSituation);
-  if (saveSituationBtn) saveSituationBtn.addEventListener('click', refreshSituationAll);
+  if (saveSituationBtn) saveSituationBtn.addEventListener('click', ()=>{
+    // Refresh = re-apply the currently selected situation to the field/UI (no saving).
+    if (!currentSituation) return;
+    const k = currentSituation.key;
+    restoreSituationFromOrig(k);
+    setSituation(k);
+    if (situationMsg){
+      situationMsg.textContent='Situation refreshed.';
+      setTimeout(()=> situationMsg.textContent='', 1400);
+    }
+  });
   if (deleteSituationBtn && typeof deleteCurrentSituation === 'function') deleteSituationBtn.addEventListener('click', deleteCurrentSituation);
   if (resetStartsBtn)   resetStartsBtn.addEventListener('click', resetStartsToDefaults);
 
@@ -4570,6 +4579,8 @@ wireSeqBuilderOnce();
 
 /// @diq:begin [A0.1] App state (mutable)
 let SITUATIONS = [];
+let SITUATIONS_ORIG_BY_KEY = {};
+
 const SITUATIONS_FALLBACK = [];
 let currentSituation = null;
 
@@ -4974,16 +4985,6 @@ function makeChipDraggable(el,id){
   });
 
   el.addEventListener('click', ()=>{
-    // Coach convenience: clicking a chip in coach mode selects it as the current Target
-    // (mirrors selecting the Target dropdown under Targets & Tolerance)
-    if (coachUnlocked && !phase2Active) {
-      if (tolTargetSel && tolTargetSel.querySelector(`option[value="${id}"]`)) {
-        tolTargetSel.value = id;
-        tolTargetSel.dispatchEvent(new Event('change', { bubbles:true }));
-      }
-      return;
-    }
-
     if (!phase2Active) return;
     if (!seqOrder || !seqOrder.length) return;
 
@@ -5818,7 +5819,39 @@ async function loadSituationsFromJson(){
     console.warn('[Situations] JSON load failed, using fallback:', err?.message||err);
     SITUATIONS = (SITUATIONS_FALLBACK||[]).map((raw,i)=> normalizeSituation(raw,i));
   }
+
+    // Keep an immutable snapshot of the loaded situations for Refresh Situation.
+    snapshotSituationsOrig();
 }
+
+
+function snapshotSituationsOrig(){
+  try{
+    const snap = {};
+    (SITUATIONS||[]).forEach(s=>{
+      if(!s || !s.key) return;
+      snap[s.key] = JSON.parse(JSON.stringify(s));
+    });
+    SITUATIONS_ORIG_BY_KEY = snap;
+  }catch(_e){
+    SITUATIONS_ORIG_BY_KEY = {};
+  }
+}
+
+function restoreSituationFromOrig(key){
+  const orig = SITUATIONS_ORIG_BY_KEY && SITUATIONS_ORIG_BY_KEY[key];
+  if(!orig) return;
+  const idx = (SITUATIONS||[]).findIndex(s=>s && s.key===key);
+  if(idx>=0){
+    SITUATIONS[idx] = JSON.parse(JSON.stringify(orig));
+    // keep currentSituation pointing at the live object
+    if(currentSituation && currentSituation.key===key){
+      currentSituation = SITUATIONS[idx];
+    }
+  }
+}
+
+
 
 /* ===== [A8.1] Description HUD helpers (mobile-friendly) ===== */
 function updateDescriptionHudText(){
@@ -6047,6 +6080,9 @@ function populateSituations(selectedKey){
 
   if (want && sitSelect) sitSelect.value = want;
 }
+
+
+
 
 function setSituation(key){
   currentSituation = getSituationByKey(key) || SITUATIONS[0];
