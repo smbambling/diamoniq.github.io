@@ -720,87 +720,26 @@
           <div id="coachReviewPlayback"></div>
         </div></div></div>
 
-  <div class="subsec diq-collapsible diq-collapsed" id="teamsSubsec" style="margin-top:14px;" data-diq-collapsible="1">
+    <div class="subsec diq-collapsible diq-collapsed" id="teamsSubsec" style="margin-top:14px;" data-diq-collapsible="1">
         <div class="title">Teams<span class="diq-chevron">▾</span></div>
 
-      <!-- COACH REVIEW (paste code from player email) -->
+      <div class="diq-body">
+        <div style="display:flex; flex-direction:column; gap:10px; max-width:460px;">
+          <label class="field" style="display:flex; flex-direction:column; gap:4px;">
+            <span style="font-size:12px; font-weight:700; color:#64748b; line-height:1.1;">Team</span>
+            <select id="coachTeamSelect" class="select"></select>
+          </label>
 
-
-
-
-
-      <div class="diq-body"><div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-          <button id="teamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
-          <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div class="mt-2 flex flex-wrap gap-2">
-              <input id="teamsCsvFile" type="file" accept=".csv,.tsv,.txt,.xlsx" class="hidden">
-              <button id="teamsCsvUploadBtn" class="btn btn-white">Upload CSV</button>
-              <button id="teamsCsvTemplateBtn" class="btn btn-white">Download CSV Template</button>
-            </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="teamsCsvTemplateBtn" class="btn btn-white">Download Template</button>
+            <button id="teamsCsvSelectedBtn" class="btn btn-white" type="button">Download Selected Team</button>
           </div>
-
-<div class="coachGrid teamsTeamGrid">
-          <label class="field">
-            <span>Team</span>
-            <select id="coachTeamSelect" class="select"><option value="">— Select team —</option><option value="13u-black">13U Black</option><option value="13u-orange">13U Orange</option></select>
-          </label>
-
-          <label class="field span2">
-            <span>Team Name</span>
-            <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black">
-          </label>
-
-          <label class="field span2">
-            <span>Coach Email</span>
-            <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com">
-          </label>
         </div>
+</div>
+      </div>
+    </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-          <button id="coachTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
-          <button id="coachTeamUpdateBtn" class="btn btn-ghost" type="button">Update Team</button>
-          <button id="coachTeamRemoveBtn" class="btn btn-ghost" type="button">Remove Team</button>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="title">Roster</div>
-        <div class="coachGrid">
-          <label class="field">
-            <span>Player</span>
-            <select id="coachRosterSelect" class="select" disabled=""><option value="">— Select player —</option></select>
-          </label>
-
-          <label class="field">
-            <span>Player Name</span>
-            <input id="coachPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled="">
-          </label>
-
-          <label class="field">
-            <span>Player Number</span>
-            <input id="coachPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled="">
-          </label>
-
-          <label class="field">
-            <span>Password</span>
-            <div class="rowFlex">
-              <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled="">
-              <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled="">Gen</button>
-            </div>
-          </label>
-        </div>
-
-        <div class="muted" id="coachPlayerIdPreview" style="margin-top:8px;"></div>
-
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-          <button id="coachPlayerAddBtn" class="btn btn-brand" type="button" disabled="">Add Player</button>
-          <button id="coachPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled="">Update Player</button>
-          <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled="">Remove Player</button>
-        </div>
-      </div></div></div>
-
-  <!-- Situation Builder (parent + nested) -->
-  <div class="subsec diq-collapsible diq-collapsed" id="situationBuilderSubsec" data-diq-collapsible="1">
+<div class="subsec diq-collapsible diq-collapsed" id="situationBuilderSubsec" data-diq-collapsible="1">
     <div class="title">Situation Builder<span class="diq-chevron">▾</span></div>
 
     
@@ -949,6 +888,15 @@
           <button id="adminTeamsImportBtn" class="btn btn-ghost" type="button">Import teams JSON</button>
           <button id="adminTeamsResetBtn" class="btn btn-ghost" type="button" title="Clear locally saved teams (does not affect teams.json on disk)">Clear local teams</button>
         </div>
+        <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3" style="margin-bottom:10px;">
+          <div class="mt-2 flex flex-wrap gap-2">
+            <input id="adminTeamsCsvFile" type="file" accept=".csv,.tsv,.txt,.xlsx" class="hidden">
+            <button id="adminTeamsCsvUploadBtn" class="btn btn-white" type="button">Upload CSV</button>
+            <button id="adminTeamsCsvTemplateBtn" class="btn btn-white" type="button">Download Template</button>
+            <button id="adminTeamsCsvSelectedBtn" class="btn btn-white" type="button">Download Selected Team</button>
+          </div>
+        </div>
+
 
         <div class="rowGrid">
           <label class="field">
@@ -1172,14 +1120,19 @@ let _timerSecs = TIMER_START_SECS;
   function ensurePlayerMeta(){
     PLAYER_BASE_ID = getOrCreatePlayerBaseId();
     const meta = loadPlayerMeta();
-    PLAYER_META = (meta && typeof meta === 'object') ? meta : null;
+    // Never allow PLAYER_META to be null/undefined — app must boot even when logged out.
+    PLAYER_META = (meta && typeof meta === 'object') ? meta : {team:"", name:"", number:""};
+    if(typeof PLAYER_META.team !== 'string') PLAYER_META.team = (PLAYER_META.team!=null ? String(PLAYER_META.team) : "");
+    if(typeof PLAYER_META.name !== 'string') PLAYER_META.name = (PLAYER_META.name!=null ? String(PLAYER_META.name) : "");
+    if(typeof PLAYER_META.number !== 'string') PLAYER_META.number = (PLAYER_META.number!=null ? String(PLAYER_META.number) : "");
     try{ refreshPlayerLoginUI(); }catch(_e){}
   }
 
   function buildPlayerId(){
-    const teamSlug = slugify(PLAYER_META.team) || "team";
-    const nameSlug = slugify(PLAYER_META.name) || "player";
-    const num = String(PLAYER_META.number || "").trim().replace(/\s+/g,"");
+    const m = (PLAYER_META && typeof PLAYER_META === 'object') ? PLAYER_META : {team:"", name:"", number:""};
+    const teamSlug = slugify(m.team) || "team";
+    const nameSlug = slugify(m.name) || "player";
+    const num = String(m.number || "").trim().replace(/\s+/g,"");
     const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
     return `${PLAYER_BASE_ID}-${teamSlug}-${nameSlug}-${numSafe}`;
   }
@@ -1344,7 +1297,199 @@ function computeRosterPlayerId(teamObj, playerObj){
     return { headers, rows };
   }
 
+  function _truthyRemove(v){
+    const s = String(v||'').trim().toLowerCase();
+    return s==='1' || s==='y' || s==='yes' || s==='true' || s==='remove' || s==='delete';
+  }
+
+  function _csvEscape(v){
+    const s = String(v ?? '');
+    if(/[",\n\r\t]/.test(s)){
+      return '"' + s.replace(/"/g,'""') + '"';
+    }
+    return s;
+  }
+
+  function _detectDelim(line){
+    const comma = (String(line||'').match(/,/g)||[]).length;
+    const tab = (String(line||'').match(/\t/g)||[]).length;
+    return tab > comma ? '\t' : ',';
+  }
+
+  // Parse the v3 block CSV:
+  // [TEAMS] team_name,coach_email,remove
+  // [PLAYERS] team_name,player_name,player_number,player_password,remove
+  function parseTeamsCsvV3(text){
+    const raw = String(text || '').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+    const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
+
+    const sections = { TEAMS: [], PLAYERS: [] };
+    let cur = null;
+    for(const line of lines){
+      const up = line.toUpperCase();
+      if(up === '[TEAMS]'){ cur = 'TEAMS'; continue; }
+      if(up === '[PLAYERS]'){ cur = 'PLAYERS'; continue; }
+      if(cur) sections[cur].push(line);
+    }
+
+    const parseSection = (arr)=>{
+      if(!arr || arr.length===0) return { headers:[], rows:[] };
+      const delim = _detectDelim(arr[0]);
+      const headers = _csvParseLine(arr[0], delim).map(h=>String(h||'').trim());
+      const rows = [];
+      for(let i=1;i<arr.length;i++){
+        const cols = _csvParseLine(arr[i], delim);
+        if(cols.every(c=>String(c||'').trim()==='')) continue;
+        const obj = {};
+        for(let j=0;j<headers.length;j++){
+          obj[headers[j]] = (cols[j]==null ? '' : String(cols[j]).trim());
+        }
+        rows.push(obj);
+      }
+      return { headers, rows };
+    };
+
+    return { teams: parseSection(sections.TEAMS), players: parseSection(sections.PLAYERS) };
+  }
+
+  function applyTeamsCsvV3(parsed){
+    const out = { teams:0, players:0, removedTeams:0, removedPlayers:0 };
+
+    const mapHeaders = (headers)=>{
+      const m = {};
+      (headers||[]).forEach(h=>{
+        const k = String(h||'').trim().toLowerCase();
+        if(k) m[k]=h;
+      });
+      return m;
+    };
+
+    const get = (row, headerMap, key, alts=[])=>{
+      const lk = String(key).toLowerCase();
+      if(headerMap[lk]) return row[headerMap[lk]];
+      for(const a of alts){
+        const la = String(a).toLowerCase();
+        if(headerMap[la]) return row[headerMap[la]];
+      }
+      for(const k in row){
+        const kl = String(k).trim().toLowerCase();
+        if(kl===lk) return row[k];
+        for(const a of alts){
+          if(kl===String(a).trim().toLowerCase()) return row[k];
+        }
+      }
+      return '';
+    };
+
+    const findTeamByNameLocal = (name)=>{
+      const n = String(name||'').trim().toLowerCase();
+      const list = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams : [];
+      for(const t of list){
+        if(String(t.name||'').trim().toLowerCase() === n) return t;
+      }
+      return null;
+    };
+
+    // --- TEAMS ---
+    const th = mapHeaders(parsed.teams.headers);
+    for(const r of (parsed.teams.rows||[])){
+      const teamName = String(get(r, th, 'team_name', ['team','name','team name','teamname'])).trim();
+      if(!teamName) continue;
+
+      const coachEmail = String(get(r, th, 'coach_email', ['coach email','email','coachemail'])).trim();
+      const remove = _truthyRemove(get(r, th, 'remove', ['rm','delete','remove?']));
+
+      const existing = findTeamByNameLocal(teamName);
+      if(remove){
+        if(existing){
+          removeTeam(existing.id);
+          out.removedTeams++;
+        }
+        continue;
+      }
+
+      if(!existing){
+        upsertTeam(teamName, coachEmail || '');
+        out.teams++;
+      }else{
+        // Do NOT clear coach email when blank (requirement)
+        if(coachEmail) existing.coachEmail = coachEmail;
+      }
+    }
+
+    // --- PLAYERS ---
+    const ph = mapHeaders(parsed.players.headers);
+    for(const r of (parsed.players.rows||[])){
+      const teamName = String(get(r, ph, 'team_name', ['team','team name','teamname'])).trim();
+      const playerName = String(get(r, ph, 'player_name', ['player','name','player name','playername'])).trim();
+      const playerNum  = String(get(r, ph, 'player_number', ['number','player number','playernumber','jersey','jersey number'])).trim();
+      const password   = String(get(r, ph, 'player_password', ['password','pin','passcode','player password','playerpassword'])).trim();
+      const remove = _truthyRemove(get(r, ph, 'remove', ['rm','delete','remove?']));
+
+      if(!teamName) continue;
+      if(!playerName && !playerNum) continue;
+
+      let t = findTeamByNameLocal(teamName);
+      if(!t){
+        t = upsertTeam(teamName, '');
+        out.teams++;
+      }
+
+      if(remove){
+        const roster = Array.isArray(t.roster) ? t.roster : [];
+        let target = null;
+
+        if(playerNum){
+          target = roster.find(p => String(p.number||'').trim() === String(playerNum).trim()) || null;
+          if(target && playerName){
+            const t2 = roster.find(p => String(p.number||'').trim() === String(playerNum).trim() && String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase());
+            if(t2) target = t2;
+          }
+        }
+        if(!target && playerName){
+          target = roster.find(p => String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase()) || null;
+        }
+        if(!target && playerNum){
+          target = roster.find(p => String(p.number||'').trim() === String(playerNum).trim()) || null;
+        }
+
+        if(target && target.playerId){
+          removePlayer(t.id, target.playerId);
+          out.removedPlayers++;
+        }
+        continue;
+      }
+
+      // Upsert: require name+number; password is optional (blank preserves existing when possible)
+      if(playerName && playerNum){
+        const existingRoster = Array.isArray(t.roster) ? t.roster : [];
+        const ex = existingRoster.find(p => String(p.number||'').trim() === String(playerNum).trim() && String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase()) || null;
+        const passToSet = password ? password : (ex && ex.password ? ex.password : '');
+        upsertPlayer(t.id, playerName, playerNum, passToSet);
+        out.players++;
+      }
+    }
+
+    TEAMS = normalizeTeamsData(TEAMS);
+    saveTeamsToLocal();
+    refreshTeamsUIAll();
+    if(typeof adminRefreshAll === 'function') adminRefreshAll();
+    return out;
+  }
+
+  // Backward-compatible: accept legacy v2 flat CSV OR v3 block CSV.
+  function importTeamsFromCsvText(text){
+    const raw = String(text || '');
+    if(/\[\s*TEAMS\s*\]/i.test(raw) && /\[\s*PLAYERS\s*\]/i.test(raw)){
+      const parsed = parseTeamsCsvV3(raw);
+      return applyTeamsCsvV3(parsed);
+    }
+    const parsed = parseDelimited(raw);
+    return applyTeamsRosterRows(parsed.rows, parsed.headers);
+  }
+
   function applyTeamsRosterRows(rows, headers){
+    // Legacy v2 flat CSV importer (kept for backward compatibility)
     if(!Array.isArray(rows) || rows.length===0) return { teams:0, players:0, removedTeams:0, removedPlayers:0 };
 
     const headerMap = {};
@@ -1360,7 +1505,6 @@ function computeRosterPlayerId(teamObj, playerObj){
         const la = String(a).toLowerCase();
         if(headerMap[la]) return row[headerMap[la]];
       }
-      // fallback: direct scan
       for(const k in row){
         if(String(k).trim().toLowerCase()===lk) return row[k];
         for(const a of alts){
@@ -1402,7 +1546,6 @@ function computeRosterPlayerId(teamObj, playerObj){
 
       let t = findTeamByNameLocal(teamName);
 
-      // Team removal: Action=REMOVE and no player info -> remove team
       const hasAnyPlayerFields = !!(playerName || playerNum);
       if(action === 'remove' && !hasAnyPlayerFields){
         if(t){
@@ -1412,31 +1555,24 @@ function computeRosterPlayerId(teamObj, playerObj){
         continue;
       }
 
-      // Team upsert rules:
-      // - if team exists: only update coachEmail when provided (non-empty)
-      // - if team new: set coachEmail if provided
       if(!t){
         t = upsertTeam(teamName, coachEmail || '');
         teamAdds++;
       }else{
-        if(coachEmail) t.coachEmail = coachEmail; // do NOT clear when blank
+        if(coachEmail) t.coachEmail = coachEmail;
       }
 
-      // Player removal: Action=REMOVE with player identifier (prefer number+name)
       if(action === 'remove' && t){
         const roster = Array.isArray(t.roster) ? t.roster : [];
         let target = null;
 
-        // try match by number first
         if(playerNum){
           target = roster.find(p => String(p.number||'').trim() === String(playerNum).trim()) || null;
-          // if multiple numbers possible, refine by name if provided
           if(target && playerName){
             const t2 = roster.find(p => String(p.number||'').trim() === String(playerNum).trim() && String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase());
             if(t2) target = t2;
           }
         }
-        // fallback match by name only
         if(!target && playerName){
           target = roster.find(p => String(p.name||'').trim().toLowerCase() === playerName.trim().toLowerCase()) || null;
         }
@@ -1448,7 +1584,6 @@ function computeRosterPlayerId(teamObj, playerObj){
         continue;
       }
 
-      // Upsert player (ADD/UPDATE/default): require all 3 fields
       if(t && playerName && playerNum && password){
         const before = (t.roster||[]).length;
         upsertPlayer(t.id, playerName, playerNum, password);
@@ -1460,57 +1595,45 @@ function computeRosterPlayerId(teamObj, playerObj){
     TEAMS = normalizeTeamsData(TEAMS);
     saveTeamsToLocal();
     refreshTeamsUIAll();
+    if(typeof adminRefreshAll === 'function') adminRefreshAll();
     return { teams:teamAdds, players:playerAdds, removedTeams, removedPlayers };
   }
 
   function downloadTeamsCsvTemplate(){
-    // Excel-friendly template (save/export as CSV)
-    // Action:
-    //  - ADD    : add/update a player row (requires Player Name, Player Number, Player Password)
-    //  - REMOVE : remove a player (Team Name + Player Number; Player Name optional)
-    //  - REMOVE : remove a team (Team Name only; leave player fields blank)
+    // v3 clean template (no comment rows)
     const csv = [
-      'Team Name,Coach Email,Player Name,Player Number,Player Password,Action',
-      // Add / update a player (team will be created if missing)
-      '13U Black,coach@example.com,John Smith,12,1234,ADD',
-      // Remove a player (do not include password)
-      '13U Black,,John Smith,12,,REMOVE',
-      // Remove an entire team (leave player fields blank)
-      '13U Black,,,,,REMOVE'
+      '[TEAMS]',
+      'team_name,coach_email,remove',
+      '',
+      '[PLAYERS]',
+      'team_name,player_name,player_number,player_password,remove'
     ].join('\n');
-    downloadText('diamondiq_teams_roster_template.csv', csv, 'text/csv');
+    downloadText('diamondiq_teams_template_v3.csv', csv, 'text/csv');
   }
 
-  function _csvEscape(v){
-    const s = String(v ?? '');
-    if(/[",\n\r\t]/.test(s)){
-      return '"' + s.replace(/"/g,'""') + '"';
-    }
-    return s;
-  }
+  function downloadSelectedTeamCsvV3(teamId){
+    const id = String(teamId||'').trim();
+    if(!id) return null;
+    const t = findTeam(id);
+    if(!t) return null;
 
-  function downloadTeamsCsvExport(){
-    const teams = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams.slice() : [];
-    teams.sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), undefined, {numeric:true, sensitivity:'base'}));
     const lines = [];
-    lines.push('Team Name,Coach Email,Player Name,Player Number,Player Password,Action');
-    for(const t of teams){
-      const coachEmail = t.coachEmail || '';
-      const roster = Array.isArray(t.roster) ? t.roster : [];
-      if(roster.length === 0){
-        lines.push([t.name||'', coachEmail, '', '', '', ''].map(_csvEscape).join(','));
-        continue;
-      }
-      // stable order by number then name
-      const r2 = roster.slice().sort((a,b)=> String(a.number||'').localeCompare(String(b.number||''), undefined, {numeric:true, sensitivity:'base'}) || String(a.name||'').localeCompare(String(b.name||'')));
-      for(const p of r2){
-        lines.push([t.name||'', coachEmail, p.name||'', p.number||'', p.password||'', ''].map(_csvEscape).join(','));
-      }
+    lines.push('[TEAMS]');
+    lines.push('team_name,coach_email,remove');
+    lines.push([t.name||'', t.coachEmail||'', ''].map(_csvEscape).join(','));
+    lines.push('');
+    lines.push('[PLAYERS]');
+    lines.push('team_name,player_name,player_number,player_password,remove');
+
+    const roster = Array.isArray(t.roster) ? t.roster.slice() : [];
+    roster.sort((a,b)=> String(a.number||'').localeCompare(String(b.number||''), undefined, {numeric:true, sensitivity:'base'}) || String(a.name||'').localeCompare(String(b.name||'')));
+    for(const p of roster){
+      lines.push([t.name||'', p.name||'', p.number!=null ? String(p.number) : '', p.password||'', ''].map(_csvEscape).join(','));
     }
-    downloadText('diamondiq_teams_roster_export.csv', lines.join('\n'), 'text/csv');
+    return lines.join('\n');
   }
 
-  // @diq:end [A13] Teams CSV upload
+  // @diq:end [A13] 
 
 
   function findTeam(teamId){
@@ -1561,17 +1684,18 @@ function computeRosterPlayerId(teamObj, playerObj){
   const teamsCsvFile = document.getElementById("teamsCsvFile");
   const teamsCsvUploadBtn = document.getElementById("teamsCsvUploadBtn");
   const teamsCsvTemplateBtn = document.getElementById("teamsCsvTemplateBtn");
+  const teamsCsvSelectedBtn = document.getElementById("teamsCsvSelectedBtn");
 
   const teamsCsvExportBtn = document.getElementById("teamsCsvExportBtn");
 function setRosterControlsEnabled(enabled){
-    coachRosterSelect.disabled = !enabled;
-    coachPlayerName.disabled = !enabled;
-    coachPlayerNumber.disabled = !enabled;
-    coachPlayerPass.disabled = !enabled;
-    coachGenPassBtn.disabled = !enabled;
-    coachPlayerAddBtn.disabled = !enabled;
-    coachPlayerUpdateBtn.disabled = !enabled;
-    coachPlayerRemoveBtn.disabled = !enabled;
+    if(coachRosterSelect) coachRosterSelect.disabled = !enabled;
+    if(coachPlayerName) coachPlayerName.disabled = !enabled;
+    if(coachPlayerNumber) coachPlayerNumber.disabled = !enabled;
+    if(coachPlayerPass) coachPlayerPass.disabled = !enabled;
+    if(coachGenPassBtn) coachGenPassBtn.disabled = !enabled;
+    if(coachPlayerAddBtn) coachPlayerAddBtn.disabled = !enabled;
+    if(coachPlayerUpdateBtn) coachPlayerUpdateBtn.disabled = !enabled;
+    if(coachPlayerRemoveBtn) coachPlayerRemoveBtn.disabled = !enabled;
   }
 
   function refreshCoachTeamSelect(){
@@ -1594,6 +1718,8 @@ function setRosterControlsEnabled(enabled){
   }
 
   function refreshCoachRosterSelect(){
+    if(!coachRosterSelect) return;
+
     const teamId = coachTeamSelect ? coachTeamSelect.value : "";
     const t = teamId ? findTeam(teamId) : null;
 
@@ -1605,7 +1731,7 @@ function setRosterControlsEnabled(enabled){
 
     if(!t){
       setRosterControlsEnabled(false);
-      coachPlayerIdPreview.textContent = "";
+      if(coachPlayerIdPreview) coachPlayerIdPreview.textContent = "";
       return;
     }
 
@@ -1620,32 +1746,41 @@ function setRosterControlsEnabled(enabled){
     });
 
     coachRosterSelect.value = "";
-    coachPlayerName.value = "";
-    coachPlayerNumber.value = "";
-    coachPlayerPass.value = "";
-    coachPlayerIdPreview.textContent = "";
+    if(coachPlayerName) coachPlayerName.value = "";
+    if(coachPlayerNumber) coachPlayerNumber.value = "";
+    if(coachPlayerPass) coachPlayerPass.value = "";
+    if(coachPlayerIdPreview) coachPlayerIdPreview.textContent = "";
   }
 
+
   function setCoachTeamFieldsFromSelection(){
+    if(!coachTeamSelect) return;
+
     const teamId = coachTeamSelect.value;
     const t = teamId ? findTeam(teamId) : null;
-    coachTeamName.value = t ? (t.name || "") : "";
-    coachTeamEmail.value = t ? (t.coachEmail || "") : "";
-    refreshCoachRosterSelect();
+
+    if(coachTeamName) coachTeamName.value = t ? (t.name || "") : "";
+    if(coachTeamEmail) coachTeamEmail.value = t ? (t.coachEmail || "") : "";
+
+    // Only refresh roster controls if those elements exist (coach tools may omit them)
+    if(coachRosterSelect) refreshCoachRosterSelect();
+
     refreshPlayerTeamDropdown(); // keep player UI in sync
     refreshPlayerLoginUI();
   }
 
   function setCoachPlayerFieldsFromSelection(){
+    if(!coachTeamSelect || !coachRosterSelect) return;
+
     const teamId = coachTeamSelect.value;
     const playerId = coachRosterSelect.value;
     const p = (teamId && playerId) ? findPlayer(teamId, playerId) : null;
 
-    coachPlayerName.value = p ? (p.name || "") : "";
-    coachPlayerNumber.value = p ? (p.number || "") : "";
-    coachPlayerPass.value = p ? (p.password || "") : "";
+    if(coachPlayerName) coachPlayerName.value = p ? (p.name || "") : "";
+    if(coachPlayerNumber) coachPlayerNumber.value = p ? (p.number || "") : "";
+    if(coachPlayerPass) coachPlayerPass.value = p ? (p.password || "") : "";
 
-    coachPlayerIdPreview.textContent = p ? `Player ID: ${p.playerId}` : "";
+    if(coachPlayerIdPreview) coachPlayerIdPreview.textContent = p ? `Player ID: ${p.playerId}` : "";
   }
 
   function buildPlayerIdForTeam(teamName, playerName, playerNumber, baseId){
@@ -1975,6 +2110,17 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
     });
   }
 
+  if(teamsCsvSelectedBtn){
+    teamsCsvSelectedBtn.addEventListener("click", ()=>{
+      const teamId = (coachTeamSelect && coachTeamSelect.value) ? String(coachTeamSelect.value||'') : (playerTeamSelect && playerTeamSelect.value) ? String(playerTeamSelect.value||'') : '';
+      if(!teamId) return alert('Select a team first.');
+      const csv = downloadSelectedTeamCsvV3(teamId);
+      if(!csv) return alert('Could not export selected team.');
+      const safeTeam = (findTeam(teamId) && findTeam(teamId).name) ? findTeam(teamId).name : 'team';
+      downloadText(`diamondiq_${slugify(safeTeam)}_v3.csv`, csv, 'text/csv');
+    });
+  }
+
   if(teamsCsvExportBtn){
     teamsCsvExportBtn.addEventListener("click", ()=>{
       downloadTeamsCsvExport();
@@ -1983,8 +2129,11 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
 
 
   function refreshTeamsUIAll(){
-    refreshCoachTeamSelect();
-    setCoachTeamFieldsFromSelection();
+    // Coach Teams UI may be intentionally minimal/absent; guard calls accordingly
+    if(coachTeamSelect){
+      refreshCoachTeamSelect();
+      setCoachTeamFieldsFromSelection();
+    }
     refreshPlayerTeamDropdown();
     refreshPlayerLoginUI();
   }
@@ -2008,13 +2157,14 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
 const playerShareHint = document.getElementById("playerShareHint");
 
   function getCurrentPlayerFromMeta(){
-    // PLAYER_META is global (loaded from STORAGE_PLAYER_META)
-    const teamId = slugifyLoose(PLAYER_META.team || "");
+    // PLAYER_META is global (loaded from STORAGE_PLAYER_META); must be null-safe.
+    const m = (PLAYER_META && typeof PLAYER_META === 'object') ? PLAYER_META : {team:"", name:"", number:""};
+    const teamId = slugifyLoose(m.team || "");
     if(!teamId) return null;
     const team = findTeam(teamId);
     if(!team) return null;
-    const num = String(PLAYER_META.number || "").trim();
-    const name = String(PLAYER_META.name || "").trim();
+    const num = String(m.number || "").trim();
+    const name = String(m.name || "").trim();
     const p = (team.roster || []).find(x => String(x.number).trim()===num && slugifyLoose(x.name)===slugifyLoose(name)) || null;
     if(!p) return null;
     return { team, player: p };
@@ -2115,7 +2265,7 @@ playerShareHint.textContent = "";
     }else if(prevTeam){
       desiredTeam = prevTeam;
     }else{
-      const metaTeamId = slugifyLoose(PLAYER_META.team || "");
+      const metaTeamId = slugifyLoose(((PLAYER_META && typeof PLAYER_META==='object') ? PLAYER_META.team : '') || "");
       if(metaTeamId && findTeam(metaTeamId)) desiredTeam = metaTeamId;
     }
     if(desiredTeam && findTeam(desiredTeam)){
@@ -7195,6 +7345,52 @@ else { window.addEventListener('load', init, { once:true }); }
       if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
       adminRefreshAll();
       alert('Local teams cleared.');
+    });
+  }
+
+  // Admin CSV (v3) import/export
+  const adminTeamsCsvFile = document.getElementById('adminTeamsCsvFile');
+  const adminTeamsCsvUploadBtn = document.getElementById('adminTeamsCsvUploadBtn');
+  const adminTeamsCsvTemplateBtn = document.getElementById('adminTeamsCsvTemplateBtn');
+  const adminTeamsCsvSelectedBtn = document.getElementById('adminTeamsCsvSelectedBtn');
+
+  if(adminTeamsCsvUploadBtn && adminTeamsCsvFile){
+    adminTeamsCsvUploadBtn.addEventListener('click', ()=> adminTeamsCsvFile.click());
+    adminTeamsCsvFile.addEventListener('change', ()=>{
+      const f = adminTeamsCsvFile.files && adminTeamsCsvFile.files[0];
+      if(!f) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const txt = String(reader.result || '');
+          const res = importTeamsFromCsvText(txt);
+          alert(`Imported. Teams upserted: ${res.teams||0}. Players upserted: ${res.players||0}. Removed teams: ${res.removedTeams||0}. Removed players: ${res.removedPlayers||0}.`);
+        }catch(e){
+          alert('Could not import CSV: ' + (e && e.message ? e.message : e));
+        }finally{
+          adminTeamsCsvFile.value = '';
+        }
+      };
+      reader.onerror = ()=>{
+        alert('Could not read file.');
+        adminTeamsCsvFile.value = '';
+      };
+      reader.readAsText(f);
+    });
+  }
+
+  if(adminTeamsCsvTemplateBtn){
+    adminTeamsCsvTemplateBtn.addEventListener('click', ()=> downloadTeamsCsvTemplate());
+  }
+
+  if(adminTeamsCsvSelectedBtn){
+    adminTeamsCsvSelectedBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? String(adminTeamSelect.value||'') : '';
+      if(!teamId) return alert('Select a team first.');
+      const csv = downloadSelectedTeamCsvV3(teamId);
+      if(!csv) return alert('Could not export selected team.');
+      const safeTeam = (findTeam(teamId) && findTeam(teamId).name) ? findTeam(teamId).name : 'team';
+      downloadText(`diamondiq_${slugify(safeTeam)}_v3.csv`, csv, 'text/csv');
     });
   }
 
