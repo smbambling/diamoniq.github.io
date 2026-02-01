@@ -5473,6 +5473,10 @@ function animateHit(style){
   if (ballSvg) ballSvg.innerHTML='';
   const startCss=nativeToCssPoint(HOME_NATIVE), endCss=nativeToCssPoint(sit.hit);
   const svgNS='http://www.w3.org/2000/svg';
+
+  // Popup path controls (used for both the blue line + the moving ball so it always follows the line)
+  let popupC1=null, popupC2=null;
+
   if (style==='line' || style==='grounder'){
     ballPath=document.createElementNS(svgNS,'line');
     Object.entries({x1:startCss.x,y1:startCss.y,x2:endCss.x,y2:endCss.y}).forEach(([k,v])=>ballPath.setAttribute(k,v));
@@ -5481,27 +5485,46 @@ function animateHit(style){
     if (style==='grounder') ballPath.setAttribute('stroke-dasharray','8 8');
     ballSvg.appendChild(ballPath);
   } else {
-    const midX=(startCss.x+endCss.x)/2, midY=(startCss.y+endCss.y)/2;
-    const curveUp = Math.max(90, Math.hypot(endCss.x - startCss.x, endCss.y - startCss.y) * 0.36); // higher arc
-    const ctrl={x:midX,y:midY-curveUp};
-    const d=`M ${startCss.x},${startCss.y} Q ${ctrl.x},${ctrl.y} ${endCss.x},${endCss.y}`;
+    // Cubic bezier gives a nice high arch while allowing a gentler "descent" near the end.
+    const distLocal=Math.hypot(endCss.x-startCss.x,endCss.y-startCss.y);
+    const archH=clamp(distLocal*0.70, 180, 420); // higher arch
+    const dx=endCss.x-startCss.x, dy=endCss.y-startCss.y;
+
+    // Peak earlier + reduce lift near landing so there's less arch at the very end.
+    popupC1={ x:startCss.x + dx*0.35, y:startCss.y + dy*0.35 - archH };
+    popupC2={ x:startCss.x + dx*0.78, y:startCss.y + dy*0.78 - archH*0.25 };
+
+    const d=`M ${startCss.x},${startCss.y} C ${popupC1.x},${popupC1.y} ${popupC2.x},${popupC2.y} ${endCss.x},${endCss.y}`;
     ballPath=document.createElementNS(svgNS,'path');
     ballPath.setAttribute('d',d); ballPath.setAttribute('fill','none');
     ballPath.setAttribute('stroke','#0ea5e9');
     ballPath.setAttribute('stroke-width', String(getBallStrokeWidth()));
     ballSvg.appendChild(ballPath);
   }
+
   ballEl.style.left=`${startCss.x}px`; ballEl.style.top=`${startCss.y}px`; ballEl.style.display='block';
   const dist=Math.hypot(endCss.x-startCss.x,endCss.y-startCss.y);
   const duration = clamp(1200 + dist * 0.90, 1500, 3200); // slower + smoother
   let t0=performance.now(); if (animReq) cancelAnimationFrame(animReq);
-  const p0={x:startCss.x,y:startCss.y}, p2={x:endCss.x,y:endCss.y};
-  const popupCtrl=(()=>{const midX=(startCss.x+endCss.x)/2, midY=(startCss.y+endCss.y)/2;
-    const curveUp = Math.max(90, Math.hypot(endCss.x - startCss.x, endCss.y - startCss.y) * 0.36); // higher arc
-    return {x:midX,y:midY-curveUp};})();
+  const p0={x:startCss.x,y:startCss.y}, p3={x:endCss.x,y:endCss.y};
+
+  function cubicPoint(a,b,c,d,t){
+    const mt=1-t, mt2=mt*mt, t2=t*t;
+    const w0=mt2*mt, w1=3*mt2*t, w2=3*mt*t2, w3=t2*t;
+    return { x:w0*a.x + w1*b.x + w2*c.x + w3*d.x,
+             y:w0*a.y + w1*b.y + w2*c.y + w3*d.y };
+  }
+
   function step(now){
     const t=clamp((now-t0)/duration,0,1);
-    const pos=(style==='popup')?quadBezier(p0,popupCtrl,p2,t):{x:lerp(p0.x,p2.x,t),y:lerp(p0.y,p2.y,t)};
+
+    // For popup: ease-in-out to simulate "hang time" while still tracking the same blue line path.
+    const u=(style==='popup')?(0.5-0.5*Math.cos(Math.PI*t)):t;
+
+    const pos=(style==='popup' && popupC1 && popupC2)
+      ? cubicPoint(p0,popupC1,popupC2,p3,u)
+      : {x:lerp(p0.x,p3.x,t), y:lerp(p0.y,p3.y,t)};
+
     ballEl.style.left=`${pos.x}px`; ballEl.style.top=`${pos.y}px`;
     if (t<1) animReq=requestAnimationFrame(step);
     else { if (ballSvg) ballSvg.innerHTML=''; animReq=null; if (ballEl) ballEl.style.display='block'; }
