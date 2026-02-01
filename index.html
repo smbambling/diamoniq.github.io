@@ -757,6 +757,8 @@
       <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
       <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
       <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
+    
+      <button id="downloadCurrentBtn" class="btn-slate" type="button">⬇️ Download Situation</button>
     </div><div class="row">
       <label class="hint">Title:</label>
       <input id="newTitleInput" type="text" style="flex:1;min-width:120px">
@@ -845,13 +847,7 @@
             <span class="hint">Total steps: <b id="seqCountHud">3</b></span>
           </div><div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
             <textarea id="seqNoteInput" rows="3" placeholder="Optional coach note shown to players on the Play Sequence card…" class="mono" style="width:100%"></textarea>
-          </div></div></div><div class="subsec diq-collapsible diq-collapsed" id="sbExportSubsec" data-diq-collapsible="1">
-          <div class="title">Export<span class="diq-chevron">▾</span></div>
-          
-        <div class="diq-body"><div class="row">
-            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current Situation</button>
-            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL Situations</button>
-</div></div></div></div></div>
+          </div></div></div></div></div>
 
       </div>
 
@@ -959,6 +955,29 @@
           <button id="adminPlayerAddBtn" class="btn btn-brand" type="button" disabled>Add Player</button>
           <button id="adminPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled>Update Player</button>
           <button id="adminPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SITUATIONS (Admin) -->
+    <div class="subsec admin-subsec" id="adminSituationsSubsec" data-admin-collapsible="1" data-admin-open="0" style="margin-top:14px;">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <div class="sectionTitle" style="margin:0">SITUATIONS</div>
+        <button class="btn btn-ghost adminSubsecToggle" type="button" aria-label="Collapse section">▾</button>
+      </div>
+
+      <div class="adminSubsecBody" style="margin-top:10px">
+        <div class="muted" style="margin-bottom:10px;">
+          Import one or more <code>.json</code> files containing an array of situations. Existing keys are merged (imported values win).
+        </div>
+
+        <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3" style="margin-bottom:10px;">
+          <div class="mt-2 flex flex-wrap gap-2">
+            <input id="adminSituationsJsonFile" type="file" accept=".json,application/json" class="hidden" multiple>
+            <button id="adminSituationsJsonUploadBtn" class="btn btn-white" type="button">Upload Situations JSON</button>
+            <button id="downloadAllBtn" class="btn btn-white" type="button">Download ALL Situations</button>
+            <span id="adminSituationsMsg" class="hint" style="margin-left:auto"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -4766,7 +4785,7 @@ wireSeqBuilderOnce();
 
   if (downloadCurrentBtn) downloadCurrentBtn.addEventListener('click', ()=>{
     refreshSituationAll(); // ensure UI → model before exporting
-    download('situation-current.json', buildCurrentSituationExport());
+    download(safeSituationJsonFilename((currentSituation && (currentSituation.title||currentSituation.key)) || 'situation-current'), buildCurrentSituationExport());
   });
   if (downloadAllBtn)     downloadAllBtn.addEventListener('click', ()=>{
     refreshSituationAll();
@@ -6118,6 +6137,64 @@ function restoreSituationFromOrig(key){
 }
 
 
+// Merge situations from an imported JSON array. Existing keys are deep-merged (import wins).
+// Also updates startsMap/hitsMap so imported starts/hit are reflected immediately.
+function _diqDeepMerge(dst, src){
+  if(!dst || typeof dst!=='object' || Array.isArray(dst)) return deepClone(src);
+  if(!src || typeof src!=='object' || Array.isArray(src)) return deepClone(src);
+  const out = { ...dst };
+  Object.keys(src).forEach(k=>{
+    const sv = src[k];
+    const dv = dst[k];
+    if(sv && typeof sv==='object' && !Array.isArray(sv) && dv && typeof dv==='object' && !Array.isArray(dv)){
+      out[k] = _diqDeepMerge(dv, sv);
+    }else{
+      out[k] = deepClone(sv);
+    }
+  });
+  return out;
+}
+
+function mergeSituationsFromArray(rawArr){
+  if(!Array.isArray(rawArr)) throw new Error('Situations JSON must be an array.');
+  let added = 0, updated = 0;
+
+  rawArr.forEach((raw,i)=>{
+    const incoming = normalizeSituation(raw, i);
+    if(!incoming || !incoming.key) return;
+
+    const idx = (SITUATIONS||[]).findIndex(s=>s && s.key===incoming.key);
+    if(idx >= 0){
+      const merged = _diqDeepMerge(SITUATIONS[idx], incoming);
+      SITUATIONS[idx] = normalizeSituation(merged, idx);
+      // Keep currentSituation pointing at the live object
+      if(currentSituation && currentSituation.key === incoming.key){
+        currentSituation = SITUATIONS[idx];
+      }
+      updated++;
+    }else{
+      SITUATIONS.push(incoming);
+      added++;
+    }
+
+    // Imported starts/hit should apply immediately (local starts/hit override otherwise)
+    if(incoming.starts){
+      startsMap[incoming.key] = Fcopy(incoming.starts);
+    }else if(!startsMap[incoming.key]){
+      startsMap[incoming.key] = Fcopy(DEFAULT_STARTS);
+    }
+    if(incoming.hit && !isNaN(incoming.hit.x) && !isNaN(incoming.hit.y)){
+      setHitSaved(incoming.key, incoming.hit);
+    }
+  });
+
+  // Persist local overrides so reloading keeps the merged set consistent
+  try{ saveStarts(); }catch(_e){}
+  try{ saveHits(); }catch(_e){}
+
+  return { added, updated };
+}
+
 
 /* ===== [A8.1] Description HUD helpers (mobile-friendly) ===== */
 function updateDescriptionHudText(){
@@ -6879,6 +6956,18 @@ function download(filename,content){
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
 }
 
+function safeSituationJsonFilename(titleOrKey){
+  let base = String(titleOrKey || '').trim();
+  if(!base) base = 'situation';
+  // Remove characters illegal in Windows filenames and trim length
+  base = base.replace(/[\\/:*?\"<>|]+/g,'').replace(/\s+/g,' ').trim();
+  if(!base) base = 'situation';
+  base = base.slice(0, 80);
+  // Avoid double extension
+  if(!/\.json$/i.test(base)) base += '.json';
+  return base;
+}
+
 /// @diq:begin [A10.1] One-button refresh (saves Coach Tools + rebuilds UI)
 function refreshSituationAll(){
   if (!currentSituation) return;
@@ -7610,6 +7699,12 @@ else { window.addEventListener('load', init, { once:true }); }
   const adminTeamsCsvTemplateBtn = document.getElementById('adminTeamsCsvTemplateBtn');
   const adminTeamsCsvSelectedBtn = document.getElementById('adminTeamsCsvSelectedBtn');
 
+  // Admin SITUATIONS import/merge
+  const adminSituationsJsonFile = document.getElementById('adminSituationsJsonFile');
+  const adminSituationsJsonUploadBtn = document.getElementById('adminSituationsJsonUploadBtn');
+  const adminSituationsMsg = document.getElementById('adminSituationsMsg');
+
+
   if(adminTeamsCsvUploadBtn && adminTeamsCsvFile){
     adminTeamsCsvUploadBtn.addEventListener('click', ()=> adminTeamsCsvFile.click());
     adminTeamsCsvFile.addEventListener('change', ()=>{
@@ -7649,6 +7744,43 @@ else { window.addEventListener('load', init, { once:true }); }
       downloadText(`diamondiq_${slugify(safeTeam)}_v3.csv`, csv, 'text/csv');
     });
   }
+  if(adminSituationsJsonUploadBtn && adminSituationsJsonFile){
+    adminSituationsJsonUploadBtn.addEventListener('click', ()=> adminSituationsJsonFile.click());
+    adminSituationsJsonFile.addEventListener('change', async ()=>{
+      const files = adminSituationsJsonFile.files ? Array.from(adminSituationsJsonFile.files) : [];
+      if(!files.length) return;
+
+      let addedTotal = 0, updatedTotal = 0;
+      try{
+        for(const f of files){
+          const txt = await f.text();
+          const parsed = JSON.parse(txt);
+          const res = mergeSituationsFromArray(parsed);
+          addedTotal += res.added || 0;
+          updatedTotal += res.updated || 0;
+        }
+
+        // Refresh snapshots + dropdown + currently selected situation
+        snapshotSituationsOrig();
+        const keepKey = (currentSituation && currentSituation.key) ? currentSituation.key : (SITUATIONS[0] && SITUATIONS[0].key);
+        populateSituations(keepKey);
+        if (keepKey) setSituation(keepKey);
+
+        if(adminSituationsMsg){
+          adminSituationsMsg.textContent = `Merged situations. Added: ${addedTotal}. Updated: ${updatedTotal}.`;
+          setTimeout(()=>{ if(adminSituationsMsg) adminSituationsMsg.textContent=''; }, 4000);
+        }else{
+          alert(`Merged situations. Added: ${addedTotal}. Updated: ${updatedTotal}.`);
+        }
+      }catch(err){
+        alert('Situations import failed: ' + (err && err.message ? err.message : String(err)));
+      }finally{
+        try{ adminSituationsJsonFile.value = ''; }catch(_e){}
+      }
+    });
+  }
+
+
 
   if (adminTeamAddBtn){
     adminTeamAddBtn.addEventListener('click', ()=>{
