@@ -1,8 +1,6 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Diamond IQ — Chips + Targets + Coach Tools (JSON situations)</title>
 <style>
   /* --- Base UI --- */
@@ -86,7 +84,6 @@
   .btn-slate{background:#fff;color:#334155;border:1px solid #cbd5e1}
   .btn-small{padding:4px 8px;font-size:12px;line-height:1.2}
 
-  
   /* Player info modal */
   .modal-overlay{
     position:fixed; inset:0;
@@ -193,7 +190,6 @@
     box-shadow: 0 0 0 2px rgba(0,0,0,.25), 0 0 0 6px rgba(22,163,74,.2);
     cursor: default !important;
   }
-
 
   /* Targets */
   .tgt{
@@ -411,7 +407,6 @@
   line-height:1.1;
 }
 
-
   /* --- Coach TEAMS section tweaks --- */
   .sectionTitle{
     font-weight:900;
@@ -502,7 +497,6 @@
 #coachCard .subsec.diq-collapsible .diq-body{margin-top:8px;}
 #coachCard .subsec.diq-collapsible.diq-collapsed .diq-body{display:none;}
 
-
 /* Coach Review modal + table */
 .diq-modal{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;}
 .diq-modal.hidden{display:none;}
@@ -519,7 +513,6 @@
 .coachMono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
 .tokenPill{display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; font-size:12px; font-weight:700; color:#0f172a;}
 .tokenPill.active{background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.45); color:#065f46;}
-
 
 
 
@@ -545,54 +538,48 @@
   Keep these markers intact to enable reliable copy/paste patching.
 -->
 
-<header>
-  <h1>Diamond IQ</h1>
-    
+<header><h1>Diamond IQ</h1>
+
   <!-- @diq:begin [H_PLAYER_BTN] Player Login button -->
-      <button id="playerBtn" class="btn-orange btn-small" title="Player login">Player Login</button>
+      <button id="playerBtn" class="btn-small btn-green" title="View Player Info" aria-pressed="true">Player Info</button>
   <!-- @diq:end [H_PLAYER_BTN] -->
 
+  
 
   
-<button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button>
-  <select id="sitSelect" aria-label="Situation" data-testid="sit-select"></select>
-  <span id="descHud" class="badge"></span>
-  <span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span>
-  <span id="outsHud" class="badge badge-tries" style="margin-left:2px">
-    Outs: <b><span id="outsVal">0</span></b>
-  </span>
+
   <div class="header-actions">
     <!-- @diq:begin control:startBtn -->
-<button id="startBtn" class="btn-green">Start Situation</button>
-    <button id="resetBtn" class="btn-orange">Reset</button>
+
     <!-- @diq:end control:startBtn -->
     <!-- @diq:begin control:checkBtn -->
-<button id="checkBtn" class="btn-green" disabled data-testid="check-btn">Check Positions</button>
+
     <!-- @diq:end control:checkBtn -->
     <!-- @diq:begin control:continueBtn -->
-<button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button>
-  </div>
 
-  <div id="hud" class="hud">
-    <span id="scoreBadge" class="badge badge-score" data-testid="score-badge">Score: <b><span id="scoreVal">0</span>/9</b></span>
-    <span id="triesBadge" class="badge badge-tries">Tries: <b><span id="triesVal">0</span></b></span>
+  <button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button><select id="sitSelect" aria-label="Situation" data-testid="sit-select"><option value="BD-01">Situation #1</option><option value="BD-02">Situation #2</option><option value="BD-03">Situation #3</option><option value="BD-04">Situation #4</option><option value="BD-05">Situation #5</option><option value="BD-06">Situation #6</option><option value="BD-07">Situation #7</option><option value="BD-08">Situation #8</option><option value="BD-09">Situation #9</option><option value="BD-10-1">Situation #10-1</option><option value="BD-10-2">Situation #10-2</option><option value="BD-10-3">Situation #10-3</option><option value="BD-11">Situation #11</option><option value="BD-12">Situation #12</option><option value="BD-13">Situation #13</option><option value="BD-14">Situation #14</option><option value="BD-15">Situation #15</option><option value="BD-16">Situation #16</option><option value="BD-17">Situation #17</option><option value="BD-18">Situation #18</option><option value="BD-19">Situation #19</option><option value="BD-20">Situation #20</option></select><span id="descHud" class="badge" title="Single to LF">Single to LF</span><span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span><span id="outsHud" class="badge badge-tries" style="margin-left:2px">
+    Outs: <b><span id="outsVal">0</span></b>
+  </span><button id="startBtn" class="btn-green">Start Situation</button><button id="resetBtn" class="btn-orange" disabled="">Reset</button><button id="checkBtn" class="btn-green" disabled="" data-testid="check-btn">Check Positions</button><button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button><button id="verifySeqBtn" class="btn-green hidden">Verify Sequence</button><div id="hud" class="hud">
+    <span id="scoreBadge" class="badge badge-score score-red" data-testid="score-badge">Score: <b><span id="scoreVal">0</span>/9</b></span>
+    <span id="triesBadge" class="badge badge-tries tries-green">Tries: <b><span id="triesVal">3/3</span></b></span>
     <span id="timerBadge" class="badge badge-timer" title="Time left in this phase">
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
-  </div><button id="coachBtn" class="btn-slate">Coach Tools</button>
+  </div><button id="coachBtn" class="btn-slate">Coach Tools</button></div>
+
     <button id="adminBtn" class="btn-slate">Admin</button>
     <!-- @diq:end control:continueBtn -->
 </header>
 
 <main class="app">
   <section class="card">
-    <div id="wrap">
+    <div id="wrap" style="--chip-size: 36px; --chip-font: 14px;">
       <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
       <!-- visual-only layers kept for z-ordering -->
       <div id="targetsLayer" class="overlay"></div>
-      <div id="ballLayer" class="overlay"></div>
+      <div id="ballLayer" class="overlay"><svg viewBox="0 0 1136.953125 942.53125"></svg></div>
       <!-- chips, rings, and hit marker are appended directly to #wrap -->
-    </div>
+    <div class="ball locked" style="display: none; width: 15px; height: 15px; box-shadow: rgb(0, 0, 0) 0px 0px 0px 1px, rgba(0, 0, 0, 0.35) 0px 1px 1px; left: 265.289063px; top: 350.180489px; z-index: 10;"></div><div class="chip Battery locked" style="left: 568.476563px; top: 618.12162px;">P</div><div class="chip Battery locked" style="left: 569.613516px; top: 813.676958px;">C</div><div class="chip Infield locked" style="left: 727.271016px; top: 540.809045px;">1B</div><div class="chip Infield locked" style="left: 695.815313px; top: 439.620527px;">2B</div><div class="chip Infield locked" style="left: 435.453047px; top: 438.104594px;">SS</div><div class="chip Infield locked" style="left: 409.303125px; top: 534.745313px;">3B</div><div class="chip Outfield locked" style="left: 280.448438px; top: 277.036728px;">LF</div><div class="chip Outfield locked" style="left: 578.709141px; top: 132.644124px;">CF</div><div class="chip Outfield locked" style="left: 859.536562px; top: 274.004863px;">RF</div><div class="tgt locked" data-id="P" style="left: 646.168359px; top: 574.159567px; width: 73px; height: 73px; display: none;"><span class="tgt-label">P</span></div><div class="tgt locked" data-id="C" style="left: 757.589766px; top: 706.424708px; width: 74px; height: 74px; display: none;"><span class="tgt-label">C</span></div><div class="tgt locked" data-id="1B" style="left: 733.334766px; top: 602.204325px; width: 65px; height: 65px; display: none;"><span class="tgt-label">1B</span></div><div class="tgt locked" data-id="2B" style="left: 568.855547px; top: 441.515443px; width: 65px; height: 65px; display: none;"><span class="tgt-label">2B</span></div><div class="tgt locked" data-id="SS" style="left: 422.567578px; top: 395.279491px; width: 65px; height: 65px; display: none;"><span class="tgt-label">SS</span></div><div class="tgt locked" data-id="3B" style="left: 408.166172px; top: 602.583308px; width: 65px; height: 65px; display: none;"><span class="tgt-label">3B</span></div><div class="tgt locked" data-id="LF" style="left: 266.047031px; top: 349.801505px; width: 65px; height: 65px; display: none;"><span class="tgt-label">LF</span></div><div class="tgt locked" data-id="CF" style="left: 305.840391px; top: 190.628556px; width: 80px; height: 80px; display: none;"><span class="tgt-label">CF</span></div><div class="tgt locked" data-id="RF" style="left: 747.736172px; top: 382.394062px; width: 80px; height: 80px; display: none;"><span class="tgt-label">RF</span></div></div>
   </section>
 
   <aside class="sideCol">
@@ -604,29 +591,17 @@
         </summary>
 
         <div class="howto-body">
-          <ol style="margin:6px 0 0 1.2em">
-            <!-- Phase 1 -->
-            <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
-            <li>Review the Description, Runners, and Outs shown in the header.</li>
-            <li>Press <em>Start Situation</em> to begin Phase 1.</li>
-            <li>Drag the 9 player chips into the correct defensive positions.</li>
-            <li>Press <em>Check Positions</em> to verify. You have 3 tries to get them correct.</li>
-
-            <!-- Transition -->
-            <li>If you finish Phase 1 correctly (or use all tries), press <em>Continue</em> to start Phase 2 (if available for this situation).</li>
-
-            <!-- Phase 2 -->
-            <li>In Phase 2, the player chips move to their correct positions automatically.</li>
-            <li>Select the players (chips) in the correct throw order to execute the play.</li>
-            <li>Click chips to add them to your sequence; click again to unselect (unless a chip is already locked as correct).</li>
-            <li>Press <em>Verify Sequence</em> to check your picks. You have 3 tries.</li>
-            <li>Correct chips (in the proper order) will lock and remain highlighted. Phase 2 ends when all throws are correct or tries are used.</li>
-          </ol>
-
-          <div class="hint" style="margin-top:8px">
-            Note: Phase 2 appears only if a Play Sequence is configured for the situation.
-          </div>
-        </div>
+  <ol style="margin:6px 0 0 1.2em">
+    <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
+    <li>Review the Description, Runners, and Outs shown in the header.</li>
+    <li>Press <em>Start Situation</em> to begin</li>
+    <li>Drag the 9 player chips into the correct defensive positions.</li>
+    <li>Press <em>Check Positions</em> to verify. You have 3 tries to get them correct.</li>
+  </ol>
+  <div class="hint" style="margin-top:8px">
+    Note: Correct chips will display within a highlighted target ring
+  </div>
+</div>
       </details>
     </div>
 
@@ -646,18 +621,61 @@
 
     </div>
 
-
     <!-- Coach Tools (hidden until unlocked) -->
     
     <div id="playerSidebarCard" class="card hidden">
       <div class="cardTitleRow">
         <div style="display:flex;align-items:center;gap:10px">
           <div class="cardTitle" style="margin:0">Player</div>
-          <span id="playerSidebarStatus" class="tag">not logged in</span>
+          <span id="playerSidebarStatus" class="tag">logged in</span>
         </div>
         <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Close</button>
       </div>
-      <div id="playerSidebarMount"></div>
+      <div id="playerSidebarMount">
+        <div class="subsec">
+          <div class="sectionTitle">Player Login</div>
+          <div class="rowGrid playerLoginGrid">
+            <label class="field">
+              <span>Team</span>
+              <select id="playerTeamSelect" class="select"><option value="">— Select team —</option><option value="13u-black">13U Black</option><option value="13u-orange">13U Orange</option></select>
+            </label>
+
+            <label class="field">
+              <span>Player</span>
+              <select id="playerNameSelect" class="select"><option value="">— Select player —</option><option value="13u-black-bob-smith-11">#11 Bob Smith</option><option value="13u-black-john-smith-12">#12 John Smith</option><option value="13u-black-kevin-smith-22">#22 Kevin Smith</option></select>
+            </label>
+          </div>
+
+          <label class="field" style="margin-top:10px;">
+            <span>Password</span>
+            <input id="playerPass" class="input" type="password" autocomplete="current-password" placeholder="Password">
+          </label>
+
+          <div class="rowGrid" style="margin-top:10px;">
+            <div class="pill" id="playerLoginStatus" style="justify-self:start;">Logged in: 13U Black • #12 John Smith</div>
+            <div style="justify-self:end; display:flex; gap:10px; flex-wrap:wrap;">
+              <button id="playerLoginBtn" class="btn btn-brand" type="button" style="display: none;">Login</button>
+              <button id="playerLogoutBtn" class="btn btn-ghost" type="button" style="display: inline-flex;">Logout</button>
+            </div>
+          </div>
+
+          <div id="playerIdLine" class="muted" style="margin-top: 8px; display: block;">
+            Player ID: <span id="playerIdText" style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">13u-black-john-smith-12</span>
+          </div>
+        </div>
+
+        <div class="subsec" style="margin-top:14px;">
+          <div class="sectionTitle">Results</div>
+          <div class="muted" style="margin-bottom:8px;">
+            Share sends a quick coach-friendly report to your coach’s email (configured for your team).
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="playerShareResultsBtn" class="btn btn-brand" type="button">Share my results</button>
+            <button id="playerCopyReviewCodeBtn" class="btn btn-white w-full">Copy Coach Review Code</button>
+</div>
+          <div class="muted" id="playerShareHint" style="margin-top:8px;">Coach email: coach@example.com</div>
+        </div>
+      </div>
     </div>
 
 <div id="coachCard" class="card hidden">
@@ -665,7 +683,7 @@
   <div class="row">
     <strong>Coach Tools</strong>
     <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
-    <span class="hint"> (drag chips, targets & hit marker while unlocked)</span>
+    <span class="hint"> (drag chips, targets &amp; hit marker while unlocked)</span>
   
     <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <button id="coachCollapseAllBtn" class="btn-slate" type="button" title="Collapse sections">Collapse all</button>
@@ -673,13 +691,13 @@
     </span>
 </div>
 
-  <div class="subsec" id="coachReviewSubsec" style="margin-top:14px;">
-        <div class="title">Coach Review</div>
-        <div class="muted" style="margin-bottom:10px;">
-          Paste a Coach Review Code from a player email to view a clean table + Phase 2 playback.
-        </div>
+  <div class="subsec diq-collapsible diq-collapsed" id="coachReviewSubsec" style="margin-top:14px;" data-diq-collapsible="1">
+        <div class="title">Coach Review<span class="diq-chevron">▾</span></div>
 
-        <div class="grid" style="gap:10px;">
+        
+      <div class="diq-body"><div class="muted" style="margin-bottom:10px;">
+          Paste a Coach Review Code from a player email to view a clean table + Phase 2 playback.
+        </div><div class="grid" style="gap:10px;">
           <label class="field">
             <span>Coach Review Code</span>
             <textarea id="coachReviewInput" class="textarea mono" rows="5" placeholder="DIQ1:..."></textarea>
@@ -690,7 +708,6 @@
             <button id="coachReviewClearBtn" class="btn btn-ghost" type="button">Clear</button>
           </div>
 
-          
           <div id="coachReviewMini" class="card" style="padding:10px; background:#fafafa; border:1px solid #e5e7eb; border-radius:12px; display:none;">
             <div class="tiny muted" style="margin-bottom:6px;">Loaded review</div>
             <div id="coachReviewMiniText" style="font-size:13px; line-height:1.35;"></div>
@@ -701,44 +718,43 @@
           </div>
 <div id="coachReviewOutput"></div>
           <div id="coachReviewPlayback"></div>
-        </div>
-      </div>
+        </div></div></div>
 
-  <div class="subsec" id="teamsSubsec" style="margin-top:14px;">
-        <div class="title">Teams</div>
-<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+  <div class="subsec diq-collapsible diq-collapsed" id="teamsSubsec" style="margin-top:14px;" data-diq-collapsible="1">
+        <div class="title">Teams<span class="diq-chevron">▾</span></div>
+
+      <!-- COACH REVIEW (paste code from player email) -->
+
+
+
+
+
+      <div class="diq-body"><div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
           <button id="teamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
-          <button id="teamsCopyBtn" class="btn btn-ghost" type="button">Copy teams.json</button>
           <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div class="mt-2 flex flex-wrap gap-2">
-              <input id="teamsCsvFile" type="file" accept=".csv,.tsv,.txt,.xlsx" class="hidden"/>
+              <input id="teamsCsvFile" type="file" accept=".csv,.tsv,.txt,.xlsx" class="hidden">
               <button id="teamsCsvUploadBtn" class="btn btn-white">Upload CSV</button>
               <button id="teamsCsvTemplateBtn" class="btn btn-white">Download CSV Template</button>
-              <button id="teamsCsvExportBtn" class="btn btn-white">Export Current CSV</button>
-            </div>
-
-            <div class="mt-2 text-[11px] text-slate-600">
-              Excel tip: File → Save As → CSV (UTF-8).
             </div>
           </div>
 
 <div class="coachGrid teamsTeamGrid">
           <label class="field">
             <span>Team</span>
-            <select id="coachTeamSelect" class="select"></select>
+            <select id="coachTeamSelect" class="select"><option value="">— Select team —</option><option value="13u-black">13U Black</option><option value="13u-orange">13U Orange</option></select>
           </label>
 
-          <label class="field">
+          <label class="field span2">
             <span>Team Name</span>
-            <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
+            <input id="coachTeamName" class="input" type="text" placeholder="e.g., 13U Black">
           </label>
 
           <label class="field span2">
             <span>Coach Email</span>
-            <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
+            <input id="coachTeamEmail" class="input" type="email" placeholder="coach@example.com">
           </label>
         </div>
-
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
           <button id="coachTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
@@ -749,118 +765,109 @@
         <div class="divider"></div>
 
         <div class="title">Roster</div>
-        
         <div class="coachGrid">
           <label class="field">
             <span>Player</span>
-            <select id="coachRosterSelect" class="select" disabled></select>
+            <select id="coachRosterSelect" class="select" disabled=""><option value="">— Select player —</option></select>
           </label>
 
           <label class="field">
             <span>Player Name</span>
-            <input id="coachPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled/>
+            <input id="coachPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled="">
           </label>
 
           <label class="field">
             <span>Player Number</span>
-            <input id="coachPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled/>
+            <input id="coachPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled="">
           </label>
 
           <label class="field">
             <span>Password</span>
-            <div class="rowFlex" >
-              <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
-              <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
+            <div class="rowFlex">
+              <input id="coachPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled="">
+              <button id="coachGenPassBtn" class="btn btn-ghost" type="button" disabled="">Gen</button>
             </div>
           </label>
         </div>
 
-
         <div class="muted" id="coachPlayerIdPreview" style="margin-top:8px;"></div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-          <button id="coachPlayerAddBtn" class="btn btn-brand" type="button" disabled>Add Player</button>
-          <button id="coachPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled>Update Player</button>
-          <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
+          <button id="coachPlayerAddBtn" class="btn btn-brand" type="button" disabled="">Add Player</button>
+          <button id="coachPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled="">Update Player</button>
+          <button id="coachPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled="">Remove Player</button>
         </div>
-      </div>
-      <!-- COACH REVIEW (paste code from player email) -->
+      </div></div></div>
+
+  <!-- Situation Builder (parent + nested) -->
+  <div class="subsec diq-collapsible diq-collapsed" id="situationBuilderSubsec" data-diq-collapsible="1">
+    <div class="title">Situation Builder<span class="diq-chevron">▾</span></div>
+
+    
+
+  
+
+
+
       
 
 
 
-
-
-
-      </div>
-
-  <!-- Situation Builder (parent + nested) -->
-  <div class="subsec" id="situationBuilderSubsec">
-    <div class="title">Situation Builder</div>
-    <div class="row">
+  <div class="diq-body"><div class="row">
       <button id="newSituationBtn" class="btn-slate">➕ New Situation</button>
-    </div>
-    <div class="row">
+    </div><div class="row">
       <label class="hint">Title:</label>
-      <input id="newTitleInput" type="text" style="flex:1;min-width:120px"/>
-    </div>
-    <div class="row">
+      <input id="newTitleInput" type="text" style="flex:1;min-width:120px">
+    </div><div class="row">
       <label class="hint">Description:</label>
-      <input id="newDescInput" type="text" style="flex:2;min-width:200px"/>
-    </div>
-    <div class="row">
+      <input id="newDescInput" type="text" style="flex:2;min-width:200px">
+    </div><div class="row">
       <label class="hint">Outs:</label>
       <select id="outsSelSituation">
         <option value="0">0 outs</option>
         <option value="1">1 out</option>
         <option value="2">2 outs</option>
       </select>
-    </div>
-    <div class="row">
+    </div><div class="row">
       <button id="saveSituationBtn" class="btn-slate">🔄 Refresh Situation</button>
       <button id="deleteSituationBtn" class="btn-slate" title="Delete current situation" style="color:#ef4444;border-color:#fecaca">🗑️ Delete Situation</button>
-      <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
-      <span id="situationMsg" class="hint" style="margin-left:auto"></span>
-    </div>
-  
+      
+    </div><div class="subsec diq-collapsible diq-collapsed" id="sbRunnersSubsec" data-diq-collapsible="1">
+          <div class="title">Runners on Base<span class="diq-chevron">▾</span></div>
 
-      <div class="subsec" id="sbRunnersSubsec">
-          <div class="title">Runners on Base</div>
-          <span class="hint" style="margin-left:auto">Updates HUD instantly</span>
-          <div class="row" id="runnersRow">
+        <div class="diq-body"><span class="hint" style="margin-left:auto">Updates HUD instantly</span><div class="row" id="runnersRow">
             <label class="hint">Select base runners:</label>
             <label><input id="run1B" type="checkbox"> 1B</label>
             <label><input id="run2B" type="checkbox"> 2B</label>
             <label><input id="run3B" type="checkbox"> 3B</label>
-          </div>
-        </div>
+          </div></div></div><div class="subsec diq-collapsible diq-collapsed" id="sbTargetsSubsec" data-diq-collapsible="1">
+          <div class="title">Targets &amp; Tolerance<span class="diq-chevron">▾</span></div>
+          
 
-      <div class="subsec" id="sbTargetsSubsec">
-          <div class="title">Targets & Tolerance</div>
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:8px">
+          
+        <div class="diq-body">
+<div class="row" style="gap:10px; align-items:center; margin-top:6px">
+            <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
+      <span id="situationMsg" class="hint" style="margin-left:auto"></span>
+          </div>
+<div class="row" style="flex-direction:column; align-items:stretch; gap:8px">
             <div class="row">
               <label class="hint">Target:</label>
-              <select id="tolTargetSel"></select>
+              <select id="tolTargetSel"><option value="P">P</option><option value="C">C</option><option value="1B">1B</option><option value="2B">2B</option><option value="SS">SS</option><option value="3B">3B</option><option value="LF">LF</option><option value="CF">CF</option><option value="RF">RF</option></select>
             </div>
             <div class="row">
               <label class="hint">Tolerance:</label>
-              <input id="tolNum" type="number" min="5" max="400" step="1" value="65"/>
-              <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1"/>
+              <input id="tolNum" type="number" min="5" max="400" step="1" value="65">
+              <input id="tolRange" type="range" min="5" max="400" step="1" value="65" style="flex:1">
             </div>
-          </div>
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
+          </div><div class="row" style="flex-direction:column; align-items:stretch; gap:6px">
             <label class="hint" style="font-weight:800">Target Note <span style="font-weight:600; opacity:.8">(optional)</span></label>
-            <textarea id="tolNotes" rows="3"
-              placeholder="Enter coaching notes for this target…"
-              style="width:100%; min-height:72px; resize:vertical"></textarea>
-</div>
-        </div>
+            <textarea id="tolNotes" rows="3" placeholder="Enter coaching notes for this target…" style="width:100%; min-height:72px; resize:vertical"></textarea>
+</div></div></div><div class="subsec diq-collapsible diq-collapsed" id="sbBallHitSubsec" data-diq-collapsible="1">
+          <div class="title">Ball Hit<span class="diq-chevron">▾</span></div>
 
-      <div class="subsec" id="sbBallHitSubsec">
-          <div class="title">Ball Hit</div>
-          <div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div>
-            <button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button>
-          <div class="row">
+          
+        <div class="diq-body"><div class="hint">Drag the marker to set the ball’s landing spot and set batter advance for this situation.</div><button id="testHitBtn" class="btn-green" style="margin-left:auto;padding:4px 8px;font-size:12px;line-height:1.2">▶ Test</button><div class="row">
             <label class="hint">Hit type:</label>
             <select id="hitTypeSel">
               <option value="line">Line drive</option>
@@ -873,22 +880,19 @@
               <option value="2">2 (Double)</option>
               <option value="3">3 (Triple)</option>
             </select>
-          </div>
-        </div>
+          </div></div></div><div class="subsec diq-collapsible diq-collapsed" id="seqSubsec" data-diq-collapsible="1">
+          <div class="title">Play Sequence<span class="diq-chevron">▾</span></div>
 
-      <div class="subsec" id="seqSubsec">
-          <div class="title">Play Sequence</div>
-          <span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span>
-          <div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div>
 
           <!-- Click-to-add grid -->
-          <div id="seqPosGrid" class="pos-grid" style="margin-top:6px"></div>
 
           <!-- Sequence list (draggable items) -->
-          <div id="seqList" class="seq-list" aria-live="polite"></div>
 
           <!-- Toolbar: templates / clear -->
-          <div class="seq-toolbar">
+
+          <!-- Optional overall coach note (keeps the same id you already use) -->
+          
+        <div class="diq-body"><span class="hint" style="color:#dc2626">Leave the sequence empty to disable Phase 2 for this situation.</span><div class="hint">Click positions below to add; drag items to reorder; remove with the ❌ button.</div><div id="seqPosGrid" class="pos-grid" style="margin-top:6px"><button type="button" class="pos-btn" data-group="Battery">P</button><button type="button" class="pos-btn" data-group="Battery">C</button><button type="button" class="pos-btn" data-group="Infield">1B</button><button type="button" class="pos-btn" data-group="Infield">2B</button><button type="button" class="pos-btn" data-group="Infield">SS</button><button type="button" class="pos-btn" data-group="Infield">3B</button><button type="button" class="pos-btn" data-group="Outfield">LF</button><button type="button" class="pos-btn" data-group="Outfield">CF</button><button type="button" class="pos-btn" data-group="Outfield">RF</button></div><div id="seqList" class="seq-list" aria-live="polite"><div class="seq-item" draggable="true" data-index="0"><div class="seq-num">1</div><div class="seq-tag">LF</div><button type="button" class="seq-remove" title="Remove this step">❌</button></div><div class="seq-item" draggable="true" data-index="1"><div class="seq-num">2</div><div class="seq-tag">SS</div><button type="button" class="seq-remove" title="Remove this step">❌</button></div><div class="seq-item" draggable="true" data-index="2"><div class="seq-num">3</div><div class="seq-tag">2B</div><button type="button" class="seq-remove" title="Remove this step">❌</button></div></div><div class="seq-toolbar">
             <select id="seqTemplateSel" title="Load a common relay">
               <option value="">Template…</option>
               <option value="LF,SS,2B,C">LF → SS → 2B → C (relay home)</option>
@@ -897,42 +901,120 @@
               <option value="SS,2B,1B">SS → 2B → 1B (6-4-3 DP)</option>
             </select>
             <button id="seqClearBtn" class="btn-slate btn-small">Clear sequence</button>
-            <span class="hint">Total steps: <b id="seqCountHud">0</b></span>
-          </div>
-
-          <!-- Optional overall coach note (keeps the same id you already use) -->
-          <div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
-            <textarea id="seqNoteInput" rows="3"
-              placeholder="Optional coach note shown to players on the Play Sequence card…"
-              class="mono" style="width:100%"></textarea>
-          </div>
-        </div>
-
-      <div class="subsec" id="sbExportSubsec">
-          <div class="title">Export</div>
-          <div class="row">
-            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current JSON</button>
-            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL JSON</button>
-            <button id="copyAllBtn" class="btn-slate">📋 Copy ALL JSON</button>
-</div>
-        </div>
-
-  </div>
+            <span class="hint">Total steps: <b id="seqCountHud">3</b></span>
+          </div><div class="row" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:6px">
+            <textarea id="seqNoteInput" rows="3" placeholder="Optional coach note shown to players on the Play Sequence card…" class="mono" style="width:100%"></textarea>
+          </div></div></div><div class="subsec diq-collapsible diq-collapsed" id="sbExportSubsec" data-diq-collapsible="1">
+          <div class="title">Export<span class="diq-chevron">▾</span></div>
+          
+        <div class="diq-body"><div class="row">
+            <button id="downloadCurrentBtn" class="btn-slate">⬇️ Download Current Situation</button>
+            <button id="downloadAllBtn" class="btn-slate">⬇️ Download ALL Situations</button>
+</div></div></div></div></div>
 
       </div>
 
-<div id="adminCard" class="card hidden">
-  <div class="row" style="align-items:center; gap:8px;">
-    <strong>Admin</strong>
-    <span id="adminStatus" class="mono" style="color:#64748b">locked</span>
-    <span class="hint">(admin-only tools)</span>
-  </div>
-  <div class="subsec" style="margin-top:10px;">
-    <div class="hint">Admin section is currently empty.</div>
+
+    </div>
+
+  <div id="adminCard" class="card hidden">
+  <div class="coachGrid">
+    <div class="row">
+      <strong>Admin</strong>
+      <span id="adminStatus" class="mono" style="color:#64748b">locked</span>
+      <span class="hint"> (admin-only tools)</span>
+    </div>
+
+    <div class="row" style="justify-content:flex-end; gap:8px; margin-top:6px">
+      <button id="adminCollapseAllBtn" class="btn-slate" type="button">Collapse all</button>
+      <button id="adminExpandAllBtn" class="btn-slate" type="button">Expand all</button>
+    </div>
+
+
+
+    <!-- TEAMS (Admin) -->
+    <div class="subsec admin-subsec" id="adminTeamsSubsec" data-admin-collapsible="1" data-admin-open="1" style="margin-top:14px;">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <div class="sectionTitle" style="margin:0">TEAMS</div>
+        <button class="btn btn-ghost adminSubsecToggle" type="button" aria-label="Collapse section">▾</button>
+      </div>
+
+      <div class="adminSubsecBody" style="margin-top:10px">
+        <div class="muted" style="margin-bottom:10px;">
+          Manage teams & rosters. Export <code>teams.json</code> and place it next to <code>index.html</code> and <code>situations.json</code>.
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+          <button id="adminTeamsDownloadBtn" class="btn btn-ghost" type="button">Download teams.json</button>
+          <button id="adminTeamsCopyBtn" class="btn btn-ghost" type="button">Copy teams.json</button>
+          <button id="adminTeamsImportBtn" class="btn btn-ghost" type="button">Import teams JSON</button>
+          <button id="adminTeamsResetBtn" class="btn btn-ghost" type="button" title="Clear locally saved teams (does not affect teams.json on disk)">Clear local teams</button>
+        </div>
+
+        <div class="rowGrid">
+          <label class="field">
+            <span>Team</span>
+            <select id="adminTeamSelect" class="select"></select>
+          </label>
+
+          <label class="field">
+            <span>Team Name</span>
+            <input id="adminTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
+          </label>
+
+          <label class="field">
+            <span>Coach Email</span>
+            <input id="adminTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
+          </label>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="adminTeamAddBtn" class="btn btn-brand" type="button">Add Team</button>
+          <button id="adminTeamUpdateBtn" class="btn btn-ghost" type="button">Update Team</button>
+          <button id="adminTeamRemoveBtn" class="btn btn-ghost" type="button">Remove Team</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">Roster</div>
+        <div class="rowGrid">
+          <label class="field">
+            <span>Player</span>
+            <select id="adminRosterSelect" class="select" disabled></select>
+          </label>
+
+          <label class="field">
+            <span>Player Name</span>
+            <input id="adminPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled/>
+          </label>
+
+          <label class="field">
+            <span>Player Number</span>
+            <input id="adminPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled/>
+          </label>
+
+          <label class="field">
+            <span>Password</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="adminPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
+              <button id="adminGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="muted" id="adminPlayerIdPreview" style="margin-top:8px;"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="adminPlayerAddBtn" class="btn btn-brand" type="button" disabled>Add Player</button>
+          <button id="adminPlayerUpdateBtn" class="btn btn-ghost" type="button" disabled>Update Player</button>
+          <button id="adminPlayerRemoveBtn" class="btn btn-ghost" type="button" disabled>Remove Player</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-    </div>
   </aside>
 </main>
 
@@ -940,7 +1022,7 @@
 <div id="pwModal">
   <div class="box">
     <div style="font-weight:800;margin-bottom:8px">Enter Coach Password</div>
-    <input id="pwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
+    <input id="pwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
     <div id="pwMsg" style="color:#ef4444;margin-top:6px;min-height:1.2em"></div>
     <div class="row" style="justify-content:flex-end;margin-top:10px">
       <button id="pwOk" class="btn-green">Unlock</button>
@@ -949,12 +1031,11 @@
   </div>
 </div>
 
-
 <!-- Admin password modal -->
 <div id="adminPwModal" style="position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:1000">
   <div class="box" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;min-width:280px;box-shadow:0 10px 30px rgba(0,0,0,.25)">
     <div style="font-weight:800;margin-bottom:8px">Enter Admin Password</div>
-    <input id="adminPwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px"/>
+    <input id="adminPwInput" type="password" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px">
     <div id="adminPwMsg" style="color:#ef4444;margin-top:6px;min-height:1.2em"></div>
     <div class="row" style="justify-content:flex-end;margin-top:10px">
       <button id="adminPwOk" class="btn-green">Unlock</button>
@@ -966,61 +1047,16 @@
 <!-- Player Info Modal -->
 
   <!-- Player Modal -->
-  <div id="playerModalOverlay" class="modalOverlay" style="display:none;">
+  <div id="playerModalOverlay" class="modalOverlay hidden" style="display:none;">
     <div class="modalPanel">
       <div class="modalHeader">
         <div style="font-weight:800;">Player</div>
         <button id="playerModalCloseX" class="btn btn-ghost" type="button">Close</button>
       </div>
 
-      <div class="modalBody">
-        <div class="subsec">
-          <div class="sectionTitle">Player Login</div>
-          <div class="rowGrid playerLoginGrid">
-            <label class="field">
-              <span>Team</span>
-              <select id="playerTeamSelect" class="select"></select>
-            </label>
-
-            <label class="field">
-              <span>Player</span>
-              <select id="playerNameSelect" class="select" disabled></select>
-            </label>
-          </div>
-
-          <label class="field" style="margin-top:10px;">
-            <span>Password</span>
-            <input id="playerPass" class="input" type="password" autocomplete="current-password" placeholder="Password"/>
-          </label>
-
-          <div class="rowGrid" style="margin-top:10px;">
-            <div class="pill" id="playerLoginStatus" style="justify-self:start;">Not logged in</div>
-            <div style="justify-self:end; display:flex; gap:10px; flex-wrap:wrap;">
-              <button id="playerLoginBtn" class="btn btn-brand" type="button">Login</button>
-              <button id="playerLogoutBtn" class="btn btn-ghost" type="button" style="display:none;">Logout</button>
-            </div>
-          </div>
-
-          <div id="playerIdLine" class="muted" style="margin-top:8px; display:none;">
-            Player ID: <span id="playerIdText" style="font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></span>
-          </div>
-        </div>
-
-        <div class="subsec" style="margin-top:14px;">
-          <div class="sectionTitle">Results</div>
-          <div class="muted" style="margin-bottom:8px;">
-            Share sends a quick coach-friendly report to your coach’s email (configured for your team).
-          </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button id="playerShareResultsBtn" class="btn btn-brand" type="button" disabled>Share my results</button>
-            <button id="playerCopyReviewCodeBtn" class="btn btn-white w-full">Copy Coach Review Code</button>
-</div>
-          <div class="muted" id="playerShareHint" style="margin-top:8px;"></div>
-        </div>
-      </div>
+      <div class="modalBody"></div>
     </div>
   </div>
-
 
 <script>
 /// @diq:begin [A0] Constants & pure helpers
@@ -1077,7 +1113,6 @@ const BASES_NATIVE = {
 const TIMER_START_SECS = 60;
 let _timerId = null;
 let _timerSecs = TIMER_START_SECS;
-
 
 // --- Player identity + per-situation results (localStorage) ---
 
@@ -1142,7 +1177,6 @@ let _timerSecs = TIMER_START_SECS;
     try{ refreshPlayerLoginUI(); }catch(_e){}
   }
 
-
   function buildPlayerId(){
     const teamSlug = slugify(PLAYER_META.team) || "team";
     const nameSlug = slugify(PLAYER_META.name) || "player";
@@ -1159,7 +1193,6 @@ let _timerSecs = TIMER_START_SECS;
     }catch(_e){}
     return buildPlayerId();
   }
-
 
   // --- Teams (Coach-managed) + Player Login ---
   const TEAMS_STORAGE_KEY = "diq_teams_v1";
@@ -1217,7 +1250,6 @@ function computeRosterPlayerId(teamObj, playerObj){
   const numSafe = num ? num.replace(/[^0-9a-zA-Z-]/g,"") : "0";
   return `${teamSlug}-${nameSlug}-${numSafe}`;
 }
-
 
   function saveTeamsToLocal(){
     try{
@@ -1479,9 +1511,7 @@ function computeRosterPlayerId(teamObj, playerObj){
     downloadText('diamondiq_teams_roster_export.csv', lines.join('\n'), 'text/csv');
   }
 
-
   // @diq:end [A13] Teams CSV upload
-
 
 
   function findTeam(teamId){
@@ -1515,7 +1545,6 @@ function computeRosterPlayerId(teamObj, playerObj){
 
   const coachCollapseAllBtn = document.getElementById("coachCollapseAllBtn");
   const coachExpandAllBtn = document.getElementById("coachExpandAllBtn");
-
 
   const coachRosterSelect = document.getElementById("coachRosterSelect");
   const coachPlayerName = document.getElementById("coachPlayerName");
@@ -1643,7 +1672,6 @@ function setRosterControlsEnabled(enabled){
   }
 
 
-
   function upsertTeam(name, email){
     const teamName = String(name || "").trim();
     if(!teamName) return null;
@@ -1744,7 +1772,6 @@ function setRosterControlsEnabled(enabled){
       try{ alert(String(msg ?? '')); }catch(_){}
     }
   }
-
 
 
 
@@ -1911,7 +1938,6 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
     });
   }
 
-
   // Teams CSV upload (Excel-friendly)
   if(teamsCsvUploadBtn && teamsCsvFile){
     teamsCsvUploadBtn.addEventListener("click", ()=> teamsCsvFile.click());
@@ -1955,7 +1981,6 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
       downloadTeamsCsvExport();
     });
   }
-
 
 
   function refreshTeamsUIAll(){
@@ -2117,7 +2142,6 @@ playerShareHint.textContent = "";
 
   }
 
-  
   function mountPlayerSidebar(){
     const card = document.getElementById("playerSidebarCard");
     const mount = document.getElementById("playerSidebarMount");
@@ -2165,7 +2189,6 @@ function updatePlayerHeaderButton(){
     btn.title = logged ? 'View Player Info' : 'Player Login';
   }
 
-
   function openPlayerSidebar(){
     const card = document.getElementById("playerSidebarCard");
     if(!card) return;
@@ -2184,7 +2207,6 @@ function updatePlayerHeaderButton(){
     if(card && !card.classList.contains("hidden")) closePlayerSidebar();
     else openPlayerSidebar();
   });
-
 
   if(playerTeamSelect){
     playerTeamSelect.addEventListener("change", ()=>{
@@ -2286,7 +2308,6 @@ function updatePlayerHeaderButton(){
     return encodeURIComponent(String(s ?? '')).replace(/%0D%0A/g,'%0A');
   }
 
-  
   function _fmtSecs(v){
     const n = Number(v);
     if(!Number.isFinite(n)) return '—';
@@ -2606,7 +2627,6 @@ const posBadgeCls = (r.posResult==='SUCCESS') ? 'score-green' : (r.posResult==='
     });
   }
 
-
 // Coach Review autoload helper (URL hash: #coachReview=...)
 function _diqTryAutoloadCoachReview(){
   if(!_pendingCoachReviewCode) return false;
@@ -2625,7 +2645,6 @@ function _diqTryAutoloadCoachReview(){
   }
 }
 window._diqCoachReviewAutoload = _diqTryAutoloadCoachReview;
-
 
 
   function startCoachPlayback(attempt, label, pbId){
@@ -2872,7 +2891,6 @@ window._diqCoachReviewAutoload = _diqTryAutoloadCoachReview;
   return rows;
 }
 
-
 function shareResultsByEmail(){
     const cur = getCurrentPlayerFromMeta();
     if(!cur) return alert("Login first.");
@@ -2893,7 +2911,6 @@ function shareResultsByEmail(){
 
     const subject = `Diamond IQ Results ${teamName} #${playerNum} ${playerName} - ${dayKey}`;
 
-    
     const body =
 `Hi Coach,
 
@@ -2913,11 +2930,9 @@ const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(
 
 
 
-
   function resultsStorageKey(){
     return STORAGE_RESULTS_PREFIX + PLAYER_BASE_ID;
   }
-
 
   if(playerCopyReviewCodeBtn){
     playerCopyReviewCodeBtn.addEventListener('click', async ()=>{
@@ -2953,7 +2968,6 @@ const mailto = `mailto:${encodeURIComponent(coachEmail)}?subject=${mailtoEncode(
       // ignore quota / privacy mode errors
     }
   }
-
 
 
 let RESULTS = loadResults();
@@ -3053,7 +3067,6 @@ function setHowToPhase(phase /* 'p1' | 'p2' */){
   if (howToDetails && wasOpen) howToDetails.open = true;
 }
 
-
 function getSituationByKey(key){ return (SITUATIONS || []).find(s => s.key === key) || null; }
 
 function setTargetNotes(sKey, id, text){
@@ -3080,7 +3093,6 @@ function isPostRound(){
   );
 }
 
-
 function snapChipsToTargets(){
   if (!currentSituation || !currentSituation.targets) return;
   POS_IDS.forEach(id=>{
@@ -3102,7 +3114,6 @@ function getSeqForCurrent(){
     .map(s => String(s||'').toUpperCase().trim())
     .filter(s => POS_IDS.includes(s));
 }
-
 
 function getSeq2ForCurrent(){
   // Optional Stage-2 sequence
@@ -3187,9 +3198,6 @@ function setPlaySeq(next){
   currentSituation.playSeq = sanitizeSeq(next);
   renderSeqBuilder();
 }
-
-
-
 
 
 
@@ -3339,7 +3347,6 @@ function wireSeqListDnDOnce(){
   });
 }
 
-
 /** Templates */
 function applySeqTemplate(val){
   if (!val) return;
@@ -3379,7 +3386,6 @@ function wireSeqBuilderOnce(){
     seqNoteInput.addEventListener('input',  syncSeqNote);
     seqNoteInput.addEventListener('change', syncSeqNote);
   }
-
 
 
 
@@ -3450,7 +3456,6 @@ function startTimer(seconds = TIMER_START_SECS){
     }
   }, 1000);
 }
-
 
 
 function resetTimer(seconds = TIMER_START_SECS){
@@ -3547,7 +3552,6 @@ function clearChipPickMarker(el){
 }
 
 
-
 /** Add/update a small numeric badge at top-right of chip (1-based). */
 function setChipPickIndex(el, n){
   if (!el) return;
@@ -3586,7 +3590,6 @@ function setChipPickIndex(el, n){
 
 
 
-
 /** Full re-render: wipe all markers, then number 1..N from phase2Picks */
 function rerenderPickMarkers(){
   tokens.forEach(({el}) => clearChipPickMarker(el));
@@ -3595,7 +3598,6 @@ function rerenderPickMarkers(){
     if (rec?.el) setChipPickIndex(rec.el, i + 1);
   });
 }
-
 
 
 
@@ -3608,7 +3610,6 @@ function clearAllPicks(){
     el.classList.remove('correctPulse','wrongShake');
   });
 }
-
 
 
 
@@ -3640,7 +3641,6 @@ function endPhase2(success = true) {
     return;
   }
 
-  
   // Record Phase 2 attempt (per-stage) before we potentially transition/exit
   try{
     recordAttempt({
@@ -3792,7 +3792,6 @@ function ensureSeqTrail(){
 }
 
 
-
 /** Remove temporary ball + trail */
 function sizeOverlays(){
   if (!wrap) return;
@@ -3852,7 +3851,6 @@ function sizeOverlays(){
 
 }
 
-
 /** Get CSS-space point for a position id, using target (snap) locations */
 /** Get CSS-space point for a position id, using the chip’s actual DOM left/top if present. */
 function getCssPointForPosId(posId){
@@ -3866,7 +3864,6 @@ function getCssPointForPosId(posId){
   const tgt = currentSituation?.targets?.[posId];
   return tgt ? nativeToCssPoint({ x: tgt.x, y: tgt.y }) : null;
 }
-
 
 /** Small chip pulse for feedback */
 function pulseChip(id){
@@ -3980,7 +3977,6 @@ function animateThrowLeg(fromPt, toPt, color, visualOffset){
 }
 
 
-
 /** Animate throws along the provided order of POS_IDS.
  *  Uses distinct colors and offsets duplicate legs to avoid stacking. */
 async function animateSequenceThrows(order){
@@ -4050,7 +4046,6 @@ async function animateSequenceThrows(order){
 }
 
 
-
 /** Show a simple "success" message inside the Play Sequence card */
 function showSeqSuccessPanel(){
   // Prefer the active order; fall back to the situation's playSeq
@@ -4066,7 +4061,6 @@ function showSeqSuccessPanel(){
 }
 
 
-
 /** Show a "failure" message inside the Play Sequence card */
 function showSeqFailPanel() {
   const seqStr = seqOrder.join(' → ') || '—';
@@ -4075,7 +4069,6 @@ function showSeqFailPanel() {
     <div class="hint" style="margin-top:6px">Expected: <b>${seqStr}</b></div>
   `);
 }
-
 
 function wireOnce(){
   if (_wired) return;
@@ -4151,7 +4144,6 @@ function wireOnce(){
       }catch(e){}
     });
   }
-
 
   // --- everything from your “/* Wiring */” block goes here ---
   if (sitSelect) sitSelect.addEventListener('change', e=> setSituation(e.target.value));
@@ -4278,7 +4270,6 @@ function lockCorrectPrefix(k){
   phase2Picks = lockIds.slice();
   rerenderPickMarkers();
 
-  
   // Coach Review (paste code → table + playback)
   if(coachReviewLoadBtn){
     coachReviewLoadBtn.addEventListener('click', ()=>{
@@ -4342,7 +4333,6 @@ wireSeqBuilderOnce();
       endPhase2(false);
     }
   });
-
 
   // --- CONTINUE button: start Phase 2, snap chips, hide rings/target panel, hide Check Positions ---
   if (continueBtn) continueBtn.addEventListener('click', ()=>{
@@ -4428,7 +4418,6 @@ wireSeqBuilderOnce();
     seqNoteInput.addEventListener('change', syncSeqNote);
   }
 
-
   if (coachBtn) coachBtn.addEventListener('click', ()=>{
     // Always reset the situation when the Coach Tools button is clicked
     resetPlayers();
@@ -4443,7 +4432,6 @@ wireSeqBuilderOnce();
       openPwModal();
     }
   });
-
 
 
   // --- Admin button / modal (separate password) ---
@@ -4567,11 +4555,6 @@ wireSeqBuilderOnce();
     refreshSituationAll();
     download('situations-all.json', buildAllSituationsExport());
   });
-  if (copyAllBtn)         copyAllBtn.addEventListener('click', async ()=>{
-    refreshSituationAll();
-    try{ await navigator.clipboard.writeText(buildAllSituationsExport()); }catch{}
-  });
-
 
       // Results export buttons (avoid relying on id->window globals)
   const copyResultsBtn = document.getElementById('copyResultsBtn');
@@ -4602,7 +4585,6 @@ let _allTargetsCorrect = false;
 // Phase 1 (chip placement) summary for the most recently completed round
 let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts:number }
 
-
 let coachUnlocked = false;
 
 // Coach Review: allow loading report code from URL fragment (e.g. #coachReview=...)
@@ -4627,7 +4609,6 @@ if(coachUnlocked && typeof window._diqCoachReviewAutoload === 'function'){
     }
   });
 }catch(e){}
-
 
 
 let runnerEl = null;
@@ -4749,7 +4730,6 @@ const ensureHeaderGrouping = () => {
 };
 
 
-
 const coachCard=document.getElementById('coachCard');
 const coachStatus=document.getElementById('coachStatus');
 
@@ -4772,7 +4752,6 @@ const advanceSel=document.getElementById('advanceSel');
 
 const downloadCurrentBtn=document.getElementById('downloadCurrentBtn');
 const downloadAllBtn=document.getElementById('downloadAllBtn');
-const copyAllBtn=document.getElementById('copyAllBtn');
 
 const pwModal=document.getElementById('pwModal');
 const pwInput=document.getElementById('pwInput');
@@ -4847,7 +4826,6 @@ window.addEventListener('orientationchange', scheduleLayout);
 
 window.addEventListener('resize', updateDescriptionHudText);
 window.addEventListener('orientationchange', updateDescriptionHudText);
-
 
 // @diq:end [A1]
 /// @diq:begin [A2] Marker Scaling (single copy)
@@ -4996,6 +4974,16 @@ function makeChipDraggable(el,id){
   });
 
   el.addEventListener('click', ()=>{
+    // Coach convenience: clicking a chip in coach mode selects it as the current Target
+    // (mirrors selecting the Target dropdown under Targets & Tolerance)
+    if (coachUnlocked && !phase2Active) {
+      if (tolTargetSel && tolTargetSel.querySelector(`option[value="${id}"]`)) {
+        tolTargetSel.value = id;
+        tolTargetSel.dispatchEvent(new Event('change', { bubbles:true }));
+      }
+      return;
+    }
+
     if (!phase2Active) return;
     if (!seqOrder || !seqOrder.length) return;
 
@@ -5018,7 +5006,6 @@ function makeChipDraggable(el,id){
     // Keep the Play Sequence panel hidden until success/exhaustion
     hideSeqPanel();
   });
-
 
 }
 
@@ -5120,7 +5107,6 @@ function enableTargetSelection(){
   }
 }
 
-
 /** Disable click-to-select for rings and forget the current selection */
 function disableTargetSelection(){
   getAllRings().forEach(ring=>{
@@ -5140,7 +5126,6 @@ function onRingClick(e){
     }
   }
 }
-
 
 /** Panel visibility helpers */
 function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
@@ -5460,7 +5445,6 @@ function animateBatterAdvance(basesAdvanced, onDone){
   runLeg();
 }
 
-
 const BASE_ORDER = ['first', 'second', 'third', 'home'];
 
 /**
@@ -5661,7 +5645,6 @@ function updateHud(scoreCount){
   if (triesBadge) setBadgeState(triesBadge, triesState, 'tries');
 }
 
-
 function setBadgeState(el, state /* 'green'|'yellow'|'red' */, base){
   if (!el) return;
   el.classList.remove(`${base}-green`, `${base}-yellow`, `${base}-red`);
@@ -5734,7 +5717,6 @@ function normalizeSituation(sRaw, i){
 
   return /** @type {Situation} */ (safe);
 }
-
 
 function defaultStartsMap(){
   const map = {};
@@ -5862,7 +5844,6 @@ document.addEventListener('click', (e)=>{
   }
 });
 
-
 // @diq:end [A8]
 /// @diq:begin [A9] Situation lifecycle
 function updateCurrentOptionLabel(){
@@ -5888,7 +5869,6 @@ function syncSituationInputsFromCurrent(){
   if (seqNoteInput) seqNoteInput.value = (typeof currentSituation.seqNote === 'string') ? currentSituation.seqNote : '';
   if (typeof renderSeqBuilder === 'function') renderSeqBuilder();
 }
-
 
 function startsToTargets(starts, tol=DEFAULT_TOL){
   const out={}; POS_IDS.forEach(id=>{ const p=starts[id]; if(p) out[id]={ x:Math.round(p.x), y:Math.round(p.y), tol:Number(tol)||DEFAULT_TOL }; });
@@ -5926,7 +5906,6 @@ function nextNewSituationTitle(){
   const next = Math.max(...nums) + 1;
   return `${base} ${next}`;
 }
-
 
 function makeBlankSituation(){
   const title = nextNewSituationTitle();            // UI label only; can be edited later
@@ -5986,7 +5965,6 @@ function addNewSituation(){
     setTimeout(() => situationMsg.textContent = '', 1400);
   }
 }
-
 
 function deleteCurrentSituation(){
   if (!currentSituation) return;
@@ -6230,7 +6208,6 @@ function composeSituationForExport(base, starts, targets, hit){
   return payload;
 }
 
-
 function buildCurrentSituationExport(){
   const s=currentSituation || SITUATIONS[0]; if(!s) return '[]';
   const one=composeSituationForExport(s, getOnscreenStarts(), getRenderedTargets(), getHitForExport(s));
@@ -6257,7 +6234,6 @@ function buildAllSituationsExport(){
   return JSON.stringify(arr,null,2);
 }
 
-
 function buildResultsExportPayload(){
   return {
     type: 'diamondiq_results_v1',
@@ -6283,7 +6259,6 @@ async function copyResults(){
   const text = buildResultsExportText();
   await navigator.clipboard.writeText(text);
 }
-
 
 /* =========================
    Coach: Player Results Viewer (parse + render)
@@ -6455,7 +6430,6 @@ function renderPlayerResultsForCoach(outEl, parsed){
   outEl.innerHTML = header + table;
 }
 
-
 function download(filename,content){
   const blob=new Blob([content], {type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename;
@@ -6508,7 +6482,6 @@ function refreshSituationAll(){
       notes
     };
   });
-
 
   // 6) Hit + meta (+ persist hit location only)
   ensureDefaultHit();
@@ -6672,7 +6645,6 @@ function checkPositions(){
   }
 }
 
-
 function resetBallAndRunnerForSituation(){
   if (animReq){ cancelAnimationFrame(animReq); animReq=null; }
   if (ballSvg) ballSvg.innerHTML='';
@@ -6754,10 +6726,31 @@ function initCoachToolsCollapsibles(){
 
   const subsecs = Array.from(card.querySelectorAll(".subsec"));
   subsecs.forEach(subsec=>{
-    if(subsec.dataset.diqCollapsible === "1") return;
+    const already = (subsec.dataset.diqCollapsible === "1");
 
     const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
     if(!header) return;
+
+    // If it was already prepared in HTML, ensure body/chevron exist; otherwise prepare.
+    if(already){
+      subsec.classList.add("diq-collapsible");
+      // Ensure chevron exists
+      if(!header.querySelector(".diq-chevron")){
+        const chev = document.createElement("span");
+        chev.className = "diq-chevron";
+        chev.textContent = "▾";
+        header.appendChild(chev);
+      }
+      // Ensure body wrapper exists
+      let body = subsec.querySelector(":scope > .diq-body");
+      if(!body){
+        body = document.createElement("div");
+        body.className = "diq-body";
+        const kids = Array.from(subsec.children);
+        kids.forEach(el=>{ if(el!==header) body.appendChild(el); });
+        subsec.appendChild(body);
+      }
+    } else {
 
     // Mark + add chevron
     subsec.dataset.diqCollapsible = "1";
@@ -6778,19 +6771,23 @@ function initCoachToolsCollapsibles(){
       body.appendChild(el);
     });
     subsec.appendChild(body);
+    }
 
     const key = subsec.id || (header.textContent || "").trim() || ("subsec_" + Math.random());
     const defaultCollapsed = true;
     const collapsed = (key in map) ? !!map[key] : defaultCollapsed;
     if(collapsed) subsec.classList.add("diq-collapsed");
 
-    header.addEventListener("click", ()=>{
+    if(subsec.dataset.diqClickWired !== "1"){
+      subsec.dataset.diqClickWired = "1";
+      header.addEventListener("click", ()=>{
       const now = !subsec.classList.contains("diq-collapsed");
       // now=true means expanded; store collapsed=false
       subsec.classList.toggle("diq-collapsed");
       map[key] = subsec.classList.contains("diq-collapsed");
       _saveCoachCollapseMap(map);
-    });
+      });
+    }
   });
 }
 
@@ -6859,7 +6856,6 @@ async function init(){
   ensurePlayerMeta();
 }
 
-
 function syncTolInputsFromModel(id){
   const t = getTargetFor(currentSituation.key, id);
   const tol = Number(t?.tol) || DEFAULT_TOL;
@@ -6903,8 +6899,413 @@ if (img && img.complete) init();
 else if (img){ img.addEventListener('load', init, { once:true }); window.addEventListener('load', ()=>{ if (!SITUATIONS.length) init(); }, { once:true }); }
 /// @diq:end [A12] Init & events
 else { window.addEventListener('load', init, { once:true }); }
-</script>
 
+// @diq:begin [A_ADMIN] Admin tools
+  let adminUnlocked = false;
+
+  const adminCollapseAllBtn = document.getElementById('adminCollapseAllBtn');
+  const adminExpandAllBtn = document.getElementById('adminExpandAllBtn');
+
+  const adminTeamsSubsec = document.getElementById('adminTeamsSubsec');
+  const adminTeamsDownloadBtn = document.getElementById('adminTeamsDownloadBtn');
+  const adminTeamsCopyBtn = document.getElementById('adminTeamsCopyBtn');
+  const adminTeamsImportBtn = document.getElementById('adminTeamsImportBtn');
+  const adminTeamsResetBtn = document.getElementById('adminTeamsResetBtn');
+
+  const adminTeamSelect = document.getElementById('adminTeamSelect');
+  const adminTeamName = document.getElementById('adminTeamName');
+  const adminTeamEmail = document.getElementById('adminTeamEmail');
+  const adminTeamAddBtn = document.getElementById('adminTeamAddBtn');
+  const adminTeamUpdateBtn = document.getElementById('adminTeamUpdateBtn');
+  const adminTeamRemoveBtn = document.getElementById('adminTeamRemoveBtn');
+
+  const adminRosterSelect = document.getElementById('adminRosterSelect');
+  const adminPlayerName = document.getElementById('adminPlayerName');
+  const adminPlayerNumber = document.getElementById('adminPlayerNumber');
+  const adminPlayerPass = document.getElementById('adminPlayerPass');
+  const adminGenPassBtn = document.getElementById('adminGenPassBtn');
+  const adminPlayerIdPreview = document.getElementById('adminPlayerIdPreview');
+  const adminPlayerAddBtn = document.getElementById('adminPlayerAddBtn');
+  const adminPlayerUpdateBtn = document.getElementById('adminPlayerUpdateBtn');
+  const adminPlayerRemoveBtn = document.getElementById('adminPlayerRemoveBtn');
+
+  function openAdminPwModal(){
+    if (!adminPwModal) return;
+    adminPwMsg.textContent = '';
+    adminPwInput.value = '';
+    adminPwModal.style.display = 'flex';
+    setTimeout(()=>adminPwInput.focus(), 0);
+  }
+  function closeAdminPwModal(){
+    if (!adminPwModal) return;
+    adminPwModal.style.display = 'none';
+  }
+
+  function adminSetSubsecCollapsed(secEl, collapsed){
+    if (!secEl) return;
+    secEl.dataset.collapsed = collapsed ? '1' : '0';
+    const body = secEl.querySelector('.adminSubsecBody');
+    if (body) body.style.display = collapsed ? 'none' : '';
+    const toggle = secEl.querySelector('.adminSubsecToggle');
+    if (toggle) toggle.textContent = collapsed ? '▸' : '▾';
+  }
+
+  function adminInitCollapsibles(){
+    if (!adminCard) return;
+    const secs = adminCard.querySelectorAll('.admin-subsec[data-admin-collapsible="1"]');
+    secs.forEach(sec=>{
+      const open = sec.dataset.adminOpen === '1';
+      adminSetSubsecCollapsed(sec, !open);
+      const t = sec.querySelector('.adminSubsecToggle');
+      if (t){
+        t.addEventListener('click', ()=>{
+          const isCollapsed = sec.dataset.collapsed === '1';
+          adminSetSubsecCollapsed(sec, !isCollapsed);
+        });
+      }
+    });
+  }
+
+  function adminSetAllSubsecs(collapsed){
+    if (!adminCard) return;
+    const secs = adminCard.querySelectorAll('.admin-subsec[data-admin-collapsible="1"]');
+    secs.forEach(sec=>adminSetSubsecCollapsed(sec, collapsed));
+  }
+
+  function adminSetMode(on){
+    adminUnlocked = !!on;
+    if (adminCard) adminCard.classList.toggle('hidden', !adminUnlocked);
+    if (adminStatus) adminStatus.textContent = adminUnlocked ? 'unlocked' : 'locked';
+    if (adminUnlocked){
+      adminInitCollapsibles();
+      adminRefreshAll();
+    }
+  }
+
+  function tryUnlockAdmin(){
+    if (!adminPwInput) return;
+    if (adminPwInput.value === ADMIN_PASSWORD){
+      closeAdminPwModal();
+      adminSetMode(true);
+    } else {
+      adminPwMsg.textContent = 'Incorrect password.';
+    }
+  }
+
+  if (adminPwCancel) adminPwCancel.addEventListener('click', closeAdminPwModal);
+  if (adminPwOk) adminPwOk.addEventListener('click', tryUnlockAdmin);
+  if (adminPwInput) adminPwInput.addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlockAdmin(); });
+
+  if (adminBtn) adminBtn.addEventListener('click', ()=>{
+    if (adminUnlocked){
+      adminSetMode(false);
+      if (adminCard) adminCard.classList.add('hidden');
+    } else {
+      openAdminPwModal();
+    }
+  });
+
+  if (adminCollapseAllBtn) adminCollapseAllBtn.addEventListener('click', ()=>adminSetAllSubsecs(true));
+  if (adminExpandAllBtn) adminExpandAllBtn.addEventListener('click', ()=>adminSetAllSubsecs(false));
+
+  // --- Admin TEAMS (uses same underlying teams model as Coach TEAMS) ---
+  function adminRefreshTeamSelect(){
+    if (!adminTeamSelect) return;
+    const curVal = adminTeamSelect.value;
+    adminTeamSelect.innerHTML = '<option value="">— Select team —</option>';
+    const list = (TEAMS && Array.isArray(TEAMS.teams)) ? TEAMS.teams.slice() : [];
+    list.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+    list.forEach(t=>{
+      const opt = document.createElement('option');
+      opt.value = t.id || slugifyLoose(t.name||'');
+      opt.textContent = t.name || t.id || '(unnamed)';
+      adminTeamSelect.appendChild(opt);
+    });
+    if (curVal) adminTeamSelect.value = curVal;
+  }
+
+  function adminRefreshRosterSelect(){
+    if (!adminRosterSelect) return;
+    const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+    adminRosterSelect.innerHTML = '<option value="">— Select player —</option>';
+    const t = teamId ? findTeam(teamId) : null;
+    if (!t) return;
+
+    (t.roster || []).forEach(p=>{
+      const o = document.createElement('option');
+      const pid = (p && p.playerId) ? String(p.playerId) : slugifyLoose(`${(t && t.id) ? t.id : teamId}-${p && p.number ? p.number : ''}-${p && p.name ? p.name : ''}`);
+      o.value = pid;
+      o.textContent = `${p.number ? "#"+p.number+" " : ""}${p.name||'(no name)'}`;
+      adminRosterSelect.appendChild(o);
+    });
+  }
+
+  function adminSetTeamFieldsFromSelection(){
+    if (!adminTeamSelect) return;
+    const teamId = adminTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+    if (adminTeamName) adminTeamName.value = t ? (t.name||'') : '';
+    if (adminTeamEmail) adminTeamEmail.value = t ? (t.coachEmail||'') : '';
+
+    const hasTeam = !!teamId;
+    if (adminTeamUpdateBtn) adminTeamUpdateBtn.disabled = !hasTeam;
+    if (adminTeamRemoveBtn) adminTeamRemoveBtn.disabled = !hasTeam;
+
+    adminRefreshRosterSelect();
+    if (adminRosterSelect) adminRosterSelect.value = '';
+    adminSetPlayerFieldsFromSelection();
+  }
+
+  function adminSetPlayerFieldsFromSelection(){
+    if (!adminRosterSelect || !adminTeamSelect) return;
+    const teamId = adminTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+    const pid = adminRosterSelect.value;
+    const p = (t && pid) ? findPlayer(t, pid) : null;
+
+    if (adminPlayerName) adminPlayerName.value = p ? (p.name||'') : '';
+    if (adminPlayerNumber) adminPlayerNumber.value = p ? (p.number!=null ? String(p.number) : '') : '';
+    if (adminPlayerPass) adminPlayerPass.value = p ? (p.password||'') : '';
+
+    const hasPlayer = !!p;
+    if (adminPlayerUpdateBtn) adminPlayerUpdateBtn.disabled = !hasPlayer;
+    if (adminPlayerRemoveBtn) adminPlayerRemoveBtn.disabled = !hasPlayer;
+
+    adminUpdatePlayerIdPreview();
+  }
+
+  function adminUpdatePlayerIdPreview(){
+    if (!adminPlayerIdPreview || !adminTeamSelect) return;
+    const teamId = adminTeamSelect.value;
+    const t = teamId ? findTeam(teamId) : null;
+    if (!t){
+      adminPlayerIdPreview.textContent = '';
+      return;
+    }
+    const name = String(adminPlayerName ? adminPlayerName.value : '').trim();
+    const num = String(adminPlayerNumber ? adminPlayerNumber.value : '').trim();
+    const baseId = ''; // preview only
+    const pid = (typeof buildPlayerIdForTeam === 'function')
+      ? buildPlayerIdForTeam(t.name, name, num, baseId)
+      : computeRosterPlayerId(t, { name, number:num });
+    adminPlayerIdPreview.textContent = pid;
+  }
+
+  function adminRefreshAll(){
+    adminRefreshTeamSelect();
+    adminSetTeamFieldsFromSelection();
+  }
+
+  if (adminTeamSelect) adminTeamSelect.addEventListener('change', adminSetTeamFieldsFromSelection);
+  if (adminRosterSelect) adminRosterSelect.addEventListener('change', adminSetPlayerFieldsFromSelection);
+  if (adminPlayerName) adminPlayerName.addEventListener('input', adminUpdatePlayerIdPreview);
+  if (adminPlayerNumber) adminPlayerNumber.addEventListener('input', adminUpdatePlayerIdPreview);
+
+  if (adminGenPassBtn){
+    adminGenPassBtn.addEventListener('click', ()=>{
+      if (!adminPlayerPass) return;
+      adminPlayerPass.value = genSimplePassword(6);
+    });
+  }
+
+  if (adminTeamsDownloadBtn){
+    adminTeamsDownloadBtn.addEventListener('click', ()=>{ downloadJson('teams.json', TEAMS); });
+  }
+  if (adminTeamsCopyBtn){
+    adminTeamsCopyBtn.addEventListener('click', ()=>{
+      const txt = JSON.stringify(TEAMS, null, 2);
+      copyTextToClipboard(txt)
+        .then(()=> alert('Teams JSON copied.'))
+        .catch(()=> alert('Clipboard copy failed. Use Download teams.json instead.'));
+    });
+  }
+
+  if (adminTeamsImportBtn){
+    adminTeamsImportBtn.addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = '.json,application/json';
+      inp.style.display = 'none';
+      document.body.appendChild(inp);
+      inp.addEventListener('change', async ()=>{
+        try{
+          const f = inp.files && inp.files[0];
+          if(!f) return;
+          const txt = await f.text();
+          const parsed = JSON.parse(txt);
+          if (!parsed || !parsed.teams || !Array.isArray(parsed.teams)) throw new Error('Expected JSON with { teams: [...] }');
+          TEAMS = normalizeTeamsData(parsed);
+          saveTeamsToLocal();
+          if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+          adminRefreshAll();
+          alert('Imported teams JSON.');
+        }catch(err){
+          alert('Import failed: ' + (err && err.message ? err.message : String(err)));
+        } finally {
+          try{ document.body.removeChild(inp); }catch(_e){}
+        }
+      }, { once:true });
+      inp.click();
+    });
+  }
+
+  if (adminTeamsResetBtn){
+    adminTeamsResetBtn.addEventListener('click', async ()=>{
+      if(!confirm('Clear locally saved teams (does not affect teams.json on disk)?')) return;
+      try{ localStorage.removeItem(TEAMS_STORAGE_KEY); }catch(_e){}
+      if (typeof loadTeamsFromJson === 'function'){
+        try{ await loadTeamsFromJson(); }catch(_e){}
+      }
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      alert('Local teams cleared.');
+    });
+  }
+
+  if (adminTeamAddBtn){
+    adminTeamAddBtn.addEventListener('click', ()=>{
+      const t = upsertTeam(adminTeamName ? adminTeamName.value : '', adminTeamEmail ? adminTeamEmail.value : '');
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      if (t && adminTeamSelect) adminTeamSelect.value = t.id;
+      adminSetTeamFieldsFromSelection();
+    });
+  }
+
+  if (adminTeamUpdateBtn){
+    adminTeamUpdateBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+      if(!teamId) return alert('Select a team to update.');
+      const old = findTeam(teamId);
+      if(!old) return;
+
+      const newName = String(adminTeamName ? adminTeamName.value : '').trim();
+      const newId = slugifyLoose(newName) || teamId;
+      const newEmail = String(adminTeamEmail ? adminTeamEmail.value : '').trim();
+
+      if(newId !== teamId){
+        // migrate (match coach tools behavior)
+        const migrated = { id: newId, name: newName, coachEmail: newEmail, roster: deepClone(old.roster || []) };
+        migrated.roster.forEach(p=>{
+          p.playerId = buildPlayerIdForTeam(migrated.name, p.name, p.number, p.baseId);
+        });
+        removeTeam(teamId);
+        TEAMS.teams.push(migrated);
+      }else{
+        old.name = newName || old.name;
+        old.coachEmail = newEmail;
+        (old.roster||[]).forEach(p=>{
+          p.playerId = buildPlayerIdForTeam(old.name, p.name, p.number, p.baseId);
+        });
+      }
+
+      TEAMS.teams = TEAMS.teams.sort((a,b)=> (a.name||"").localeCompare(b.name||""));
+      saveTeamsToLocal();
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      if (adminTeamSelect) adminTeamSelect.value = newId;
+      adminSetTeamFieldsFromSelection();
+    });
+  }
+
+  if (adminTeamRemoveBtn){
+    adminTeamRemoveBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+      if(!teamId) return;
+      if(!confirm('Remove this team and all players?')) return;
+      removeTeam(teamId);
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      if (adminTeamSelect) adminTeamSelect.value = '';
+      adminSetTeamFieldsFromSelection();
+    });
+  }
+
+  if (adminPlayerAddBtn){
+    adminPlayerAddBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+      if(!teamId) return alert('Select a team first.');
+      const name = String(adminPlayerName ? adminPlayerName.value : '').trim();
+      const num = String(adminPlayerNumber ? adminPlayerNumber.value : '').trim();
+      const pass = String(adminPlayerPass ? adminPlayerPass.value : '').trim();
+      if(!name) return alert('Player Name is required.');
+      if(!num) return alert('Player Number is required.');
+
+      const p = upsertPlayer(teamId, name, num, pass);
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      adminRefreshRosterSelect();
+      if (adminRosterSelect && p && p.playerId) adminRosterSelect.value = p.playerId;
+      adminSetPlayerFieldsFromSelection();
+    });
+  }
+
+  if (adminPlayerUpdateBtn){
+    adminPlayerUpdateBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+      if(!teamId) return;
+      const t = findTeam(teamId);
+      if(!t) return;
+      const pid = adminRosterSelect ? adminRosterSelect.value : '';
+      if(!pid) return alert('Select a player to update.');
+      const p = findPlayer(t, pid);
+      if(!p) return;
+
+      p.name = String(adminPlayerName ? adminPlayerName.value : '').trim() || p.name;
+      p.number = String(adminPlayerNumber ? adminPlayerNumber.value : '').trim() || p.number;
+      p.password = String(adminPlayerPass ? adminPlayerPass.value : '').trim() || p.password;
+      p.playerId = buildPlayerIdForTeam(t.name, p.name, p.number, p.baseId);
+      saveTeamsToLocal();
+
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      adminRefreshRosterSelect();
+      if (adminRosterSelect) adminRosterSelect.value = p.playerId;
+      adminSetPlayerFieldsFromSelection();
+    });
+  }
+
+  if (adminPlayerRemoveBtn){
+    adminPlayerRemoveBtn.addEventListener('click', ()=>{
+      const teamId = adminTeamSelect ? adminTeamSelect.value : '';
+      if(!teamId) return;
+      const pid = adminRosterSelect ? adminRosterSelect.value : '';
+      if(!pid) return;
+      if(!confirm('Remove this player?')) return;
+      removePlayer(teamId, pid);
+
+      if (typeof refreshTeamsUIAll === 'function') refreshTeamsUIAll();
+      adminRefreshAll();
+      adminRefreshRosterSelect();
+      if (adminRosterSelect) adminRosterSelect.value = '';
+      adminSetPlayerFieldsFromSelection();
+    });
+  }
+
+  // Initialize hidden state
+  adminSetMode(false);
+  // @diq:end [A_ADMIN] Admin tools
+
+
+// @diq:begin [A_RESETSTARTS_DELEGATE] Reset Starts delegated click
+// Robust to DOM moves / collapsible wrappers.
+document.addEventListener('click', (e)=>{
+  const btn = e.target && e.target.closest ? e.target.closest('#resetStartsBtn') : null;
+  if(!btn) return;
+  // Prefer existing handler if one is wired on the element.
+  // If not, fall back to calling the same reset function used elsewhere.
+  try{
+    if(typeof resetPlayerStarts === 'function') { resetPlayerStarts(); return; }
+    if(typeof resetStarts === 'function') { resetStarts(); return; }
+    // last-resort: trigger click on the element (if a listener exists)
+    btn.click();
+  } catch(_err){
+    console.error('[ResetStarts] failed', _err);
+  }
+});
+// @diq:end [A_RESETSTARTS_DELEGATE] Reset Starts delegated click
+
+</script>
 
 <!-- Coach Review Modal (Option B) -->
 <div id="coachReviewModal" class="diq-modal hidden" role="dialog" aria-modal="true" aria-label="Coach Review">
@@ -6920,5 +7321,4 @@ else { window.addEventListener('load', init, { once:true }); }
   </div>
 </div>
 
-</body>
-</html>
+</body></html>
