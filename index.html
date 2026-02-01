@@ -787,6 +787,8 @@
         <div class="diq-body">
 <div class="row" style="gap:10px; align-items:center; margin-top:6px">
             <button id="resetStartsBtn" class="btn-slate" title="Reset player chips to default locations">↺ Reset Player Starts</button>
+      <button id="sbUndoBtn" class="btn-slate" type="button" title="Undo last edit" disabled>↩ Undo</button>
+      <button id="sbRedoBtn" class="btn-slate" type="button" title="Redo" disabled>↪ Redo</button>
       <span id="situationMsg" class="hint" style="margin-left:auto"></span>
           </div>
 <div class="row" style="flex-direction:column; align-items:stretch; gap:8px">
@@ -3836,6 +3838,9 @@ function endPhase2(success = true) {
       allowSeqPanel = false;
       hideSeqPanel();
       if (continueBtn) continueBtn.classList.add('hidden');
+
+  // Situation Builder undo/redo availability follows coach lock + current situation
+  try{ sbEnsureKey(); sbUpdateButtons(); }catch(e){}
       if (verifySeqBtn) verifySeqBtn.classList.remove('hidden');
 
       // Keep chips clickable for the next pick
@@ -4716,6 +4721,30 @@ wireSeqBuilderOnce();
   if (deleteSituationBtn && typeof deleteCurrentSituation === 'function') deleteSituationBtn.addEventListener('click', deleteCurrentSituation);
   if (resetStartsBtn)   resetStartsBtn.addEventListener('click', resetStartsToDefaults);
 
+  if (sbUndoBtn) sbUndoBtn.addEventListener('click', sbUndo);
+  if (sbRedoBtn) sbRedoBtn.addEventListener('click', sbRedo);
+
+  // Snapshot/commit history for tolerance + notes edits (avoid one entry per keystroke)
+  const sbCommitTol = ()=>{ if(_sbTolStartSnap){ sbPushUndo(_sbTolStartSnap); _sbTolStartSnap=null; } };
+  const sbCommitNotes = ()=>{ if(_sbNotesStartSnap){ sbPushUndo(_sbNotesStartSnap); _sbNotesStartSnap=null; } };
+
+  if (tolNum){
+    tolNum.addEventListener('focus', ()=>{ if(coachUnlocked) _sbTolStartSnap = sbSnapshot(); });
+    tolNum.addEventListener('change', sbCommitTol);
+    tolNum.addEventListener('blur', sbCommitTol);
+  }
+  if (tolRange){
+    tolRange.addEventListener('pointerdown', ()=>{ if(coachUnlocked) _sbTolStartSnap = sbSnapshot(); });
+    tolRange.addEventListener('pointerup', sbCommitTol);
+    tolRange.addEventListener('change', sbCommitTol);
+    tolRange.addEventListener('blur', sbCommitTol);
+  }
+  if (tolNotes){
+    tolNotes.addEventListener('focus', ()=>{ if(coachUnlocked) _sbNotesStartSnap = sbSnapshot(); });
+    tolNotes.addEventListener('change', sbCommitNotes);
+    tolNotes.addEventListener('blur', sbCommitNotes);
+  }
+
   if (outsSelSituation) outsSelSituation.addEventListener('change', e=> setOuts(e.target.value, {quiet:false}));
 
   if (newTitleInput) {
@@ -4776,6 +4805,14 @@ let _allTargetsCorrect = false;
 let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts:number }
 
 let coachUnlocked = false;
+
+// Situation Builder edit history (Undo/Redo, per-situation; 10-step)
+const SB_HISTORY_MAX = 10;
+let sbHistKey = null;         // currentSituation.key the stacks apply to
+let sbUndoStack = [];         // array of snapshots
+let sbRedoStack = [];
+let _sbTolStartSnap = null;   // snapshot captured at start of tol edits
+let _sbNotesStartSnap = null; // snapshot captured at start of notes edits
 
 // Coach Review: allow loading report code from URL fragment (e.g. #coachReview=...)
 let _pendingCoachReviewCode = null;
@@ -4955,6 +4992,8 @@ const newSituationBtn  = document.getElementById('newSituationBtn');
 const saveSituationBtn = document.getElementById('saveSituationBtn');
 const deleteSituationBtn = document.getElementById('deleteSituationBtn');
 const resetStartsBtn = document.getElementById('resetStartsBtn');
+const sbUndoBtn = document.getElementById('sbUndoBtn');
+const sbRedoBtn = document.getElementById('sbRedoBtn');
 const situationMsg     = document.getElementById('situationMsg');
 
 const outsValHud      = document.getElementById('outsVal');
@@ -5132,12 +5171,16 @@ function canDrag(){
 /* Basic pointer-driven dragging (writes native coords back to tokens map) */
 function makeChipDraggable(el,id){
   let drag=null;
+  let preSnap=null;
 
   // --- drag for Phase 1 / coach ---
   el.addEventListener('pointerdown', e=>{
     if (!canDrag()) return;
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
+
+    // Situation Builder history: capture pre-edit snapshot (coach only)
+    if (coachUnlocked && currentSituation) { try{ preSnap = sbSnapshot(); }catch(err){ preSnap=null; } }
 
     const rec = tokens.get(id);
     const css = unitToCss(rec.pos);
@@ -5156,6 +5199,19 @@ function makeChipDraggable(el,id){
 
     const onUp = ()=>{
       window.removeEventListener('pointermove', onMove);
+
+      // Persist coach-edited starts for this situation and record undo step
+      if (coachUnlocked && currentSituation){
+        try{
+          const starts = getOnscreenStarts();
+          startsMap[currentSituation.key] = Fcopy(starts);
+          currentSituation.starts = Fcopy(starts);
+          saveStarts();
+        }catch(e){}
+        try{ if(preSnap) sbPushUndo(preSnap); }catch(e){}
+        preSnap = null;
+      }
+
       drag = null;
     };
 
@@ -5228,11 +5284,14 @@ function buildTargets(){
 }
 function makeTargetDraggable(el,id){
   let drag=null;
+  let preSnap=null;
   el.addEventListener('pointerdown',e=>{
     if(!coachUnlocked) return;
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
     drag={cx:e.clientX,cy:e.clientY,left:parseFloat(el.style.left),top:parseFloat(el.style.top)};
+
+    if (coachUnlocked && currentSituation) { try{ preSnap = sbSnapshot(); }catch(err){ preSnap=null; } }
     window.addEventListener('pointermove',onMove);
     window.addEventListener('pointerup',onUp,{once:true});
   });
@@ -5244,7 +5303,12 @@ function makeTargetDraggable(el,id){
     const pt=cssToUnit(left,top);
     setTargetFor(currentSituation.key,id,pt,currentSituation.targets?.[id]?.tol ?? DEFAULT_TOL);
   }
-  function onUp(){ window.removeEventListener('pointermove',onMove); drag=null; }
+  function onUp(){
+    window.removeEventListener('pointermove',onMove);
+    try{ if(preSnap) sbPushUndo(preSnap); }catch(e){}
+    preSnap=null;
+    drag=null;
+  }
 }
 
 function renderTargetPanel(id){
@@ -6221,6 +6285,7 @@ function deleteCurrentSituation(){
     startsMap[s.key] = Fcopy(s.starts||DEFAULT_STARTS);
     saveStarts();
   }
+  try{ if(preSnap) sbPushUndo(preSnap); }catch(e){}
 
   // Pick next selection (prefer previous index)
   const nextIdx = Math.max(0, Math.min(idx, SITUATIONS.length - 1));
@@ -6238,6 +6303,7 @@ function deleteCurrentSituation(){
 
 function resetStartsToDefaults(){
   if (!currentSituation) return;
+  const preSnap = (coachUnlocked ? sbSnapshot() : null);
   POS_IDS.forEach(id=>{
     const p = DEFAULT_STARTS[id];
     const rec = tokens.get(id);
@@ -6248,6 +6314,7 @@ function resetStartsToDefaults(){
     startsMap[currentSituation.key] = Fcopy(DEFAULT_STARTS);
     saveStarts();
   }
+  try{ if(preSnap) sbPushUndo(preSnap); }catch(e){}
   if (situationMsg){
     situationMsg.textContent = 'Player starts reset to defaults.';
     setTimeout(()=> situationMsg.textContent = '', 1400);
@@ -6393,6 +6460,9 @@ function setSituation(key){
     withInputMute(()=> { seqInput.value = seq; });
   }
 
+  // Reset Situation Builder history when switching situations
+  try{ sbEnsureKey(); sbUpdateButtons(); }catch(e){}
+
   setHowToPhase('p1');
 }
 
@@ -6414,6 +6484,140 @@ function getRenderedTargets(){
     };
   });
   return out;
+}
+
+
+// --- Situation Builder Undo/Redo (chips + targets + tolerance + notes) ---
+function sbSnapshot(){
+  if(!currentSituation) return null;
+  const key = currentSituation.key;
+  const starts = getOnscreenStarts();
+  const targets = {};
+  const t = currentSituation.targets || {};
+  Object.entries(t).forEach(([id,pt])=>{
+    targets[id] = { x:Math.round(pt.x), y:Math.round(pt.y), tol:Number(pt.tol)||DEFAULT_TOL, notes: (typeof pt.notes==='string'?pt.notes:'') };
+  });
+  return {
+    key,
+    starts,
+    targets,
+    tolSel: (tolTargetSel && tolTargetSel.value) ? String(tolTargetSel.value) : null
+  };
+}
+function sbSame(a,b){
+  if(!a || !b) return false;
+  if(a.key !== b.key) return false;
+  for(const id of POS_IDS){
+    const pa=a.starts?.[id], pb=b.starts?.[id];
+    if(!pa || !pb) return false;
+    if(Math.round(pa.x)!==Math.round(pb.x) || Math.round(pa.y)!==Math.round(pb.y)) return false;
+  }
+  for(const id of POS_IDS){
+    const ta=a.targets?.[id], tb=b.targets?.[id];
+    if(!ta || !tb) return false;
+    if(Math.round(ta.x)!==Math.round(tb.x) || Math.round(ta.y)!==Math.round(tb.y)) return false;
+    if(Math.round(Number(ta.tol)||0)!==Math.round(Number(tb.tol)||0)) return false;
+    if(String(ta.notes||'')!==String(tb.notes||'')) return false;
+  }
+  return true;
+}
+function sbEnsureKey(){
+  const key = currentSituation && currentSituation.key;
+  if(!key) return;
+  if(sbHistKey !== key){
+    sbHistKey = key;
+    sbUndoStack = [];
+    sbRedoStack = [];
+    _sbTolStartSnap = null;
+    _sbNotesStartSnap = null;
+    sbUpdateButtons();
+  }
+}
+function sbUpdateButtons(){
+  if(sbUndoBtn) sbUndoBtn.disabled = !(coachUnlocked && sbUndoStack.length);
+  if(sbRedoBtn) sbRedoBtn.disabled = !(coachUnlocked && sbRedoStack.length);
+}
+function sbPushUndo(preSnap){
+  if(!coachUnlocked) return;
+  if(!currentSituation) return;
+  sbEnsureKey();
+  if(!preSnap || preSnap.key !== sbHistKey) return;
+  const cur = sbSnapshot();
+  if(!cur) return;
+  if(sbSame(preSnap, cur)) return;
+  sbUndoStack.push(preSnap);
+  if(sbUndoStack.length > SB_HISTORY_MAX) sbUndoStack.shift();
+  sbRedoStack = [];
+  sbUpdateButtons();
+}
+function sbApplySnap(snap){
+  if(!snap || !currentSituation) return;
+  if(snap.key !== currentSituation.key) return;
+
+  // Apply starts (chips)
+  const starts = snap.starts || {};
+  POS_IDS.forEach(id=>{
+    const pt = starts[id];
+    const rec = tokens.get(id);
+    if(rec && pt){
+      rec.pos = { x:pt.x, y:pt.y };
+      placeToken(id);
+    }
+  });
+
+  // Persist starts for this situation (coach edits only)
+  try{
+    if(currentSituation.key){
+      startsMap[currentSituation.key] = Fcopy(getOnscreenStarts());
+      saveStarts();
+      currentSituation.starts = Fcopy(startsMap[currentSituation.key]);
+    }
+  }catch(e){}
+
+  // Apply targets model (x,y,tol,notes)
+  const nextTargets = {};
+  POS_IDS.forEach(id=>{
+    const pt = (snap.targets && snap.targets[id]) ? snap.targets[id] : null;
+    const base = pt || startsToTargets(getOnscreenStarts(), DEFAULT_TOL)[id];
+    nextTargets[id] = {
+      x: Math.round(base.x),
+      y: Math.round(base.y),
+      tol: Number(base.tol)||DEFAULT_TOL,
+      notes: String(base.notes||'')
+    };
+  });
+  currentSituation.targets = nextTargets;
+
+  // Rebuild rings and re-sync tolerance/notes UI
+  buildTargets();
+  if(!coachUnlocked) getAllRings().forEach(el=> el.style.display='none');
+
+  const sel = snap.tolSel && POS_IDS.includes(snap.tolSel) ? snap.tolSel : (tolTargetSel?.value || POS_IDS[0]);
+  if(tolTargetSel){
+    tolTargetSel.value = sel;
+    syncTolInputsFromModel(sel);
+  }
+  sbUpdateButtons();
+}
+function sbUndo(){
+  if(!coachUnlocked) return;
+  if(!currentSituation) return;
+  sbEnsureKey();
+  if(!sbUndoStack.length) return;
+  const cur = sbSnapshot();
+  const prev = sbUndoStack.pop();
+  if(cur) sbRedoStack.push(cur);
+  sbApplySnap(prev);
+}
+function sbRedo(){
+  if(!coachUnlocked) return;
+  if(!currentSituation) return;
+  sbEnsureKey();
+  if(!sbRedoStack.length) return;
+  const cur = sbSnapshot();
+  const next = sbRedoStack.pop();
+  if(cur) sbUndoStack.push(cur);
+  sbApplySnap(next);
 }
 
 function getHitForExport(sit){ return sit && sit.hit ? { x:Math.round(sit.hit.x), y:Math.round(sit.hit.y) } : undefined; }
