@@ -688,6 +688,7 @@
     <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
       <button id="coachCollapseAllBtn" class="btn-slate" type="button" title="Collapse sections">Collapse all</button>
       <button id="coachExpandAllBtn" class="btn-slate" type="button" title="Expand sections">Expand all</button>
+      <button id="coachCardCloseBtn" class="btn btn-ghost" type="button">Close</button>
     </span>
 </div>
 
@@ -866,6 +867,7 @@
     <div class="row" style="justify-content:flex-end; gap:8px; margin-top:6px">
       <button id="adminCollapseAllBtn" class="btn-slate" type="button">Collapse all</button>
       <button id="adminExpandAllBtn" class="btn-slate" type="button">Expand all</button>
+      <button id="adminCardCloseBtn" class="btn btn-ghost" type="button">Close</button>
     </div>
 
 
@@ -4583,6 +4585,21 @@ wireSeqBuilderOnce();
   });
 
 
+  // Close button on Coach Tools card (does not reset situation)
+  const coachCardCloseBtn = document.getElementById('coachCardCloseBtn');
+  if (coachCardCloseBtn) coachCardCloseBtn.addEventListener('click', ()=>{
+    if (coachUnlocked){
+      setCoachMode(false);
+      if (coachCard) coachCard.classList.add('hidden');
+      setChipsLocked(!gameActive||remainingTries===0);
+      getAllRings().forEach(el=>el.style.display='none');
+      syncBallToHit();
+    } else {
+      if (coachCard) coachCard.classList.add('hidden');
+    }
+  });
+
+
   // --- Admin button / modal (separate password) ---
   const adminBtn = document.getElementById('adminBtn');
   const adminCard = document.getElementById('adminCard');
@@ -4634,6 +4651,18 @@ wireSeqBuilderOnce();
       openAdminPwModal();
     }
   });
+
+  // Close button on Admin Tools card
+  const adminCardCloseBtn = document.getElementById('adminCardCloseBtn');
+  if (adminCardCloseBtn) adminCardCloseBtn.addEventListener('click', ()=>{
+    if (adminUnlocked){
+      setAdminMode(false);
+      if (adminCard) adminCard.classList.add('hidden');
+    } else {
+      if (adminCard) adminCard.classList.add('hidden');
+    }
+  });
+
 
   // When the target dropdown changes, sync tolerance + notes
   if (tolTargetSel) {
