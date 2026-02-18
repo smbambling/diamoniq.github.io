@@ -1,0 +1,79 @@
+{
+  "pitch_sets": [
+    {
+      "id": "set_fb_ch",
+      "name": "FB vs CH",
+      "pitches": [
+        "FB",
+        "CH"
+      ]
+    },
+    {
+      "id": "set_mix4",
+      "name": "Mix 4 (FB/CH/CB/SL)",
+      "pitches": [
+        "FB",
+        "CH",
+        "CB",
+        "SL"
+      ]
+    }
+  ],
+  "drills": [
+    {
+      "id": "d_fb_ch",
+      "name": "FB vs CH",
+      "pitch_set_id": "set_fb_ch",
+      "defaults": {
+        "rounds": 20,
+        "show_ms": 1400,
+        "lock_ms": 300,
+        "inter_ms": 650
+      }
+    },
+    {
+      "id": "d_mix4",
+      "name": "Mix 4",
+      "pitch_set_id": "set_mix4",
+      "defaults": {
+        "rounds": 25,
+        "show_ms": 1300,
+        "lock_ms": 300,
+        "inter_ms": 650
+      }
+    }
+  ],
+  "stimuli": [
+    {
+      "type": "FB",
+      "recipe": {
+        "trail": "straight",
+        "wiggle": 0.04
+      }
+    },
+    {
+      "type": "CH",
+      "recipe": {
+        "trail": "straight",
+        "wiggle": 0.06,
+        "speed": 0.78
+      }
+    },
+    {
+      "type": "CB",
+      "recipe": {
+        "trail": "curve",
+        "wiggle": 0.05,
+        "speed": 0.72
+      }
+    },
+    {
+      "type": "SL",
+      "recipe": {
+        "trail": "slider",
+        "wiggle": 0.06,
+        "speed": 0.86
+      }
+    }
+  ]
+}

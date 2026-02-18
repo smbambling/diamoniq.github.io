@@ -168,7 +168,7 @@
   /* Field + overlays */
   /* The play stage centers the field and ensures the field never grows beyond the viewport. */
   #playCard{display:flex;flex-direction:column}
-  #playStage{flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+  #playStage{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;position:relative}
   /* Wrap should size to the rendered image so chip coordinates stay aligned even when the image is height-constrained. */
   #wrap{position:relative;display:inline-block}
   #fieldImg{
@@ -683,6 +683,112 @@ main.app.prLayout{
 #playInfoMainPane .pi-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
 #playInfoMainPane .pi-title{ font-weight:900; font-size:16px; }
 
+/* @diq:begin [MODE-100] Mode toggle + Pitch Recognition styles */
+header .modeToggle{
+  margin-left:14px;
+  display:inline-flex;
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:999px;
+  overflow:hidden;
+  box-shadow: 0 1px 0 rgba(15,23,42,.04);
+}
+header .modeBtn{
+  appearance:none;
+  border:0;
+  background:transparent;
+  padding:8px 12px;
+  font-weight:900;
+  font-size:12px;
+  color:#0b1222;
+  cursor:pointer;
+  user-select:none;
+}
+header .modeBtn:hover{ background: rgba(15,23,42,.03); }
+header .modeBtn.active{
+  background: rgba(246,95,22,.12);
+  color: rgba(124,45,18,1);
+}
+
+.modePitchOnly{ display:none !important; }
+body.mode-pitch .modePitchOnly{ display:block !important; }
+body.mode-pitch .modeFieldingOnly{ display:none !important; }
+
+/* Allow hiding Pitch-only cards (like Drill) even while in pitch mode */
+body.mode-pitch #drillCard.prLocked{ display:none !important; }
+
+/* Pitch Recognition play area (keeps your clean DIQ card style) */
+.prPlayWrap{ display:grid; gap:12px; }
+.prHudRow{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; }
+.prBadge{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:900;
+  border-radius:999px; padding:6px 10px;
+  border:1px solid rgba(226,232,240,.95);
+  background:#fff;
+}
+.prBadge.good{ border-color:rgba(22,163,74,.35); background:rgba(22,163,74,.08); color:#16a34a; }
+.prBadge.bad{ border-color:rgba(220,38,38,.35); background:rgba(220,38,38,.08); color:#dc2626; }
+.prBadge.warn{ border-color:rgba(245,158,11,.35); background:rgba(245,158,11,.10); color:#a16207; }
+
+.prCanvasWrap{
+  width:100%;
+  border-radius:18px;
+  border:1px solid rgba(226,232,240,.95);
+  background: radial-gradient(800px 400px at 50% 0%, #ffffff, #f8fafc);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+  overflow:hidden;
+  position:relative;
+  aspect-ratio: 16 / 12;
+  min-height: 320px;
+}
+#prCanvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.prOverlayCenter{ position:absolute; inset:0; display:grid; place-items:center; pointer-events:none; }
+.prOverlayCard{
+  pointer-events:none;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(226,232,240,.85);
+  border-radius:16px;
+  padding:12px 14px;
+  box-shadow:0 10px 30px rgba(15,23,42,.12);
+  display:grid; gap:6px;
+  max-width: 360px;
+  text-align:center;
+}
+.loginGateCenter{ position:absolute; inset:0; display:grid; place-items:center; z-index:60; background:rgba(255,255,255,.55); backdrop-filter: blur(2px); }
+.loginGateCard{
+  pointer-events:auto;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(226,232,240,.90);
+  border-radius:16px;
+  padding:12px 14px;
+  box-shadow:0 10px 30px rgba(15,23,42,.12);
+  display:grid; gap:6px;
+  max-width: 420px;
+  text-align:center;
+}
+#wrap.lockedNoLogin{ pointer-events:none; filter: saturate(.9) contrast(.98); }
+.prAnsGrid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:10px;
+}
+@media (max-width: 520px){ .prAnsGrid{ grid-template-columns:repeat(2,1fr); } }
+.prAns{
+  border:1px solid rgba(226,232,240,.95);
+  background:#fff;
+  border-radius:14px;
+  padding:12px 10px;
+  cursor:pointer;
+  font-weight:900;
+  user-select:none;
+  transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.prAns:hover{ border-color:#cbd5e1; box-shadow:0 10px 25px rgba(15,23,42,.06); }
+.prAns:active{ transform:translateY(1px); }
+.prAns.disabled{ opacity:.55; cursor:not-allowed; }
+/* @diq:end [MODE-100] Mode toggle + Pitch Recognition styles */
+
 </style>
 
 </head>
@@ -695,6 +801,10 @@ main.app.prLayout{
 -->
 
 <header><h1>Diamond IQ</h1>
+  <div class="modeToggle" aria-label="App Mode">
+    <button id="btnModeFielding" class="modeBtn active" type="button">Fielding</button>
+    <button id="btnModePitch" class="modeBtn" type="button">Pitch Recognition</button>
+  </div>
   <div class="header-actions">
     <!-- @diq:begin control:startBtn -->
 
@@ -732,7 +842,7 @@ main.app.prLayout{
 
   <aside class="sideCol">
     <!-- @diq:begin [H_SIT_CARD] Situation card host -->
-    <div class="card" id="situationCard" style="display:none">
+    <div class="card modeFieldingOnly" id="situationCard" class="card modeFieldingOnly" style="display:none">
       <div class="cardTitleRow">
         <h1 class="cardTitle" style="margin:0">Situation</h1>
       </div>
@@ -750,7 +860,49 @@ main.app.prLayout{
     </div>
     <!-- @diq:end [H_SIT_CARD] -->
 
-    <div class="card" id="howToCard">
+<!-- @diq:begin [H_DRILL_CARD] Drill card host (Pitch Recognition) -->
+<div class="card modePitchOnly" id="drillCard" style="display:none">
+  <div class="cardTitleRow">
+    <h1 class="cardTitle" style="margin:0">Drill</h1>
+  </div>
+
+  <div class="fieldRow" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+    <div class="fieldHline" style="flex:1; min-width:240px">
+      <label for="prDrillSel">Drill</label>
+      <select id="prDrillSel"></select>
+    </div>
+  </div>
+
+  <div class="fieldGrid2" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+    <div class="fieldHline">
+      <label for="prRoundsInp">Pitches</label>
+      <input id="prRoundsInp" type="number" min="5" max="100" step="1" />
+    </div>
+    <div class="fieldHline">
+      <label for="prShowMsInp">Show (ms)</label>
+      <input id="prShowMsInp" type="number" min="80" max="2500" step="10" />
+    </div>
+    <div class="fieldHline">
+      <label for="prLockMsInp">Lock (ms)</label>
+      <input id="prLockMsInp" type="number" min="0" max="1200" step="10" />
+    </div>
+    <div class="fieldHline">
+      <label for="prInterMsInp">Between (ms)</label>
+      <input id="prInterMsInp" type="number" min="0" max="2500" step="50" />
+    </div>
+  </div>
+
+  <div class="btnRow" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px">
+    <button class="btn btn-primary" id="prBtnStart" type="button">Start Round</button>
+    <button class="btn" id="prBtnResume" type="button">Resume</button>
+    <button class="btn" id="prBtnReset" type="button">Reset</button>
+  </div>
+</div>
+<!-- @diq:end [H_DRILL_CARD] -->
+
+
+
+    <div class="card modeFieldingOnly" id="howToCard">
       <details id="howToDetails">
         <summary>
           <strong>How to play (click to expand)</strong>
@@ -1168,7 +1320,7 @@ main.app.prLayout{
     </div>
 
     <!-- @diq:begin [H_PLAYINFO_PANE] Play Info main pane -->
-    <div id="playInfoMainPane" class="subcard">
+    <div id="playInfoMainPane" class="subcard modeFieldingOnly">
       <div class="pi-header">
         <div class="pi-title">How it works</div>
         <button id="playInfoBackBtn" class="btn btn-ghost" type="button">Back to Play</button>
@@ -1176,6 +1328,7 @@ main.app.prLayout{
       <div id="playInfoMainBody"></div>
     </div>
     <!-- @diq:end [H_PLAYINFO_PANE] -->
+    <div id="fieldingPlayStage" class="modeFieldingOnly">
     <div id="playStage">
 
     <div id="wrap" style="--chip-size: 36px; --chip-font: 14px;">
@@ -1185,7 +1338,37 @@ main.app.prLayout{
       <div id="ballLayer" class="overlay"><svg viewBox="0 0 1136.953125 942.53125"></svg></div>
       <!-- chips, rings, and hit marker are appended directly to #wrap -->
     <div class="ball locked" style="display: none; width: 15px; height: 15px; box-shadow: rgb(0, 0, 0) 0px 0px 0px 1px, rgba(0, 0, 0, 0.35) 0px 1px 1px; left: 265.289063px; top: 350.180489px; z-index: 10;"></div><div class="chip Battery locked" style="left: 568.476563px; top: 618.12162px;">P</div><div class="chip Battery locked" style="left: 569.613516px; top: 813.676958px;">C</div><div class="chip Infield locked" style="left: 727.271016px; top: 540.809045px;">1B</div><div class="chip Infield locked" style="left: 695.815313px; top: 439.620527px;">2B</div><div class="chip Infield locked" style="left: 435.453047px; top: 438.104594px;">SS</div><div class="chip Infield locked" style="left: 409.303125px; top: 534.745313px;">3B</div><div class="chip Outfield locked" style="left: 280.448438px; top: 277.036728px;">LF</div><div class="chip Outfield locked" style="left: 578.709141px; top: 132.644124px;">CF</div><div class="chip Outfield locked" style="left: 859.536562px; top: 274.004863px;">RF</div><div class="tgt locked" data-id="P" style="left: 646.168359px; top: 574.159567px; width: 73px; height: 73px; display: none;"><span class="tgt-label">P</span></div><div class="tgt locked" data-id="C" style="left: 757.589766px; top: 706.424708px; width: 74px; height: 74px; display: none;"><span class="tgt-label">C</span></div><div class="tgt locked" data-id="1B" style="left: 733.334766px; top: 602.204325px; width: 65px; height: 65px; display: none;"><span class="tgt-label">1B</span></div><div class="tgt locked" data-id="2B" style="left: 568.855547px; top: 441.515443px; width: 65px; height: 65px; display: none;"><span class="tgt-label">2B</span></div><div class="tgt locked" data-id="SS" style="left: 422.567578px; top: 395.279491px; width: 65px; height: 65px; display: none;"><span class="tgt-label">SS</span></div><div class="tgt locked" data-id="3B" style="left: 408.166172px; top: 602.583308px; width: 65px; height: 65px; display: none;"><span class="tgt-label">3B</span></div><div class="tgt locked" data-id="LF" style="left: 266.047031px; top: 349.801505px; width: 65px; height: 65px; display: none;"><span class="tgt-label">LF</span></div><div class="tgt locked" data-id="CF" style="left: 305.840391px; top: 190.628556px; width: 80px; height: 80px; display: none;"><span class="tgt-label">CF</span></div><div class="tgt locked" data-id="RF" style="left: 747.736172px; top: 382.394062px; width: 80px; height: 80px; display: none;"><span class="tgt-label">RF</span></div></div>
+    <div class="loginGateCenter" id="fieldingLoginGate" style="display:none">
+      <div class="loginGateCard">
+        <div style="font-weight:900">Player login required</div>
+        <div class="subtle">Select your Team & Player in the Player card to start Fielding.</div>
+      </div>
     </div>
+    </div>
+</div>
+
+<div id="pitchPlayStage" class="modePitchOnly prPlayWrap" style="display:none">
+  <div class="prHudRow">
+    <span class="prBadge" id="prHudScore">0 / 0</span>
+    <span class="prBadge" id="prHudAcc">Acc: —</span>
+    <span class="prBadge" id="prHudRt">Avg RT: —</span>
+    <span class="prBadge warn" id="prHudTimer">Ready</span>
+  </div>
+
+  <div class="prCanvasWrap">
+    <canvas id="prCanvas"></canvas>
+    <div class="prOverlayCenter">
+      <div class="prOverlayCard" id="prOverlayCard">
+        <div style="font-weight:900">Press Start Round</div>
+        <div class="subtle">A pitch will appear briefly, then vanish. Identify it fast.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prAnsGrid" id="prAnsGrid"></div>
+
+  <div class="subtle" id="prLastFeedback">—</div>
+</div>
   </section>
 
   </main>
@@ -2519,6 +2702,9 @@ playerShareHint.textContent = "";
     setPlayerUIForLoggedIn();
 
     // keep header Player Login button state in sync (no refresh needed)
+
+    // If we're in Pitch Recognition mode, re-apply mode so Drill/Start buttons unlock immediately after login changes
+    try{ if(typeof DIQMode !== "undefined" && DIQMode && typeof DIQMode.apply==="function"){ DIQMode.apply(DIQMode.getStored ? DIQMode.getStored() : "fielding"); } }catch(e){}
 }
 
   
@@ -6984,6 +7170,11 @@ const savedHit = getHitSaved(currentSituation.key); if (savedHit) currentSituati
   try{ sbEnsureKey(); sbUpdateButtons(); }catch(e){}
 
   setHowToPhase('p1');
+
+    // Initialize mode toggle + pitch recognition module
+    DIQMode.initOnce();
+    PR.initOnce();
+    DIQMode.apply(DIQMode.getStored());
 }
 
 // @diq:end [A9]
@@ -7781,6 +7972,736 @@ function setAllCoachSubsecsCollapsed(collapsed){
   });
   _saveCoachCollapseMap(map);
 }
+
+/* @diq:begin [MODE-200] Fielding vs Pitch Recognition mode + embedded Pitch Recognition MVP */
+const DIQ_MODE_KEY = "diq_app_mode_v1"; // "fielding" | "pitch"
+
+const DIQMode = (function(){
+  let inited = false;
+
+  function els(){
+    return {
+      btnFielding: document.getElementById("btnModeFielding"),
+      btnPitch: document.getElementById("btnModePitch"),
+      drillCard: document.getElementById("drillCard"),
+      pitchStage: document.getElementById("pitchPlayStage"),
+      fieldingStage: document.getElementById("fieldingPlayStage"),
+    };
+  }
+
+  function getStored(){
+    const v = (localStorage.getItem(DIQ_MODE_KEY) || "").trim();
+    return (v === "pitch") ? "pitch" : "fielding";
+  }
+
+  function setStored(mode){
+    localStorage.setItem(DIQ_MODE_KEY, mode);
+  }
+
+  function apply(mode){
+    const e = els();
+    const pitch = (mode === "pitch");
+
+    document.body.classList.toggle("mode-pitch", pitch);
+    if(e.btnFielding) e.btnFielding.classList.toggle("active", !pitch);
+    if(e.btnPitch) e.btnPitch.classList.toggle("active", pitch);
+
+    // Explicit display toggles (in addition to CSS) so layout calculations are correct.
+    if(e.drillCard){ const _loggedNow = (window.isPlayerLoggedInNow ? window.isPlayerLoggedInNow() : false); e.drillCard.classList.toggle("prLocked", pitch && !_loggedNow); e.drillCard.style.display = (pitch && _loggedNow) ? "block" : "none"; }
+    if(e.pitchStage) e.pitchStage.style.display = pitch ? "grid" : "none";
+
+    // If not logged in, show Pitch Recognition as locked (no drill controls)
+    if(pitch){
+      const logged = (window.isPlayerLoggedInNow ? window.isPlayerLoggedInNow() : false);
+      const overlay = document.getElementById("prOverlayCard");
+      if(overlay){
+        overlay.innerHTML = logged
+          ? `<div style="font-weight:900">Press Start Round</div><div class="subtle">A pitch will appear briefly, then vanish. Identify it fast.</div>`
+          : `<div style="font-weight:900">Player login required</div><div class="subtle">Select your Team & Player in the Player card to start Pitch Recognition.</div>`;
+      }
+      // also disable answer buttons when locked
+      const ans = document.getElementById("prAnsGrid");
+      if(ans){
+        ans.querySelectorAll("button").forEach(b=>{ b.disabled = !logged; b.classList.toggle("disabled", !logged); });
+      }
+      const bStart = document.getElementById("prBtnStart");
+      const bRes = document.getElementById("prBtnResume");
+      if(bStart) bStart.disabled = !logged;
+      if(bRes) bRes.disabled = !logged;
+    }
+
+    if(e.fieldingStage) e.fieldingStage.style.display = pitch ? "none" : "block";
+
+    // Fielding login gate (prevents using Fielding when not logged in)
+    if(!pitch){
+      const logged = (window.isPlayerLoggedInNow ? window.isPlayerLoggedInNow() : false);
+      const gate = document.getElementById("fieldingLoginGate");
+      if(gate) gate.style.display = logged ? "none" : "grid";
+      const w = document.getElementById("wrap");
+      if(w) w.classList.toggle("lockedNoLogin", !logged);
+    }
+
+
+    // When switching into pitch mode, ensure canvas sizes correctly.
+    if(pitch && PR && PR.ui && typeof PR.ui.resizeCanvas === "function"){
+      requestAnimationFrame(()=>PR.ui.resizeCanvas());
+    }
+  }
+
+  function initOnce(){
+    if(inited) return;
+    inited = true;
+    const e = els();
+    if(e.btnFielding){
+      e.btnFielding.addEventListener("click", ()=>{
+        setStored("fielding");
+        apply("fielding");
+      });
+    }
+    if(e.btnPitch){
+      e.btnPitch.addEventListener("click", ()=>{
+        setStored("pitch");
+        apply("pitch");
+      });
+    }
+  }
+
+  return { initOnce, apply, getStored };
+})();
+
+/* Minimal embedded Pitch Recognition (Play + Drill only for now) */
+const PR = (function(){
+  const LS_KEY = "diq_pitchrec_embedded_v1";
+
+  const PITCH_LABELS = {
+    FB: "4S FB",
+    CH: "Change",
+    CB: "Curve",
+    SL: "Slider",
+    "2S": "2S FB",
+    CT: "Cutter",
+    SP: "Splitter",
+    FK: "Fork",
+    SV: "Slurve",
+    CCH:"Circle CH",
+  };
+
+  const DEFAULT = {
+    pitch_sets: [
+      { id:"set_fb_ch", name:"FB vs CH", pitches:["FB","CH"] },
+      { id:"set_mix4", name:"Mix 4 (FB/CH/CB/SL)", pitches:["FB","CH","CB","SL"] },
+    ],
+    drills: [
+      { id:"d_fb_ch", name:"FB vs CH", pitch_set_id:"set_fb_ch",
+        defaults:{ rounds:20, show_ms:1400, lock_ms:300, inter_ms:650 }
+      },
+      { id:"d_mix4", name:"Mix 4", pitch_set_id:"set_mix4",
+        defaults:{ rounds:25, show_ms:1300, lock_ms:300, inter_ms:650 }
+      },
+    ],
+    stimuli: [
+      { type:"FB", recipe:{ trail:"straight", wiggle:0.04 } },
+      { type:"CH", recipe:{ trail:"straight", wiggle:0.06, speed:0.78 } },
+      { type:"CB", recipe:{ trail:"curve",   wiggle:0.05, speed:0.72 } },
+      { type:"SL", recipe:{ trail:"slider",  wiggle:0.06, speed:0.86 } },
+    ]
+  };
+
+  const state = {
+    drill_id: "d_fb_ch",
+    cfg: { rounds:20, show_ms:1400, lock_ms:300, inter_ms:650 },
+    round: null
+  };
+
+  const ui = {};
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return JSON.parse(JSON.stringify(DEFAULT));
+      const obj = JSON.parse(raw);
+      if(!obj || !obj.drills || !obj.pitch_sets || !obj.stimuli) return JSON.parse(JSON.stringify(DEFAULT));
+      return obj;
+    }catch(e){
+      return JSON.parse(JSON.stringify(DEFAULT));
+    }
+  }
+  let data = load();
+
+  async function loadRemoteData(){
+    // Prefer external JSON so drills/pitch sets can be edited without touching index.html
+    try{
+      const res = await fetch("pitch-recognition.json", { cache: "no-store" });
+      if(!res.ok) throw new Error("HTTP "+res.status);
+      const obj = await res.json();
+      if(obj && obj.drills && obj.pitch_sets && obj.stimuli){
+        data = obj;
+        try{ localStorage.setItem(LS_KEY, JSON.stringify(obj)); }catch(e){}
+        // refresh UI if already bound
+        if(ui.drillSel){
+          refreshDrills();
+          applyDrillDefaults();
+          refreshAll();
+        }
+      }
+    }catch(e){
+      // fallback: localStorage or DEFAULT already loaded
+    }
+  }
+
+  loadRemoteData();
+
+  function saveState(){
+    try{
+      localStorage.setItem(LS_KEY+"_state", JSON.stringify({
+        drill_id: state.drill_id,
+        cfg: state.cfg,
+        round: state.round ? {
+          active: !!state.round.active,
+          idx: state.round.idx,
+          answered: state.round.answered,
+          correct: state.round.correct,
+          rts: state.round.rts,
+          current: state.round.current,
+          awaiting: !!state.round.awaiting,
+          best_streak: state.round.best_streak,
+          streak: state.round.streak
+        } : null
+      }));
+    }catch(e){}
+  }
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(LS_KEY+"_state");
+      if(!raw) return;
+      const s = JSON.parse(raw);
+      if(!s) return;
+      state.drill_id = s.drill_id || state.drill_id;
+      state.cfg = s.cfg || state.cfg;
+      state.round = s.round || null;
+    }catch(e){}
+  }
+
+  function byId(list,id){ return (list||[]).find(x=>x.id===id) || null; }
+  function clamp(n,a,b){ return Math.max(a, Math.min(b, n)); }
+  function fmtPct(x){ return (x==null || Number.isNaN(x)) ? "—" : Math.round(x*100)+"%"; }
+  function fmtMs(x){ return (x==null || Number.isNaN(x)) ? "—" : Math.round(x)+"ms"; }
+  function avg(arr){ return arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : null; }
+
+  function currentPlayerOk(){
+    try{
+      return !!(typeof getCurrentPlayerFromMeta === "function" && getCurrentPlayerFromMeta());
+    }catch(e){ return false; }
+  }
+
+  function bindUI(){
+    ui.drillSel = document.getElementById("prDrillSel");
+    ui.roundsInp = document.getElementById("prRoundsInp");
+    ui.showMsInp = document.getElementById("prShowMsInp");
+    ui.lockMsInp = document.getElementById("prLockMsInp");
+    ui.interMsInp = document.getElementById("prInterMsInp");
+    ui.btnStart = document.getElementById("prBtnStart");
+    ui.btnResume = document.getElementById("prBtnResume");
+    ui.btnReset = document.getElementById("prBtnReset");
+
+    ui.canvas = document.getElementById("prCanvas");
+    ui.ansGrid = document.getElementById("prAnsGrid");
+    ui.overlayCard = document.getElementById("prOverlayCard");
+    ui.lastFeedback = document.getElementById("prLastFeedback");
+
+    ui.hudScore = document.getElementById("prHudScore");
+    ui.hudAcc = document.getElementById("prHudAcc");
+    ui.hudRt = document.getElementById("prHudRt");
+    ui.hudTimer = document.getElementById("prHudTimer");
+
+    // Drill dropdown
+    if(ui.drillSel){
+      ui.drillSel.addEventListener("change", ()=>{
+        state.drill_id = ui.drillSel.value;
+        applyDrillDefaults();
+        saveState();
+        refreshAll();
+      });
+    }
+
+    for(const [inp, key, min, max] of [
+      [ui.roundsInp, "rounds", 5, 100],
+      [ui.showMsInp, "show_ms", 80, 2500],
+      [ui.lockMsInp, "lock_ms", 0, 1200],
+      [ui.interMsInp, "inter_ms", 0, 2500],
+    ]){
+      if(!inp) continue;
+      inp.addEventListener("change", ()=>{
+        const v = clamp(parseInt(inp.value||"0",10), min, max);
+        inp.value = String(v);
+        state.cfg[key] = v;
+        saveState();
+      });
+    }
+
+    if(ui.btnStart) ui.btnStart.addEventListener("click", startRound);
+    if(ui.btnResume) ui.btnResume.addEventListener("click", resumeRound);
+    if(ui.btnReset) ui.btnReset.addEventListener("click", resetRound);
+
+    setupCanvas();
+  }
+
+  function refreshDrills(){
+    if(!ui.drillSel) return;
+    ui.drillSel.innerHTML = "";
+    for(const d of data.drills){
+      const ps = byId(data.pitch_sets, d.pitch_set_id);
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = `${d.name}${ps ? " • "+ps.pitches.map(p=>PITCH_LABELS[p]||p).join(" / ") : ""}`;
+      ui.drillSel.appendChild(opt);
+    }
+    if(!state.drill_id) state.drill_id = data.drills[0]?.id || null;
+    ui.drillSel.value = state.drill_id || "";
+  }
+
+  function applyDrillDefaults(){
+    const d = byId(data.drills, state.drill_id);
+    if(!d) return;
+    state.cfg = {...d.defaults};
+    if(ui.roundsInp) ui.roundsInp.value = String(state.cfg.rounds);
+    if(ui.showMsInp) ui.showMsInp.value = String(state.cfg.show_ms);
+    if(ui.lockMsInp) ui.lockMsInp.value = String(state.cfg.lock_ms);
+    if(ui.interMsInp) ui.interMsInp.value = String(state.cfg.inter_ms);
+  }
+
+  function refreshHUD(){
+    const r = state.round;
+    if(!r || !r.active){
+      if(ui.hudScore) ui.hudScore.textContent = "0 / 0";
+      if(ui.hudAcc) ui.hudAcc.textContent = "Acc: —";
+      if(ui.hudRt) ui.hudRt.textContent = "Avg RT: —";
+      if(ui.hudTimer) ui.hudTimer.textContent = "Ready";
+      if(ui.btnResume) ui.btnResume.disabled = true;
+      return;
+    }
+    if(ui.btnResume) ui.btnResume.disabled = false;
+
+    if(ui.hudScore) ui.hudScore.textContent = `${r.correct} / ${r.answered}`;
+    const acc = r.answered ? (r.correct/r.answered) : null;
+    if(ui.hudAcc) ui.hudAcc.textContent = `Acc: ${fmtPct(acc)}`;
+    if(ui.hudRt) ui.hudRt.textContent = `Avg RT: ${r.rts.length ? fmtMs(avg(r.rts)) : "—"}`;
+    if(ui.hudTimer) ui.hudTimer.textContent = r.awaiting ? "Answer" : "Wait";
+  }
+
+  function stopTimers(){
+    const r = state.round;
+    if(r && r._timer){
+      clearTimeout(r._timer);
+      r._timer = null;
+    }
+  }
+
+  function startRound(){
+    if(!currentPlayerOk()){
+      toast("Select a Team and Player first.");
+      return;
+    }
+    stopTimers();
+
+    const d = byId(data.drills, state.drill_id);
+    const ps = d ? byId(data.pitch_sets, d.pitch_set_id) : null;
+    const allowed = ps?.pitches || ["FB","CH"];
+
+    state.round = {
+      active:true,
+      idx: 0,
+      answered:0,
+      correct:0,
+      rts:[],
+      streak:0,
+      best_streak:0,
+      awaiting:false,
+      current:null,
+      allowed,
+      cfg:{...state.cfg},
+      _timer:null
+    };
+
+    if(ui.overlayCard){
+      ui.overlayCard.innerHTML = '<div style="font-weight:900">Get Ready…</div><div class="subtle">Round starting.</div>';
+      ui.overlayCard.classList.remove("hidden");
+    }
+    if(ui.lastFeedback) ui.lastFeedback.textContent = "—";
+
+    renderAnswerButtons();
+    refreshHUD();
+    saveState();
+
+    state.round._timer = setTimeout(()=>nextPitch(), 350);
+  }
+
+  function resumeRound(){
+    if(!currentPlayerOk()){
+      toast("Select a Team and Player first.");
+      return;
+    }
+    const r = state.round;
+    if(!(r && r.active)){
+      toast("No active round to resume.");
+      return;
+    }
+    if(ui.overlayCard){
+      ui.overlayCard.classList.add("hidden");
+    }
+    renderAnswerButtons();
+    refreshHUD();
+    if(!r.awaiting) nextPitch();
+  }
+
+  function resetRound(){
+    stopTimers();
+    state.round = null;
+    saveState();
+    if(ui.overlayCard){
+      ui.overlayCard.innerHTML = '<div style="font-weight:900">Press Start Round</div><div class="subtle">A pitch will appear briefly, then vanish. Identify it fast.</div>';
+      ui.overlayCard.classList.remove("hidden");
+    }
+    if(ui.lastFeedback) ui.lastFeedback.textContent = "—";
+    clearCanvas();
+    renderAnswerButtons();
+    refreshHUD();
+  }
+
+  function pickStim(type){
+    const pool = data.stimuli.filter(s=>s.type===type);
+    return pool.length ? pool[Math.floor(Math.random()*pool.length)] : data.stimuli[0];
+  }
+
+  function nextPitch(){
+    const r = state.round;
+    if(!r || !r.active) return;
+    if(r.idx >= r.cfg.rounds){
+      endRound();
+      return;
+    }
+
+    r.awaiting = false;
+    r.current = null;
+
+    const type = r.allowed[Math.floor(Math.random()*r.allowed.length)];
+    const stim = pickStim(type);
+
+    r.current = { n: r.idx+1, type, recipe: {...(stim.recipe||{}), _ptype:type } };
+    r.idx++;
+
+    if(ui.overlayCard) ui.overlayCard.classList.add("hidden");
+
+    showStimulus(r.current.recipe, r.cfg.show_ms, ()=>{
+      r.awaiting = true;
+      r.current.shown_at = performance.now();
+      r.current.lock_until = r.current.shown_at + r.cfg.lock_ms;
+      enableAnswers(true);
+      refreshHUD();
+      saveState();
+    });
+
+    renderAnswerButtons();
+    refreshHUD();
+    saveState();
+  }
+
+  function endRound(){
+    stopTimers();
+    const r = state.round;
+    if(r) r.active = false;
+    state.round = null;
+    saveState();
+    toast("Round ended.");
+    if(ui.overlayCard){
+      ui.overlayCard.innerHTML = '<div style="font-weight:900">Round complete</div><div class="subtle">Press Start Round to begin again.</div>';
+      ui.overlayCard.classList.remove("hidden");
+    }
+    renderAnswerButtons();
+    refreshHUD();
+  }
+
+  function enableAnswers(on){
+    if(!ui.ansGrid) return;
+    for(const b of ui.ansGrid.querySelectorAll(".prAns")){
+      b.classList.toggle("disabled", !on);
+      b.disabled = !on;
+    }
+  }
+
+  function renderAnswerButtons(){
+    if(!ui.ansGrid) return;
+
+    const d = byId(data.drills, state.drill_id);
+    const ps = d ? byId(data.pitch_sets, d.pitch_set_id) : null;
+    const pitchTypes = ps?.pitches || ["FB","CH","CB","SL"];
+
+    ui.ansGrid.innerHTML = "";
+    for(const t of pitchTypes){
+      const btn = document.createElement("button");
+      btn.className = "prAns";
+      btn.type = "button";
+      btn.textContent = PITCH_LABELS[t] || t;
+      btn.addEventListener("click", ()=>onAnswer(t));
+      ui.ansGrid.appendChild(btn);
+    }
+
+    const active = !!(state.round && state.round.active && state.round.awaiting);
+    enableAnswers(active);
+
+    // columns
+    ui.ansGrid.style.gridTemplateColumns =
+      pitchTypes.length <= 2 ? "repeat(2,1fr)"
+      : pitchTypes.length === 3 ? "repeat(3,1fr)"
+      : "repeat(4,1fr)";
+  }
+
+  function onAnswer(type){
+    const r = state.round;
+    if(!r || !r.active || !r.awaiting) return;
+
+    enableAnswers(false);
+
+    const rt = (typeof r.current?.shown_at === "number") ? (performance.now() - r.current.shown_at) : null;
+    const correct = (type === r.current.type);
+
+    r.answered++;
+    if(correct) r.correct++;
+    if(typeof rt === "number") r.rts.push(rt);
+
+    if(correct){
+      r.streak++;
+      r.best_streak = Math.max(r.best_streak, r.streak);
+    }else{
+      r.streak = 0;
+    }
+
+    if(ui.lastFeedback){
+      const acc = r.answered ? (r.correct/r.answered) : null;
+      ui.lastFeedback.innerHTML = correct
+        ? `<span class="prBadge good">Correct</span> <span class="subtle">Actual: ${r.current.type} • RT ${fmtMs(rt)} • Acc ${fmtPct(acc)}</span>`
+        : `<span class="prBadge bad">Miss</span> <span class="subtle">Actual: ${r.current.type} • You: ${type} • RT ${fmtMs(rt)} • Acc ${fmtPct(acc)}</span>`;
+    }
+
+    r.awaiting = false;
+    refreshHUD();
+    saveState();
+
+    r._timer = setTimeout(()=>nextPitch(), r.cfg.inter_ms);
+  }
+
+  // ---- Canvas ----
+  function getCanvasCSSSize(){
+    const wrap = ui.canvas?.parentElement;
+    if(!wrap) return {w:0,h:0};
+    const rect = wrap.getBoundingClientRect();
+    return { w: rect.width, h: rect.height };
+  }
+
+  function setupCanvas(){
+    if(!ui.canvas) return;
+    const c = ui.canvas;
+
+    function resize(tries=0){
+      const wrap = c.parentElement;
+      if(!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      if(rect.width < 20 || rect.height < 20){
+        if(tries < 20) setTimeout(()=>resize(tries+1), 60);
+        return;
+      }
+      const dpr = window.devicePixelRatio || 1;
+      c.width = Math.floor(rect.width * dpr);
+      c.height = Math.floor(rect.height * dpr);
+      const ctx = c.getContext("2d");
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(dpr, dpr);
+      drawIdle();
+    }
+
+    ui.resizeCanvas = resize;
+    window.addEventListener("resize", ()=>resize(0));
+    resize(0);
+  }
+
+  function clearCanvas(){
+    if(!ui.canvas) return;
+    const ctx = ui.canvas.getContext("2d");
+    const {w,h} = getCanvasCSSSize();
+    ctx.clearRect(0,0,w,h);
+    drawIdle(true);
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+  }
+
+  function drawIdle(skipClear=false){
+    if(!ui.canvas) return;
+    const ctx = ui.canvas.getContext("2d");
+    const {w,h} = getCanvasCSSSize();
+    if(!skipClear) ctx.clearRect(0,0,w,h);
+
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    const zx = w*0.42, zy = h*0.30, zw = w*0.16, zh = h*0.36;
+    ctx.strokeStyle = "rgba(100,116,139,.45)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, zx, zy, zw, zh, 14);
+    ctx.stroke();
+
+    // plate
+    const px = w*0.462, py = h*0.80, pw = w*0.076, ph = h*0.076;
+    ctx.fillStyle = "rgba(15,23,42,.10)";
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px+pw, py);
+    ctx.lineTo(px+pw, py+ph*0.6);
+    ctx.lineTo(px+pw*0.5, py+ph);
+    ctx.lineTo(px, py+ph*0.6);
+    ctx.closePath();
+    ctx.fill();
+
+    // mound dot
+    ctx.fillStyle = "rgba(15,23,42,.10)";
+    ctx.beginPath();
+    ctx.arc(w*0.5, h*0.10, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function showStimulus(recipe, showMs, done){
+    if(!ui.canvas) return done && done();
+    const ctx = ui.canvas.getContext("2d");
+    const {w,h} = getCanvasCSSSize();
+
+    const start = performance.now();
+    const dur = Math.max(240, Math.round(showMs * 16.0)); // slow, training-friendly
+    const smooth = (t)=> t*t*(3 - 2*t);
+
+    const ptype = (recipe && recipe._ptype) ? recipe._ptype : "FB";
+    const wiggle = ((recipe && recipe.wiggle) ? recipe.wiggle : 0);
+
+    function posAt(u){
+      const x0 = w*0.5, y0 = h*0.10;
+      const x1 = w*0.5, y1 = h*0.78;
+      let x = x0 + (x1-x0)*u;
+      let y = y0 + (y1-y0)*u;
+
+      // stylized movement
+      const late = Math.pow(u, 4);
+      if(ptype==="CB"){
+        x += Math.sin(u*Math.PI)*(-0.10*w);
+        y += (u*u)*(0.09*h);
+      }else if(ptype==="SL"){
+        x += late*(0.12*w);
+        y += late*(0.05*h);
+      }else if(ptype==="CH"){
+        x += late*(-0.08*w);
+        y += late*(0.07*h);
+      }else{
+        // FB
+        y += (u*u)*(-0.03*h);
+      }
+
+      x += wiggle * Math.sin(u*10) * w*0.010;
+      return {x,y};
+    }
+
+    function frame(tNow){
+      const raw = clamp((tNow - start)/dur, 0, 1);
+      const u = smooth(raw);
+
+      ctx.clearRect(0,0,w,h);
+      drawIdle(true);
+
+      const steps = 42;
+      const wStart = 1.6;
+      const wEnd = 8.0;
+
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.shadowColor = "rgba(239,68,68,0.14)";
+      ctx.shadowBlur = 12;
+
+      // tail
+      let prev = posAt(0);
+      for(let i=1;i<=steps;i++){
+        const uu = (i/steps) * u;
+        const cur = posAt(uu);
+        const g = smooth(uu);
+        const wseg = wStart + (wEnd - wStart)*g;
+        ctx.lineWidth = wseg;
+        ctx.strokeStyle = "rgba(239,68,68,0.90)";
+        ctx.beginPath();
+        ctx.moveTo(prev.x, prev.y);
+        ctx.lineTo(cur.x, cur.y);
+        ctx.stroke();
+        prev = cur;
+      }
+      ctx.restore();
+
+      // ball
+      const p = posAt(u);
+      const rBall = 6 + 6*u;
+      ctx.save();
+      ctx.fillStyle = "rgba(255,255,255,0.98)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, rBall, 0, Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.75)";
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+      ctx.restore();
+
+      if(raw < 1){
+        requestAnimationFrame(frame);
+      }else{
+        done && done();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function refreshAll(){
+    refreshDrills();
+    if(!ui.roundsInp?.value) applyDrillDefaults();
+    if(ui.roundsInp) ui.roundsInp.value = String(state.cfg.rounds);
+    if(ui.showMsInp) ui.showMsInp.value = String(state.cfg.show_ms);
+    if(ui.lockMsInp) ui.lockMsInp.value = String(state.cfg.lock_ms);
+    if(ui.interMsInp) ui.interMsInp.value = String(state.cfg.inter_ms);
+
+    // overlay based on stored active round
+    if(state.round && state.round.active){
+      if(ui.overlayCard){
+        ui.overlayCard.innerHTML = '<div style="font-weight:900">Round paused</div><div class="subtle">Tap Resume to continue.</div>';
+        ui.overlayCard.classList.remove("hidden");
+      }
+    }
+    renderAnswerButtons();
+    refreshHUD();
+  }
+
+  let inited = false;
+  function initOnce(){
+    if(inited) return;
+    inited = true;
+    bindUI();
+    loadState();
+    refreshAll();
+  }
+
+  return { initOnce, ui };
+})();
+/* @diq:end [MODE-200] Fielding vs Pitch Recognition mode + embedded Pitch Recognition MVP */
 
 async function init(){
   ensurePlayerMeta();
