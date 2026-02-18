@@ -36,15 +36,6 @@
     flex:1;                      /* allow actions row to stretch */
   }
 
-  /* Right-aligned header buttons: Help / Coach Tools / Admin Tools */
-  header .header-right{
-    margin-left:auto;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
   /* Situation dropdown auto-sizes to its text */
   #sitSelect{
     width:auto;
@@ -133,10 +124,6 @@
     background:#f8fafc;color:#0b1321;
   }
 
-
-  .badge-green{background:#16a34a;color:#fff;border-color:#15803d}
-  .badge-orange{background:#f97316;color:#fff;border-color:#ea580c}
-
   .badge-mini{padding:3px 8px;font-size:12px;font-weight:900;}
   .badge-score{background:#ecfeff;border-color:#a5f3fc}
   .badge-tries{background:#eef2ff;border-color:#c7d2fe}
@@ -151,8 +138,7 @@
   .dot-tries{background:#6366f1}
 
   /* App shell */
-  /* Left column slightly narrower so the field/play area on the right is larger */
-  .app{display:grid;grid-template-columns:290px minmax(0,1fr);gap:14px;padding:14px;max-width:min(1600px,96vw);margin:0 auto}
+  .app{display:grid;grid-template-columns:1fr 340px;gap:14px;padding:14px;max-width:min(1600px,96vw);margin:0 auto}
   header .header-row{width:100%;max-width:min(1600px,96vw);margin:0 auto}
   @media (max-width:1100px){
     .app{grid-template-columns:1fr;gap:12px;padding:10px;max-width:98vw}
@@ -541,73 +527,6 @@
 #coachCard .rowFlex > * { min-width:0; }
 #coachCard .rowFlex input { flex:1 1 auto; width:auto; }
 #coachCard .rowFlex button { flex:0 0 auto; white-space:nowrap; }
-
-/* --- Pitch-recognition inspired layout (Diamond IQ) --- */
-body{background:#f6f7fb;}
-header{position:sticky;top:0;z-index:50;background:rgba(246,247,251,.92);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid rgba(0,0,0,.06);}
-header h1{font-size:18px;margin:0;}
-.header-actions{display:flex;align-items:center;gap:10px;}
-.hiddenDock{display:none !important;}
-main.app.prLayout{
-  max-width: 1280px;
-  margin: 18px auto 40px;
-  padding: 0 14px;
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 18px;
-  align-items: start;
-}
-.sideCol{width:auto; margin:0;}
-#playCard{min-height: 520px;}
-.playTitleRow{margin-bottom:12px;}
-.playHudMount{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
-#situationCard #situationControlsMount{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-#situationCard .sitRow{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:10px;
-}
-#situationCard .sitRow2{
-  gap:8px;
-}
-#situationCard .sitRow3{
-  gap:8px;
-}
-#situationCard select, #situationCard button{margin:0;}
-.subcard{
-  margin-top:12px;
-  border:1px solid rgba(0,0,0,.08);
-  border-radius:14px;
-  padding:12px;
-  background:#fff;
-  box-shadow:none;
-}
-.subcardTitle{font-weight:800;font-size:13px;margin-bottom:8px;}
-/* make the old standalone panels look normal when mounted as subcards */
-#situationTargetMount #targetPanel,
-#situationSeqMount #seqPanel{border:none;box-shadow:none;padding:0;margin:0;}
-#situationTargetMount #targetPanel.hidden,
-#situationSeqMount #seqPanel.hidden{display:none;}
-
-/* Hide inner panel headings when used as subcards (we use the subcardTitle instead) */
-#situationTargetMount #targetPanelTitle{display:none;}
-#situationSeqMount #seqPanel > strong{display:none;}
-
-/* Player card collapse (keeps header visible) */
-#playerSidebarCard.collapsed #playerSidebarMount{ display:none !important; }
-#playerSidebarCard.collapsed #playerPlayInfoBox{ display:none !important; }
-
-/* Play Info main pane overlay */
-#playInfoMainPane{ display:none; }
-#playInfoMainPane.active{ display:block; }
-#playInfoMainPane .pi-header{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-#playInfoMainPane .pi-title{ font-weight:900; font-size:16px; }
-
 </style>
 
 </head>
@@ -620,6 +539,15 @@ main.app.prLayout{
 -->
 
 <header><h1>Diamond IQ</h1>
+
+  <!-- @diq:begin [H_PLAYER_BTN] Player Login button -->
+      <button id="playerBtn" class="btn-small btn-green" title="View Player Info" aria-pressed="true">Player Info</button>
+  <!-- @diq:end [H_PLAYER_BTN] -->
+
+  
+
+  
+
   <div class="header-actions">
     <!-- @diq:begin control:startBtn -->
 
@@ -629,8 +557,7 @@ main.app.prLayout{
     <!-- @diq:end control:checkBtn -->
     <!-- @diq:begin control:continueBtn -->
 
-    <div id="diqHeaderDock" class="hiddenDock" style="display:none !important">
-<button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button><select id="sitSelect" aria-label="Situation" data-testid="sit-select"><option value="BD-01">Situation #1</option><option value="BD-02">Situation #2</option><option value="BD-03">Situation #3</option><option value="BD-04">Situation #4</option><option value="BD-05">Situation #5</option><option value="BD-06">Situation #6</option><option value="BD-07">Situation #7</option><option value="BD-08">Situation #8</option><option value="BD-09">Situation #9</option><option value="BD-10-1">Situation #10-1</option><option value="BD-10-2">Situation #10-2</option><option value="BD-10-3">Situation #10-3</option><option value="BD-11">Situation #11</option><option value="BD-12">Situation #12</option><option value="BD-13">Situation #13</option><option value="BD-14">Situation #14</option><option value="BD-15">Situation #15</option><option value="BD-16">Situation #16</option><option value="BD-17">Situation #17</option><option value="BD-18">Situation #18</option><option value="BD-19">Situation #19</option><option value="BD-20">Situation #20</option></select><span id="descHud" class="badge" title="Single to LF">Single to LF</span><span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span><span id="outsHud" class="badge badge-tries" style="margin-left:2px">
+  <button id="randomSitBtn" class="btn-slate btn-small" title="Pick a random situation">Random</button><select id="sitSelect" aria-label="Situation" data-testid="sit-select"><option value="BD-01">Situation #1</option><option value="BD-02">Situation #2</option><option value="BD-03">Situation #3</option><option value="BD-04">Situation #4</option><option value="BD-05">Situation #5</option><option value="BD-06">Situation #6</option><option value="BD-07">Situation #7</option><option value="BD-08">Situation #8</option><option value="BD-09">Situation #9</option><option value="BD-10-1">Situation #10-1</option><option value="BD-10-2">Situation #10-2</option><option value="BD-10-3">Situation #10-3</option><option value="BD-11">Situation #11</option><option value="BD-12">Situation #12</option><option value="BD-13">Situation #13</option><option value="BD-14">Situation #14</option><option value="BD-15">Situation #15</option><option value="BD-16">Situation #16</option><option value="BD-17">Situation #17</option><option value="BD-18">Situation #18</option><option value="BD-19">Situation #19</option><option value="BD-20">Situation #20</option></select><span id="descHud" class="badge" title="Single to LF">Single to LF</span><span id="runnersBadge" class="badge"><span style="background:#10b981"></span>Runners: <b><span id="runnersVal">—</span></b></span><span id="outsHud" class="badge badge-tries" style="margin-left:2px">
     Outs: <b><span id="outsVal">0</span></b>
   </span><button id="startBtn" class="btn-green">Start Situation</button><button id="resetBtn" class="btn-orange" disabled="">Reset</button><button id="checkBtn" class="btn-green" disabled="" data-testid="check-btn">Check Positions</button><button id="continueBtn" class="btn-green hidden" title="Continue to Phase 2">Continue ▶</button><button id="verifySeqBtn" class="btn-green hidden">Verify Sequence</button><div id="hud" class="hud">
     <span id="scoreBadge" class="badge badge-score score-red" data-testid="score-badge">Score: <b><span id="scoreVal">0</span>/9</b></span>
@@ -638,43 +565,24 @@ main.app.prLayout{
     <span id="timerBadge" class="badge badge-timer" title="Time left in this phase">
       ⏱️ <b><span id="timerVal">60</span>s</b>
     </span>
-  </div>
-</div>
+  </div><button id="coachBtn" class="btn-slate">Coach Tools</button></div>
 
-    <div class="header-right">
-      <!-- @diq:begin [H_PLAYINFO_BTN] Help button -->
-      <button id="playInfoTopBtn" class="btn-small btn-slate" type="button" title="How it works">Help</button>
-      <!-- @diq:end [H_PLAYINFO_BTN] -->
-      <button id="coachBtn" class="btn-slate">Coach Tools</button>
-      <button id="adminBtn" class="btn-slate">Admin Tools</button>
-    </div>
-
+    <button id="adminBtn" class="btn-slate">Admin</button>
     <!-- @diq:end control:continueBtn -->
-  </div>
 </header>
 
-<main class="app prLayout">
+<main class="app">
+  <section class="card">
+    <div id="wrap" style="--chip-size: 36px; --chip-font: 14px;">
+      <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
+      <!-- visual-only layers kept for z-ordering -->
+      <div id="targetsLayer" class="overlay"></div>
+      <div id="ballLayer" class="overlay"><svg viewBox="0 0 1136.953125 942.53125"></svg></div>
+      <!-- chips, rings, and hit marker are appended directly to #wrap -->
+    <div class="ball locked" style="display: none; width: 15px; height: 15px; box-shadow: rgb(0, 0, 0) 0px 0px 0px 1px, rgba(0, 0, 0, 0.35) 0px 1px 1px; left: 265.289063px; top: 350.180489px; z-index: 10;"></div><div class="chip Battery locked" style="left: 568.476563px; top: 618.12162px;">P</div><div class="chip Battery locked" style="left: 569.613516px; top: 813.676958px;">C</div><div class="chip Infield locked" style="left: 727.271016px; top: 540.809045px;">1B</div><div class="chip Infield locked" style="left: 695.815313px; top: 439.620527px;">2B</div><div class="chip Infield locked" style="left: 435.453047px; top: 438.104594px;">SS</div><div class="chip Infield locked" style="left: 409.303125px; top: 534.745313px;">3B</div><div class="chip Outfield locked" style="left: 280.448438px; top: 277.036728px;">LF</div><div class="chip Outfield locked" style="left: 578.709141px; top: 132.644124px;">CF</div><div class="chip Outfield locked" style="left: 859.536562px; top: 274.004863px;">RF</div><div class="tgt locked" data-id="P" style="left: 646.168359px; top: 574.159567px; width: 73px; height: 73px; display: none;"><span class="tgt-label">P</span></div><div class="tgt locked" data-id="C" style="left: 757.589766px; top: 706.424708px; width: 74px; height: 74px; display: none;"><span class="tgt-label">C</span></div><div class="tgt locked" data-id="1B" style="left: 733.334766px; top: 602.204325px; width: 65px; height: 65px; display: none;"><span class="tgt-label">1B</span></div><div class="tgt locked" data-id="2B" style="left: 568.855547px; top: 441.515443px; width: 65px; height: 65px; display: none;"><span class="tgt-label">2B</span></div><div class="tgt locked" data-id="SS" style="left: 422.567578px; top: 395.279491px; width: 65px; height: 65px; display: none;"><span class="tgt-label">SS</span></div><div class="tgt locked" data-id="3B" style="left: 408.166172px; top: 602.583308px; width: 65px; height: 65px; display: none;"><span class="tgt-label">3B</span></div><div class="tgt locked" data-id="LF" style="left: 266.047031px; top: 349.801505px; width: 65px; height: 65px; display: none;"><span class="tgt-label">LF</span></div><div class="tgt locked" data-id="CF" style="left: 305.840391px; top: 190.628556px; width: 80px; height: 80px; display: none;"><span class="tgt-label">CF</span></div><div class="tgt locked" data-id="RF" style="left: 747.736172px; top: 382.394062px; width: 80px; height: 80px; display: none;"><span class="tgt-label">RF</span></div></div>
+  </section>
 
   <aside class="sideCol">
-    <!-- @diq:begin [H_SIT_CARD] Situation card host -->
-    <div class="card" id="situationCard" style="display:none">
-      <div class="cardTitleRow">
-        <h1 class="cardTitle" style="margin:0">Situation</h1>
-      </div>
-      <div id="situationControlsMount"></div>
-
-      <div class="subcard" id="situationTargetSubcard" style="display:none">
-        <div class="subcardTitle">Selected Target</div>
-        <div id="situationTargetMount"></div>
-      </div>
-
-      <div class="subcard" id="situationSeqSubcard" style="display:none">
-        <div class="subcardTitle">Play Sequence</div>
-        <div id="situationSeqMount"></div>
-      </div>
-    </div>
-    <!-- @diq:end [H_SIT_CARD] -->
-
     <div class="card" id="howToCard">
       <details id="howToDetails">
         <summary>
@@ -683,8 +591,6 @@ main.app.prLayout{
         </summary>
 
         <div class="howto-body">
-  
-  <div style="font-weight:900; margin:6px 0 2px">Fielding Positions</div>
   <ol style="margin:6px 0 0 1.2em">
     <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
     <li>Review the Description, Runners, and Outs shown in the header.</li>
@@ -695,7 +601,6 @@ main.app.prLayout{
   <div class="hint" style="margin-top:8px">
     Note: Correct chips will display within a highlighted target ring
   </div>
-
 </div>
       </details>
     </div>
@@ -718,14 +623,13 @@ main.app.prLayout{
 
     <!-- Coach Tools (hidden until unlocked) -->
     
-    <div id="playerSidebarCard" class="card collapsed">
+    <div id="playerSidebarCard" class="card hidden">
       <div class="cardTitleRow">
         <div style="display:flex;align-items:center;gap:10px">
-          <h1 class="cardTitle" style="margin:0">Player</h1>
+          <div class="cardTitle" style="margin:0">Player</div>
+          <span id="playerSidebarStatus" class="tag">logged in</span>
         </div>
-        <span class="cardTitleActions" style="margin-left:auto;display:flex;align-items:center;gap:10px">
-          <span id="playerStatusBadge" class="badge badge-mini badge-orange">No player logged in</span>
-          <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Collapse</button></span>
+        <button id="playerSidebarCloseBtn" class="btn btn-ghost" type="button">Close</button>
       </div>
       <div id="playerSidebarMount">
         <div class="subsec">
@@ -1082,34 +986,7 @@ main.app.prLayout{
 </div>
 
   </aside>
-
-
-  <section class="card" id="playCard">
-    <div class="cardTitleRow playTitleRow">
-      <h1 class="cardTitle" style="margin:0">Play</h1>
-      <div id="playHudMount" class="playHudMount"></div>
-    </div>
-
-    <!-- @diq:begin [H_PLAYINFO_PANE] Play Info main pane -->
-    <div id="playInfoMainPane" class="subcard">
-      <div class="pi-header">
-        <div class="pi-title">How it works</div>
-        <button id="playInfoBackBtn" class="btn btn-ghost" type="button">Back to Play</button>
-      </div>
-      <div id="playInfoMainBody"></div>
-    </div>
-    <!-- @diq:end [H_PLAYINFO_PANE] -->
-
-    <div id="wrap" style="--chip-size: 36px; --chip-font: 14px;">
-      <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
-      <!-- visual-only layers kept for z-ordering -->
-      <div id="targetsLayer" class="overlay"></div>
-      <div id="ballLayer" class="overlay"><svg viewBox="0 0 1136.953125 942.53125"></svg></div>
-      <!-- chips, rings, and hit marker are appended directly to #wrap -->
-    <div class="ball locked" style="display: none; width: 15px; height: 15px; box-shadow: rgb(0, 0, 0) 0px 0px 0px 1px, rgba(0, 0, 0, 0.35) 0px 1px 1px; left: 265.289063px; top: 350.180489px; z-index: 10;"></div><div class="chip Battery locked" style="left: 568.476563px; top: 618.12162px;">P</div><div class="chip Battery locked" style="left: 569.613516px; top: 813.676958px;">C</div><div class="chip Infield locked" style="left: 727.271016px; top: 540.809045px;">1B</div><div class="chip Infield locked" style="left: 695.815313px; top: 439.620527px;">2B</div><div class="chip Infield locked" style="left: 435.453047px; top: 438.104594px;">SS</div><div class="chip Infield locked" style="left: 409.303125px; top: 534.745313px;">3B</div><div class="chip Outfield locked" style="left: 280.448438px; top: 277.036728px;">LF</div><div class="chip Outfield locked" style="left: 578.709141px; top: 132.644124px;">CF</div><div class="chip Outfield locked" style="left: 859.536562px; top: 274.004863px;">RF</div><div class="tgt locked" data-id="P" style="left: 646.168359px; top: 574.159567px; width: 73px; height: 73px; display: none;"><span class="tgt-label">P</span></div><div class="tgt locked" data-id="C" style="left: 757.589766px; top: 706.424708px; width: 74px; height: 74px; display: none;"><span class="tgt-label">C</span></div><div class="tgt locked" data-id="1B" style="left: 733.334766px; top: 602.204325px; width: 65px; height: 65px; display: none;"><span class="tgt-label">1B</span></div><div class="tgt locked" data-id="2B" style="left: 568.855547px; top: 441.515443px; width: 65px; height: 65px; display: none;"><span class="tgt-label">2B</span></div><div class="tgt locked" data-id="SS" style="left: 422.567578px; top: 395.279491px; width: 65px; height: 65px; display: none;"><span class="tgt-label">SS</span></div><div class="tgt locked" data-id="3B" style="left: 408.166172px; top: 602.583308px; width: 65px; height: 65px; display: none;"><span class="tgt-label">3B</span></div><div class="tgt locked" data-id="LF" style="left: 266.047031px; top: 349.801505px; width: 65px; height: 65px; display: none;"><span class="tgt-label">LF</span></div><div class="tgt locked" data-id="CF" style="left: 305.840391px; top: 190.628556px; width: 80px; height: 80px; display: none;"><span class="tgt-label">CF</span></div><div class="tgt locked" data-id="RF" style="left: 747.736172px; top: 382.394062px; width: 80px; height: 80px; display: none;"><span class="tgt-label">RF</span></div></div>
-  </section>
-
-  </main>
+</main>
 
 <!-- Password modal -->
 <div id="pwModal">
@@ -2285,7 +2162,8 @@ const preview = buildPlayerIdForTeam(t.name, coachPlayerName.value, coachPlayerN
   }
 
   // --- Player login UI wiring ---
-const playerModalOverlay = document.getElementById("playerModalOverlay");
+  const playerBtn = document.getElementById("playerBtn");
+  const playerModalOverlay = document.getElementById("playerModalOverlay");
   const playerModalCloseX = document.getElementById("playerModalCloseX");
   const playerTeamSelect = document.getElementById("playerTeamSelect");
   const playerNameSelect = document.getElementById("playerNameSelect");
@@ -2364,7 +2242,9 @@ const playerShareHint = document.getElementById("playerShareHint");
   function setPlayerUIForLoggedIn(){
     const cur = getCurrentPlayerFromMeta();
     if(cur){
-      playerLoginStatus.textContent = `Logged in: ${cur.team.name} • #${cur.player.number} ${cur.player.name}`;      playerIdLine.style.display = "block";
+      playerLoginStatus.textContent = `Logged in: ${cur.team.name} • #${cur.player.number} ${cur.player.name}`;
+      const _ps = document.getElementById('playerSidebarStatus'); if(_ps) _ps.textContent = 'logged in';
+      playerIdLine.style.display = "block";
       playerIdText.textContent = cur.player.playerId;
 
       playerLoginBtn.style.display = "none";
@@ -2379,7 +2259,9 @@ const playerShareHint = document.getElementById("playerShareHint");
 
       playerShareHint.textContent = cur.team.coachEmail ? `Coach email: ${cur.team.coachEmail}` : "No coach email configured for this team (ask coach to add one).";
     }else{
-      playerLoginStatus.textContent = "Not logged in";      playerIdLine.style.display = "none";
+      playerLoginStatus.textContent = "Not logged in";
+      const _ps = document.getElementById('playerSidebarStatus'); if(_ps) _ps.textContent = 'not logged in';
+      playerIdLine.style.display = "none";
       playerIdText.textContent = "";
 
       playerLoginBtn.style.display = "inline-flex";
@@ -2388,18 +2270,6 @@ const playerShareHint = document.getElementById("playerShareHint");
       playerShareResultsBtn.disabled = true;
 playerShareHint.textContent = "";
     }
-
-  try{
-    const sitCard = document.getElementById('situationCard');
-    if(sitCard){
-      sitCard.style.display = (cur && cur.team && cur.player) ? '' : 'none';
-    }
-  }catch(_e){}
-
-
-  // Update top status badge in card header
-  try{ updatePlayerStatusBadge(cur); }catch(_e){}
-
   }
 
   function refreshPlayerLoginUI(){
@@ -2440,32 +2310,11 @@ playerShareHint.textContent = "";
     setPlayerUIForLoggedIn();
 
     // keep header Player Login button state in sync (no refresh needed)
-}
+    updatePlayerHeaderButton();
 
-  
-  function updatePlayerCollapseToggleBtn(){
-    const card = document.getElementById("playerSidebarCard");
-    const btn = document.getElementById("playerSidebarCloseBtn");
-    if(!card || !btn) return;
-    const collapsed = card.classList.contains("collapsed");
-    btn.textContent = collapsed ? "Expand" : "Collapse";
   }
 
-  function updatePlayerStatusBadge(cur){
-    const badge = document.getElementById("playerStatusBadge");
-    if(!badge) return;
-    if(cur && cur.player){
-      badge.classList.remove("badge-orange");
-      badge.classList.add("badge-green");
-      badge.textContent = `#${cur.player.number} ${cur.player.name}`;
-    }else{
-      badge.classList.remove("badge-green");
-      badge.classList.add("badge-orange");
-      badge.textContent = "No player logged in";
-    }
-  }
-
-function mountPlayerSidebar(){
+  function mountPlayerSidebar(){
     const card = document.getElementById("playerSidebarCard");
     const mount = document.getElementById("playerSidebarMount");
     if(!card || !mount || !playerModalOverlay) return;
@@ -2482,15 +2331,10 @@ function mountPlayerSidebar(){
 
     const closeBtn = document.getElementById("playerSidebarCloseBtn");
     if(closeBtn){
-      closeBtn.addEventListener("click", ()=>{
-        const isCollapsed = card.classList.contains("collapsed");
-        if(isCollapsed) card.classList.remove("collapsed");
-        else card.classList.add("collapsed");
-        updatePlayerCollapseToggleBtn();
-      });
+      closeBtn.addEventListener("click", ()=> card.classList.add("hidden"));
     }
   
-  updatePlayerCollapseToggleBtn();
+  updatePlayerHeaderButton();
 }
 
 function isPlayerLoggedInNow(){
@@ -2499,6 +2343,42 @@ function isPlayerLoggedInNow(){
 }
   // expose for header button logic (avoids scoping quirks)
   window.isPlayerLoggedInNow = isPlayerLoggedInNow;
+
+function updatePlayerHeaderButton(){
+    const btn = document.getElementById('playerBtn');
+    if(!btn) return;
+
+    let logged = false;
+    try{
+      if(typeof isPlayerLoggedInNow === 'function') logged = !!isPlayerLoggedInNow();
+      else if(window.PLAYER && window.PLAYER.playerId) logged = true;
+    }catch(_e){ logged = false; }
+
+    btn.textContent = logged ? 'Player Info' : 'Player Login';
+    btn.classList.remove('btn-orange','btn-yellow','btn-green');
+    btn.classList.add(logged ? 'btn-green' : 'btn-orange');
+    btn.setAttribute('aria-pressed', logged ? 'true' : 'false');
+    btn.title = logged ? 'View Player Info' : 'Player Login';
+  }
+
+  function openPlayerSidebar(){
+    const card = document.getElementById("playerSidebarCard");
+    if(!card) return;
+    refreshPlayerLoginUI();
+    card.classList.remove("hidden");
+  }
+
+  function closePlayerSidebar(){
+    const card = document.getElementById("playerSidebarCard");
+    if(!card) return;
+    card.classList.add("hidden");
+  }
+
+  if(playerBtn) playerBtn.addEventListener("click", ()=>{
+    const card = document.getElementById("playerSidebarCard");
+    if(card && !card.classList.contains("hidden")) closePlayerSidebar();
+    else openPlayerSidebar();
+  });
 
   if(playerTeamSelect){
     playerTeamSelect.addEventListener("change", ()=>{
@@ -2535,7 +2415,8 @@ function isPlayerLoggedInNow(){
     loadResults();
 
     refreshPlayerLoginUI();
-alert("Logged in.");
+    updatePlayerHeaderButton();
+    alert("Logged in.");
   
   // Ensure dropdowns are populated once the sidebar is mounted
   try{ refreshTeamsUIAll(); }catch(_e){}
@@ -2551,7 +2432,8 @@ alert("Logged in.");
     loadResults();
 
     refreshPlayerLoginUI();
-}
+    updatePlayerHeaderButton();
+  }
 
   if(playerLoginBtn) playerLoginBtn.addEventListener("click", doPlayerLogin);
   if(playerLogoutBtn) playerLogoutBtn.addEventListener("click", doPlayerLogout);
@@ -3321,7 +3203,6 @@ function quadBezier(p0,p1,p2,t){return {x:(1-t)*(1-t)*p0.x+2*(1-t)*t*p1.x+t*t*p2
 
 // --- How To Play templates + renderer ---
 const HOWTO_PHASE1_HTML = `
-  <div style="font-weight:900; margin:6px 0 2px">Fielding Positions</div>
   <ol style="margin:6px 0 0 1.2em">
     <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
     <li>Review the Description, Runners, and Outs shown in the header.</li>
@@ -3335,36 +3216,6 @@ const HOWTO_PHASE1_HTML = `
 `;
 
 const HOWTO_PHASE2_HTML = `
-  <div style="font-weight:900; margin:6px 0 2px">Relay Sequence</div>
-  <ol style="margin:6px 0 0 1.2em">
-    <li>Select <em>Continue</em> to begin</li>
-    <li>Select the players (chips) in the correct throw order to execute the play.</li>
-    <li>Click chips to add them to your sequence; click again to unselect (unless a chip is already locked as correct).</li>
-    <li>Press <em>Verify Sequence</em> to check your picks. You have 3 tries.</li>
-  </ol>
-  <div class="hint" style="margin-top:8px">
-    Note: Correct chips (in the proper order) will lock and remain highlighted.
-  </div>
-`;
-
-
-
-const HOWTO_HELP_HTML = `
-  <div style="font-weight:900; margin:6px 0 2px">Fielding Positions</div>
-  <ol style="margin:6px 0 0 1.2em">
-    <li>Select a situation from the dropdown (or click <em>Random</em>).</li>
-    <li>Review the Description, Runners, and Outs shown in the header.</li>
-    <li>Press <em>Start Situation</em> to begin</li>
-    <li>Drag the 9 player chips into the correct defensive positions.</li>
-    <li>Press <em>Check Positions</em> to verify. You have 3 tries to get them correct.</li>
-  </ol>
-  <div class="hint" style="margin-top:8px">
-    Note: Correct chips will display within a highlighted target ring
-  </div>
-
-  <div style="height:12px"></div>
-
-  <div style="font-weight:900; margin:6px 0 2px">Relay Sequence</div>
   <ol style="margin:6px 0 0 1.2em">
     <li>Select <em>Continue</em> to begin</li>
     <li>Select the players (chips) in the correct throw order to execute the play.</li>
@@ -3454,16 +3305,12 @@ function showSeqPanel(textHTML){
     : '';
 
   seqPanel.classList.remove('hidden');
-  const sub = document.getElementById('situationSeqSubcard');
-  if (sub) sub.style.display = '';
   seqBody.innerHTML = (textHTML || '') + note;
 }
 
 function hideSeqPanel(){
   if (!seqPanel) return;
   seqPanel.classList.add('hidden');
-  const sub = document.getElementById('situationSeqSubcard');
-  if (sub) sub.style.display = 'none';
   if (seqBody) seqBody.innerHTML = '';
 }
 
@@ -3482,14 +3329,31 @@ function setChipsSelectable(on){
 }
 
 function phase2UpdateHud(){
-  // During active sequence selection (after Continue), NO subcards should be displayed.
-  // The Play Sequence subcard is rendered only when Phase 2 ENDS (success or out of tries)
-  // via endPhase2()/showSeqPanel().
-  if (!_phase2Ended){
-    hideSeqPanel?.();
+  // Only show panel if Phase 2 is active AND we allow showing it
+  if (!phase2Active || !allowSeqPanel){
+    hideSeqPanel();
     return;
   }
-  // If Phase 2 has ended, keep whatever endPhase2() rendered.
+
+  if (!seqOrder.length){
+    hideSeqPanel(); // nothing to do if no sequence
+    return;
+  }
+
+  const next  = seqOrder[seqIndex];
+  const done  = seqIndex;
+  const total = seqOrder.length;
+
+  const path = seqOrder.map((p,i)=>
+    i < done
+      ? `<span style="opacity:.5;text-decoration:line-through">${p}</span>`
+      : (i === done ? `<b>${p}</b>` : p)
+  ).join(' → ');
+
+  showSeqPanel(
+    `<div>Step ${Math.min(done+1,total)} of ${total}: select <b>${next || '—'}</b></div>
+     <div style="margin-top:6px">Sequence: ${path}</div>`
+  );
 }
 
 /// @diq:begin Play Sequence Builder (Coach)
@@ -3989,9 +3853,9 @@ function endPhase2(success = true) {
       clearAllPicks();
       updatePhase2Hud();
 
-      // Do NOT show any subcards during Phase 2; show Play Sequence only after Phase 2 ends
+      // Make sure the UI is in "sequence picking" mode
       allowSeqPanel = false;
-      hideSeqPanel?.();
+      hideSeqPanel();
       if (continueBtn) continueBtn.classList.add('hidden');
 
   // Situation Builder undo/redo availability follows coach lock + current situation
@@ -4468,8 +4332,6 @@ function wireOnce(){
 
     _roundHasStarted = true;
     _phase2Ended = false;
-  _targetPanelDismissedOnce = false;
-    _targetPanelDismissedOnce = false;
     allowSeqPanel = false;
 
     // --- Set game state up front ---
@@ -4533,7 +4395,15 @@ function wireOnce(){
     }
   });
 
-    // Verify Sequence button is part of the Situation card (row 3). Do not create/move into header.
+  // --- Create a Verify Sequence button in the header row (once) ---
+  const actionsRow = document.querySelector('.header-actions') || document.querySelector('header .header-actions');
+  if (!verifySeqBtn){
+    verifySeqBtn = document.createElement('button');
+    verifySeqBtn.id = 'verifySeqBtn';
+    verifySeqBtn.className = 'btn-green hidden';
+    verifySeqBtn.textContent = 'Verify Sequence';
+    actionsRow.insertBefore(verifySeqBtn, document.getElementById('hud'));
+  }
 
 // ===== Small helpers (add once anywhere in <script>) =====
 function getCorrectPrefixLen(picks, order){
@@ -4663,9 +4533,8 @@ wireSeqBuilderOnce();
 
     // Phase 2 setup
     hideTargetPanel();             // hide Selected Target card immediately
-    _targetPanelDismissedOnce = true; // never show Selected Target again this run
     disableTargetSelection();      // stop ring selection in post-round view
-    allowSeqPanel = false;         // do not show Play Sequence panel during Phase 2 (results only)
+    allowSeqPanel = false;         // keep the Play Sequence card hidden during attempts
 
     // Move chips to their correct targets, then hide the rings (non-coach)
     snapChipsToTargets();
@@ -4696,11 +4565,9 @@ wireSeqBuilderOnce();
     setChipsSelectable(true);
     updateHud();
 
-    // During Phase 2 attempts, keep the Play Sequence subcard hidden.
-    hideSeqPanel?.();
-
-    // Show Verify button; Play Sequence subcard remains hidden during Phase 2 attempts
+    // Show Verify button; keep Play Sequence panel hidden until success/exhaustion
     verifySeqBtn.classList.remove('hidden');
+    hideSeqPanel();
 
     continueBtn.classList.add('hidden');
   });
@@ -4912,7 +4779,7 @@ wireSeqBuilderOnce();
       if (_muteCoachInputs || !currentSituation) return;
       currentSituation.desc = newDescInput.value;
       if (descHud) descHud.textContent = currentSituation.desc || '';
-if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
+      if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
     });
   }
 
@@ -5012,13 +4879,12 @@ let seqOrder = [];     // array of POS_IDS e.g. ['LF','SS','2B','C']
 let seqIndex = 0;      // current expected index
 let _phase2Ended = false;   // prevents target panel from showing after Phase 2
 
-let _targetPanelDismissedOnce = false; // once Continue is pressed, never show Selected Target again during this run
 const PHASE2_MAX_TRIES = 3;
 let phase2TriesLeft = 0;
 let allowSeqPanel = false;
 let phase2Picks = [];
 let phase2Stage = 1; // 1 = primary playSeq, 2 = optional secondary playSeq2         // array of POS_IDS in the order the user picked
-let verifySeqBtn = document.getElementById('verifySeqBtn'); // lives in Situation card row 3 (moved by layout)
+let verifySeqBtn = null;      // created in wireOnce
 let phase2Locked = new Set(); // chips locked as correct prefix (GLOBAL)
 
 const Bus = (() => {
@@ -5109,221 +4975,6 @@ const ensureHeaderGrouping = () => {
   if (h1) header.insertBefore(h1, header.firstChild);
 };
 
-// @diq:begin [A_PITCH_LAYOUT] Pitch-recognition inspired layout (DOM move only)
-function applyPitchRecognitionLayout(){
-  const aside = document.querySelector('aside.sideCol');
-  const sitCard = document.getElementById('situationCard');
-  const sitMount = document.getElementById('situationControlsMount');
-  const hudMount = document.getElementById('playHudMount');
-  const headerDock = document.getElementById('diqHeaderDock');
-
-  // Move the situation control bar (buttons/select/badges) out of the header into the Situation card
-  // Do this by IDs so it works even if markup changes, while keeping all existing logic/listeners intact.
-  const moveById = (id, mount) => {
-    const el = document.getElementById(id);
-    if (el && mount && el.parentElement !== mount){
-      mount.appendChild(el);
-    }
-  };
-
-  // Build 3 rows inside the Situation card:
-  // Row 1: Random + Situation dropdown
-  // Row 2: Situation Title + (optional) Desc + Runners + Outs
-  // Row 3: Start/Reset/Check/Continue/Verify (only visible when the app shows them)
-  const buildSituationRows = () => {
-    if (!sitMount) return null;
-
-    // Clear any previous children (we'll re-append the real elements to the right row)
-    sitMount.innerHTML = '';
-
-    const row1 = document.createElement('div');
-    row1.className = 'sitRow sitRow1';
-
-    const row2 = document.createElement('div');
-    row2.className = 'sitRow sitRow2';
-
-    const row3 = document.createElement('div');
-    row3.className = 'sitRow sitRow3';
-
-    sitMount.appendChild(row1);
-    sitMount.appendChild(row2);
-    sitMount.appendChild(row3);
-
-    return { row1, row2, row3 };
-  };
-
-  const rows = buildSituationRows();
-
-  // Primary: if we have a header dock wrapper, drain it (so the IDs exist in DOM), then we will re-home by id
-  if (headerDock){
-    // Don't leave the old controls in the header even if something unexpected lives there
-    headerDock.style.display = 'none';
-  }
-
-  // Explicitly place known situation controls into the correct row
-  if (rows){
-    // Row 1
-    ['randomSitBtn','sitSelect'].forEach(id => moveById(id, rows.row1));
-
-    // Row 2
-    ['descHud','runnersBadge','outsHud'].forEach(id => moveById(id, rows.row2));
-
-    // Row 3
-    ['startBtn','resetBtn','checkBtn','continueBtn','verifySeqBtn'].forEach(id => moveById(id, rows.row3));
-  }
-
-  // After moving, hide the dock wrapper if it still exists
-  if (headerDock){
-    headerDock.style.display = 'none';
-  }
-
-  // Move HUD badges into the Play card header
-  const hud = document.getElementById('hud');
-  if (hud && hudMount){
-    hudMount.appendChild(hud);
-  }
-
-  // Merge Selected Target + Play Sequence into Situation subcards
-  const targetPanel = document.getElementById('targetPanel');
-  const targetMount = document.getElementById('situationTargetMount');
-  if (targetPanel && targetMount){
-    targetMount.appendChild(targetPanel);
-  }
-
-  const seqPanel = document.getElementById('seqPanel');
-  const seqMount = document.getElementById('situationSeqMount');
-  if (seqPanel && seqMount){
-    seqMount.appendChild(seqPanel);
-  }
-
-  // Subcards should appear only when relevant to the current phase
-  const targetSub = document.getElementById('situationTargetSubcard');
-  const seqSub    = document.getElementById('situationSeqSubcard');
-
-  function updateSituationSubcardsVisibility(){
-    // Prefer the app's current phase if available; fall back to DOM visibility of panels
-    const phase = (window.__diqHowToPhase || window.diqHowToPhase || window.currentPhase || '').toString();
-    const isP2 = phase === 'p2' || phase === 'phase2' || phase === 'seq';
-    const isP1 = phase === 'p1' || phase === 'phase1' || phase === 'chips' || phase === '';
-
-    // Selected Target: hidden by default; show only after Phase 1 completes (all correct OR out of tries)
-    if (targetSub){
-      const tp = document.getElementById('targetPanel');
-      const shouldShow = (typeof isPostRound === 'function') ? isPostRound() : (tp && !tp.classList.contains('hidden'));
-      targetSub.style.display = shouldShow ? '' : 'none';
-    }
-
-    // Play Sequence: hidden by default; show only during/after Phase 2 and when there is an actual sequence rendered
-    if (seqSub){
-      const hasSeqItems = !!(seqPanel && (seqPanel.querySelectorAll('li').length > 0 || seqPanel.querySelectorAll('.seqItem').length > 0));
-      seqSub.style.display = (isP2 && hasSeqItems) ? '' : 'none';
-    }
-  }
-
-  // Expose for other logic to trigger without changing core game behavior
-  try{ window.__diqUpdateSituationSubcardsVisibility = updateSituationSubcardsVisibility; }catch(e){}
-
-  // Hook setHowToPhase without changing app logic
-  if (!window.__diqPRPhaseHooked){
-    window.__diqPRPhaseHooked = true;
-    const orig = window.setHowToPhase;
-    if (typeof orig === 'function'){
-      window.setHowToPhase = function(ph){
-        try { window.__diqHowToPhase = ph; } catch(e){}
-        const r = orig.apply(this, arguments);
-        try { updateSituationSubcardsVisibility(); } catch(e){}
-        return r;
-      };
-    }
-  }
-
-  // Initial state
-  try { updateSituationSubcardsVisibility(); } catch(e){}
-
-  // Header "Play Info" button shows instructions in the main Play pane (replaces field until back)
-  const playInfoTopBtn = document.getElementById('playInfoTopBtn');
-  const playInfoMainPane = document.getElementById('playInfoMainPane');
-  const playInfoMainBody = document.getElementById('playInfoMainBody');
-  const playInfoBackBtn  = document.getElementById('playInfoBackBtn');
-  const wrap = document.getElementById('wrap');
-
-  function showPlayInfoInMain(){
-    if (!playInfoMainPane || !playInfoMainBody) return;
-    // Help view should explain BOTH phases (Fielding Positions + Relay Sequence)
-    playInfoMainBody.innerHTML = HOWTO_HELP_HTML;
-    playInfoMainPane.classList.add('active');
-    playInfoMainPane.style.display = '';
-    if (wrap) wrap.style.display = 'none';
-  }
-
-  function hidePlayInfoInMain(){
-    if (playInfoMainPane){
-      playInfoMainPane.classList.remove('active');
-      playInfoMainPane.style.display = 'none';
-    }
-    if (wrap) wrap.style.display = '';
-    if (playInfoMainBody) playInfoMainBody.innerHTML = '';
-  }
-
-
-  if (playInfoTopBtn && !playInfoTopBtn.__diqWired){
-    playInfoTopBtn.__diqWired = true;
-    playInfoTopBtn.addEventListener('click', ()=>{
-      // If already showing play info, go back to play
-      const active = !!(playInfoMainPane && playInfoMainPane.classList.contains('active'));
-      if (active) hidePlayInfoInMain();
-      else showPlayInfoInMain();
-    });
-  }
-  if (playInfoBackBtn && !playInfoBackBtn.__diqWired){
-    playInfoBackBtn.__diqWired = true;
-    playInfoBackBtn.addEventListener('click', hidePlayInfoInMain);
-  }
-
-
-  // Player card: move How-To content into player sidebar card and toggle via "Play Info" button
-  const playerCard = document.getElementById('playerSidebarCard');
-  const howToCard  = document.getElementById('howToCard');
-  const howToDetails = document.getElementById('howToDetails');
-
-  if (playerCard){
-    // Ensure player card is visible in the new sidebar layout
-    playerCard.classList.remove('hidden');
-
-    // Place Player card above Situation card (like the reference layout)
-    if (aside && sitCard && aside.contains(sitCard) && aside.contains(playerCard)){
-      if (aside.firstElementChild !== playerCard){
-        aside.insertBefore(playerCard, sitCard);
-      }
-    }
-    // Mount the how-to details as a subcard inside the player card
-    if (howToDetails){
-      let box = document.getElementById('playerPlayInfoBox');
-      if (!box){
-        box = document.createElement('div');
-        box.id = 'playerPlayInfoBox';
-        box.className = 'subcard hidden';
-        const t = document.createElement('div');
-        t.className = 'subcardTitle';
-        t.textContent = 'How it works';
-        box.appendChild(t);
-        playerCard.appendChild(box);
-      }
-
-      // Move the how-to body (not the outer card)
-      const howBody = howToDetails.querySelector('.howto-body') || howToDetails;
-      if (howBody && !box.contains(howBody)){
-        box.appendChild(howBody);
-      }
-
-      // Remove the old how-to card from the sidebar to avoid duplicates
-      if (howToCard) howToCard.style.display = 'none';
-    }
-  }
-}
-// @diq:end [A_PITCH_LAYOUT]
-
-
 
 const coachCard=document.getElementById('coachCard');
 const coachStatus=document.getElementById('coachStatus');
@@ -5379,10 +5030,9 @@ function nativeToCssPoint(pt){ const css=unitToCss(pt); return { x:css.left, y:c
 
 function updateChipScale(){
   const base = Math.min(imgRect.width, imgRect.height);
-  // slightly smaller than before (still larger than bases, text remains very readable)
-  const size = clamp(Math.round(base * 0.045), 11, 30);
+  const size = clamp(Math.round(base * 0.056), 10, 36);
   CHIP_PX = size;
-  const fz = clamp(Math.round(size * 0.46), 9, 14);
+  const fz = clamp(Math.round(size * 0.42), 8, 14);
   wrap.style.setProperty('--chip-size', size + 'px');
   wrap.style.setProperty('--chip-font', fz + 'px');
 }
@@ -5680,29 +5330,21 @@ function makeTargetDraggable(el,id){
   }
 }
 
-function shouldShowTargetPanel(){
-  // Selected Target sub-card should only be visible AFTER Phase 1 ends (post-round),
-  // BEFORE Phase 2 starts, and NOT after Phase 2 has ended.
-  return (typeof isPostRound === 'function' && isPostRound()) && !_targetPanelDismissedOnce && !phase2Active && !_phase2Ended;
-}
-
 function renderTargetPanel(id){
   if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
-  if (!shouldShowTargetPanel()) { hideTargetPanel?.(); return; }
   _currentSelectedTargetId = id;
 
   targetPanel.classList.remove('hidden');
-  targetPanelTitle.textContent = 'Selected Target';
+  targetPanelTitle.textContent = `Selected Target: ${id}`;
 
   const notes = getTargetNotes(currentSituation.key, id);
   targetPanelBody.innerHTML = notes
-    ? `<div style="font-weight:800;margin-bottom:6px">Selected Target: ${id}</div><div>${String(notes).replace(/\n/g, '<br>')}</div>`
-    : `<div style="font-weight:800;margin-bottom:6px">Selected Target: ${id}</div><div class="hint">No notes.</div>`;
+    ? `<div>${String(notes).replace(/\n/g, '<br>')}</div>`
+    : `<div class="hint">No notes for ${id}</div>`;
 }
 
 function showTargetInstruction(){
   if (!targetPanel || !targetPanelTitle || !targetPanelBody) return;
-  if (!shouldShowTargetPanel()) { hideTargetPanel?.(); return; }
   _currentSelectedTargetId = null;
 
   targetPanel.classList.remove('hidden');
@@ -5749,16 +5391,8 @@ function onRingClick(e){
 }
 
 /** Panel visibility helpers */
-function showTargetPanel(){
-  if (targetPanel) targetPanel.classList.remove('hidden');
-  const sub = document.getElementById('situationTargetSubcard');
-  if (sub) sub.style.display = '';
-}
-function hideTargetPanel(){
-  if (targetPanel) targetPanel.classList.add('hidden');
-  const sub = document.getElementById('situationTargetSubcard');
-  if (sub) sub.style.display = 'none';
-}
+function showTargetPanel(){ if (targetPanel) targetPanel.classList.remove('hidden'); }
+function hideTargetPanel(){ if (targetPanel) targetPanel.classList.add('hidden'); }
 
 // @diq:end [A4]
 /// @diq:begin [A5] Runners & Outs
@@ -6603,7 +6237,8 @@ function syncSituationInputsFromCurrent(){
   });
 
   if (descHud)     descHud.textContent     = currentSituation.desc  || '';
-const o = clampInt((currentSituation.outs ?? 0), 0, 2);
+
+  const o = clampInt((currentSituation.outs ?? 0), 0, 2);
   setOuts(o, { quiet: true });
 
   // Coach tools: keep Play Sequence + notes inputs in sync with the selected situation
@@ -6818,7 +6453,8 @@ function setSituation(key){
 
   // Title + Description UI
   if (descHud)  descHud.textContent  = currentSituation.desc  || '';
-const savedHit = getHitSaved(currentSituation.key); if (savedHit) currentSituation.hit = savedHit;
+
+  const savedHit = getHitSaved(currentSituation.key); if (savedHit) currentSituation.hit = savedHit;
 
   // Tolerance dropdown
   tolTargetSel.innerHTML='';
@@ -7392,7 +7028,7 @@ function refreshSituationAll(){
   populateSituations(currentSituation.key);
 
   if (descHud) descHud.textContent = currentSituation.desc || '';
-if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
+  if (typeof updateDescriptionHudText === 'function') updateDescriptionHudText();
 
   // Rebuild targets (applies new tolerance sizes), hit marker & ball
   buildTargets();
@@ -7522,7 +7158,6 @@ function checkPositions(){
         } else if (typeof showTargetPanel === 'function') {
           showTargetPanel();
         }
-        try{ window.__diqUpdateSituationSubcardsVisibility && window.__diqUpdateSituationSubcardsVisibility(); }catch(e){}
       }
 
       // If a sequence exists, reveal Continue and switch How-to to Phase 2
@@ -7743,8 +7378,6 @@ async function init(){
       refreshTeamsUIAll();
       // Mount Player panel into sidebar
       mountPlayerSidebar();
-      // Apply pitch-recognition inspired layout (DOM moves only)
-      applyPitchRecognitionLayout();
     setHowToPhase('p1');
 
   } catch (err){

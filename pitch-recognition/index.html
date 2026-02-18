@@ -1,0 +1,2236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DIQ Pitch Recognition MVP</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --accent:#f65f16; /* Tigers-ish orange */
+      --good:#16a34a;
+      --bad:#dc2626;
+      --warn:#f59e0b;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --r:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background: radial-gradient(1200px 700px at 30% 0%, #fff, var(--bg));
+    }
+    a{color:inherit}
+    .wrap{max-width:1180px;margin:0 auto;padding:18px 18px 40px}
+    .topbar{
+      display:flex;gap:14px;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:10;
+      background:rgba(246,247,251,.85);
+      backdrop-filter:saturate(180%) blur(10px);
+      border-bottom:1px solid rgba(226,232,240,.8);
+      padding:14px 18px;
+      margin:0 -18px 16px;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:36px;height:36px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),#ffb703);
+      box-shadow:0 10px 25px rgba(246,95,22,.25);
+      display:grid;place-items:center;color:white;font-weight:900;
+      letter-spacing:.5px;
+    }
+    .titleblock{display:flex;flex-direction:column;line-height:1.1}
+    .titleblock .t{font-weight:800}
+    .titleblock .s{color:var(--muted);font-size:12px}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{
+      appearance:none;border:1px solid var(--line);background:var(--card);
+      padding:10px 12px;border-radius:12px;cursor:pointer;
+      display:inline-flex;gap:8px;align-items:center;
+      font-weight:700;color:#0b1222;
+      box-shadow:0 1px 0 rgba(15,23,42,.04);
+      transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .btn:hover{border-color:#cbd5e1;box-shadow:0 10px 25px rgba(15,23,42,.06)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:var(--text);border-color:var(--text);color:white}
+    .btn.accent{background:var(--accent);border-color:var(--accent);color:white}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:7px 9px;border-radius:10px;font-size:12px}
+    .pill{
+      font-size:12px;color:var(--muted);border:1px solid var(--line);
+      background:#fff;border-radius:999px;padding:6px 10px;display:inline-flex;gap:6px;align-items:center
+    }
+    .grid{display:grid;gap:14px}
+    .cols{grid-template-columns: 360px 1fr}
+    @media (max-width: 980px){ .cols{grid-template-columns:1fr} .topbar{position:static} }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    .card h2,.card h3{margin:0 0 10px}
+    .card h2{font-size:16px}
+    .card h3{font-size:14px;color:#0b1222}
+    .subtle{color:var(--muted);font-size:12px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .row.between{justify-content:space-between}
+    .stack{display:grid;gap:10px}
+    .field{display:grid;gap:6px}
+    label{font-size:12px;color:var(--muted);font-weight:700}
+    input,select,textarea{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:#fff;font:inherit;outline:none;
+    }
+    textarea{min-height:92px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:#94a3b8;box-shadow:0 0 0 3px rgba(148,163,184,.25)}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 520px){ .split{grid-template-columns:1fr} }
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .badge{
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:12px;font-weight:800;
+      border-radius:999px;padding:6px 10px;border:1px solid var(--line);
+      background:#fff
+    }
+    .badge.good{border-color:rgba(22,163,74,.35);background:rgba(22,163,74,.08);color:var(--good)}
+    .badge.bad{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.08);color:var(--bad)}
+    .badge.warn{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.1);color:#a16207}
+    .kbd{
+      font-family:var(--mono);font-size:12px;
+      background:#0b1222;color:#e2e8f0;border-radius:9px;padding:4px 8px;border:1px solid rgba(226,232,240,.12)
+    }
+    .table{
+      width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line)
+    }
+    .table th,.table td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:12px}
+    .table th{background:#f8fafc;color:#0b1222;font-weight:900}
+    .table tr:last-child td{border-bottom:none}
+    .right{text-align:right}
+    .center{text-align:center}
+    .mono{font-family:var(--mono)}
+    .muted{color:var(--muted)}
+    .big{
+      font-size:28px;font-weight:900;letter-spacing:-.02em
+    }
+    .tiny{font-size:11px;color:var(--muted)}
+    .canvasWrap{
+      width:100%;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background: radial-gradient(800px 400px at 50% 0%, #ffffff, #f8fafc);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+      overflow:hidden;
+      position:relative;
+      /* Taller play area to better show ball travel */
+      aspect-ratio: 16 / 12;
+      min-height: 320px;
+    }
+    
+    #stimCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      display:block;
+    }
+.overlayCenter{
+      position:absolute;inset:0;
+      display:grid;place-items:center;
+      pointer-events:none;
+    }
+    .overlayCard{
+      pointer-events:none;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(226,232,240,.85);
+      border-radius:16px;
+      padding:12px 14px;
+      box-shadow:0 10px 30px rgba(15,23,42,.12);
+      display:grid;gap:6px;
+      max-width: 360px;
+      text-align:center;
+    }
+    .ansGrid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 520px){ .ansGrid{grid-template-columns:repeat(2,1fr)} }
+    .ans{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:12px 10px;
+      cursor:pointer;
+      font-weight:900;
+      user-select:none;
+      transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .ans:hover{border-color:#cbd5e1;box-shadow:0 10px 25px rgba(15,23,42,.06)}
+    .ans:active{transform:translateY(1px)}
+    .ans.selected{border-color:rgba(246,95,22,.7);box-shadow:0 0 0 3px rgba(246,95,22,.18)}
+    .ans.disabled{opacity:.55;cursor:not-allowed}
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:14px;z-index:999;
+      background:rgba(15,23,42,.92);color:#e2e8f0;
+      border:1px solid rgba(226,232,240,.18);
+      padding:10px 12px;border-radius:14px;
+      box-shadow:0 15px 40px rgba(0,0,0,.25);
+      max-width:92vw;
+      display:none;
+    }
+    .toast.show{display:block;animation:pop .18s ease}
+    @keyframes pop{from{transform:translateX(-50%) translateY(10px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    .hint{
+      display:flex;gap:10px;align-items:flex-start;
+      padding:10px 12px;border-radius:14px;border:1px dashed rgba(100,116,139,.35);
+      background:rgba(248,250,252,.7)
+    }
+    .hint b{font-weight:900}
+    .hidden{display:none !important}
+  
+    .seg{display:inline-flex; border:1px solid rgba(148,163,184,.45); border-radius:999px; background:#fff; overflow:hidden; box-shadow: 0 1px 0 rgba(15,23,42,.02) inset;}
+    .segBtn{appearance:none; border:0; background:transparent; padding:8px 12px; font-weight:800; font-size:12px; color:var(--ink); cursor:pointer;}
+    .segBtn:hover{background:rgba(15,23,42,.03);}
+    .segBtn.active{background:rgba(246,95,22,.12); color:rgba(124,45,18,1);}
+
+</style>
+</head>
+<body>
+  <!-- @diq:begin [PR-000] App Shell -->
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">DIQ</div>
+        <div class="titleblock">
+          <div class="t">Pitch Recognition</div>
+          
+        </div>
+      </div>
+      <div class="nav">
+        <button class="btn small" id="navHome">Home</button>
+        <button class="btn small" id="navPlay">Play</button>
+        <button class="btn small" id="navResults">Results</button>
+        <button class="btn small" id="navCoach">Coach Tools</button>
+        <button class="btn small ghost" id="navHelp">Help</button>
+      </div>
+    </div>
+
+    <div class="grid cols">
+      <!-- LEFT SIDEBAR -->
+      <div class="stack">
+<div class="card" id="cardPlayer">
+
+          <div class="row between">
+            <h2>Player</h2>
+            
+          </div>
+
+          <div class="field">
+            <label for="teamSel">Team</label>
+            <select id="teamSel"></select>
+          </div>
+
+          <div class="split">
+            <div class="field">
+              <label for="playerSel">Player</label>
+              <select id="playerSel"></select>
+            </div>
+            <div class="field">
+              <label for="handSel">Bats</label>
+              <select id="handSel">
+                <option value="R">Right</option>
+                <option value="L">Left</option>
+              </select>
+            </div>
+          </div>
+</div>
+
+<div class="card" id="cardDrill">
+<div class="row between">
+            <h2>Drill</h2>
+            <span class="badge" id="badgeDrill">None selected</span>
+          </div>
+
+          <div class="field">
+            <label for="drillSel">Select drill</label>
+            <select id="drillSel"></select>
+          </div>
+
+          <div class="split">
+            <div class="field">
+              <label for="roundsInp">Pitches in round</label>
+              <input id="roundsInp" type="number" min="5" max="100" step="1" />
+            </div>
+            <div class="field">
+              <label for="showMsInp">Show time (ms)</label>
+              <input id="showMsInp" type="number" min="80" max="2500" step="10" />
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="field">
+              <label for="lockMsInp">Lock after show (ms)</label>
+              <input id="lockMsInp" type="number" min="0" max="1200" step="10" />
+            </div>
+            <div class="field">
+              <label for="interMsInp">Between pitches (ms)</label>
+              <input id="interMsInp" type="number" min="0" max="2500" step="50" />
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn accent" id="btnStart">Start Round</button>
+            <button class="btn" id="btnResume">Resume</button>
+            <button class="btn" id="btnResetRound">Reset Round</button>
+          </div>
+        </div>
+
+<div class="card" id="cardQuickStats">
+          <div class="row between">
+            <h2>Today</h2>
+            <span class="pill"><span id="todayDate"></span></span>
+          </div>
+          <div class="split">
+            <div>
+              <div class="tiny">Accuracy</div>
+              <div class="big" id="todayAcc">—</div>
+            </div>
+            <div>
+              <div class="tiny">Avg RT</div>
+              <div class="big" id="todayRt">—</div>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div class="row">
+            <span class="badge good" id="todayStreak">Streak: 0</span>
+            <span class="badge" id="todayRounds">Rounds: 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div class="stack">
+        <div class="card" id="viewHome">
+          <div class="row between">
+            <h2>Home</h2>
+            <span class="pill">MVP content included • swap in real clips later</span>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1.15fr .85fr; gap:14px">
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>How it works</h3>
+              <div class="subtle" style="line-height:1.5">
+                This MVP shows a **pitch stimulus** for a short time (like 200–350ms), then hides it. Your job is to
+                identify the pitch type as fast as you can. We track **accuracy**, **reaction time**, and breakdowns by pitch type.
+                <div class="hr"></div>
+                Start with longer view times, then shorten as the player improves.
+              </div>
+              <div class="row" style="margin-top:10px">
+                <span class="badge">✅ Single file</span>
+                <span class="badge">✅ Local save</span>
+                <span class="badge">✅ Coach drills</span>
+                <span class="badge">✅ Exports</span>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>Recommended first drill</h3>
+              <div class="subtle">
+                Try: <b>Fastball vs Changeup</b> • 20 pitches • show 1400ms • lock 300ms
+              </div>
+              <div class="hr"></div>
+              <button class="btn primary" id="btnPickDefault">Select “FB vs CH”</button>
+              <button class="btn" id="btnGoPlay" style="margin-left:8px">Go to Play</button>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3>Stimulus styles (placeholders)</h3>
+          <div class="subtle">
+            This MVP uses a simple animated “pitch trail” plus a faint plate/zone overlay. Replace stimuli later with video clips
+            (cut to release window) using the same data model.
+          </div>
+        </div>
+
+        <div class="card hidden" id="viewPlay">
+          <div class="row between">
+            <h2>Play</h2>
+            <div class="row">
+              <span class="badge" id="hudScore">0 / 0</span>
+              <span class="badge" id="hudAcc">Acc: —</span>
+              <span class="badge" id="hudRt">Avg RT: —</span>
+              <span class="badge warn" id="hudTimer">Ready</span>
+            </div>
+          </div>
+
+          <div class="canvasWrap">
+            <canvas id="stimCanvas"></canvas>
+            <div class="overlayCenter">
+              <div class="overlayCard" id="overlayCard">
+                <div style="font-weight:900">Press Start Round</div>
+                <div class="subtle">Your pitch will appear briefly, then vanish. Identify it fast.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row between">
+            <div class="row">
+              <span class="pill">Answer</span>
+              <span class="subtle" id="answerHint">Choose pitch type</span>
+            </div>
+            <div class="row">
+              <span class="pill">Optional</span>
+              <div class="seg" id="pitcherHandToggle" title="Pitcher handedness (affects perceived spin direction)"><button class="segBtn active" data-hand="R">RHP</button><button class="segBtn" data-hand="L">LHP</button></div>
+<button class="btn small" id="holdToggle" title="Keep the final ball + tail visible after the pitch">Hold: ON</button>
+<button class="btn small" id="btnToggleZone">Zone: OFF</button>
+            </div>
+          </div>
+
+          <div class="ansGrid" id="ansGrid"></div>
+
+          <div class="hr"></div>
+
+          <div class="row between">
+            <div class="subtle" id="lastFeedback">—</div>
+            <div class="row">
+              <button class="btn" id="btnUndo" title="Undo last answer">Undo</button>
+              <button class="btn" id="btnSkip" title="Skip this pitch">Skip</button>
+              <button class="btn primary" id="btnNext" title="Next pitch (if enabled)">Next</button>
+              <button class="btn" id="btnEnd">End Round</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card hidden" id="viewResults">
+          <div class="row between">
+            <h2>Results</h2>
+            <div class="row">
+              <button class="btn" id="btnExportCSV">Export CSV</button>
+              <button class="btn" id="btnExportJSON">Export JSON</button>
+              <button class="btn" id="btnClearData">Clear All Data</button>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:14px">
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>Summary</h3>
+              <div class="split">
+                <div>
+                  <div class="tiny">Rounds</div>
+                  <div class="big" id="sumRounds">—</div>
+                </div>
+                <div>
+                  <div class="tiny">Overall Accuracy</div>
+                  <div class="big" id="sumAcc">—</div>
+                </div>
+              </div>
+              <div class="hr"></div>
+              <div class="split">
+                <div>
+                  <div class="tiny">Avg Reaction Time</div>
+                  <div class="big" id="sumRt">—</div>
+                </div>
+                <div>
+                  <div class="tiny">Best Streak</div>
+                  <div class="big" id="sumStreak">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>Breakdown</h3>
+              <table class="table" id="breakdownTbl">
+                <thead>
+                  <tr>
+                    <th>Pitch</th>
+                    <th class="right">Seen</th>
+                    <th class="right">Correct</th>
+                    <th class="right">Acc</th>
+                    <th class="right">Avg RT</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <h3>Recent rounds</h3>
+          <table class="table" id="recentTbl">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Team</th>
+                <th>Player</th>
+                <th>Drill</th>
+                <th class="right">Pitches</th>
+                <th class="right">Acc</th>
+                <th class="right">Avg RT</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="card hidden" id="viewCoach">
+          <div class="row between">
+            <h2>Coach Tools</h2>
+            <span class="pill">Password required</span>
+          </div>
+
+          <div class="field" id="coachGate">
+            <label for="coachPass">Enter password</label>
+            <div class="row">
+              <input id="coachPass" type="password" placeholder="coach" style="max-width:240px" />
+              <button class="btn primary" id="btnCoachUnlock">Unlock</button>
+            </div>
+            <div class="subtle">MVP password is <span class="kbd">coach</span>. Change it in code later.</div>
+          </div>
+
+          <div id="coachPanel" class="hidden">
+            <div class="grid" style="grid-template-columns:1fr 1fr; gap:14px">
+              <div class="card" style="box-shadow:none;border-radius:18px">
+                <h3>Drill Builder</h3>
+                <div class="field">
+                  <label for="drillName">Drill name</label>
+                  <input id="drillName" placeholder="e.g., FB vs CH (Beginner)" />
+                </div>
+
+                <div class="split">
+                  <div class="field">
+                    <label for="drillPitchSet">Pitch set</label>
+                    <select id="drillPitchSet"></select>
+                  </div>
+                  <div class="field">
+                    <label for="drillDifficulty">Difficulty</label>
+                    <select id="drillDifficulty">
+                      <option>Easy</option><option selected>Normal</option><option>Hard</option><option>Elite</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="split">
+                  <div class="field">
+                    <label for="drillDefaultShow">Default show ms</label>
+                    <input id="drillDefaultShow" type="number" min="80" max="2500" step="10" />
+                  </div>
+                  <div class="field">
+                    <label for="drillDefaultLock">Default lock ms</label>
+                    <input id="drillDefaultLock" type="number" min="0" max="1200" step="10" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="drillNotes">Notes</label>
+                  <textarea id="drillNotes" placeholder="Optional coaching notes..."></textarea>
+                </div>
+
+                <div class="row">
+                  <button class="btn accent" id="btnSaveDrill">Save drill</button>
+                  <button class="btn" id="btnDeleteDrill">Delete selected</button>
+                </div>
+              </div>
+
+              <div class="card" style="box-shadow:none;border-radius:18px">
+                <h3>Stimuli & Data</h3>
+                <div class="subtle">This MVP uses built-in “synthetic” pitch stimuli. You can import/export JSON to swap content.</div>
+                <div class="hr"></div>
+                <div class="row">
+                  <button class="btn" id="btnCoachExport">Export app JSON</button>
+                  <label class="btn" style="cursor:pointer">
+                    Import JSON
+                    <input id="fileImport" type="file" accept="application/json" style="display:none" />
+                  </label>
+                  <button class="btn" id="btnResetDefaults">Reset defaults</button>
+                </div>
+                <div class="hr"></div>
+                <div class="subtle mono" id="coachCounts">—</div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+            <h3>Teams & Players</h3>
+            <div class="grid" style="grid-template-columns:1fr 1fr; gap:14px">
+              <div class="card" style="box-shadow:none;border-radius:18px">
+                <div class="subtle">MVP includes sample teams/players. Edit in JSON export/import later, or extend UI.</div>
+                <div class="hr"></div>
+                <table class="table" id="teamTbl">
+                  <thead><tr><th>Team</th><th class="right">Players</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div class="card" style="box-shadow:none;border-radius:18px">
+                <h3>Coach notes</h3>
+                <div class="subtle" style="line-height:1.5">
+                  Next upgrades (easy wins):
+                  <ul>
+                    <li>Replace synthetic canvas with **video clips** (mp4/webm) and occlusion cuts.</li>
+                    <li>Add “Strike / Ball” or “Swing / Take” decision layer.</li>
+                    <li>Add difficulty ladder & per-pitch weights.</li>
+                    <li>Add drill assignments per team/player.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card hidden" id="viewHelp">
+          <div class="row between">
+            <h2>Help</h2>
+            <span class="pill">Keyboard + mobile tips</span>
+          </div>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:14px">
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>Keyboard shortcuts</h3>
+              <div class="subtle">
+                <div class="row"><span class="kbd">1</span> <span>Select Answer #1</span></div>
+                <div class="row"><span class="kbd">2</span> <span>Select Answer #2</span></div>
+                <div class="row"><span class="kbd">3</span> <span>Select Answer #3</span></div>
+                <div class="row"><span class="kbd">4</span> <span>Select Answer #4</span></div>
+                <div class="row"><span class="kbd">Z</span> <span>Toggle Zone answers</span></div>
+                <div class="row"><span class="kbd">N</span> <span>Next pitch (only when enabled)</span></div>
+              </div>
+            </div>
+            <div class="card" style="box-shadow:none;border-radius:18px">
+              <h3>Mobile</h3>
+              <div class="subtle" style="line-height:1.6">
+                Use big buttons below the canvas. If the round feels too fast, increase:
+                <ul>
+                  <li><b>Show time</b> (ms)</li>
+                  <li><b>Between pitches</b> (ms)</li>
+                </ul>
+                If kids “guess” too much, increase lock time so they can’t change answers after seeing feedback.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+<div class="toast" id="toast"></div>
+  </div>
+  <!-- @diq:end [PR-000] App Shell -->
+
+<script>
+/* @diq:begin [PR-100] Data + Storage */
+const LS_KEY = "diq_pitchrec_mvp_v1";
+
+function nowISO(){ return new Date().toISOString(); }
+function todayKey(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function round1(n){ return Math.round(n*10)/10; }
+
+const DEFAULT_DATA = {
+  meta: { version: 1, created_at: nowISO() },
+  teams: [
+    { id:"tigers11u", name:"Rawlings Tigers 11U", players:[
+      { id:"p1", name:"Player One", number:"7" },
+      { id:"p2", name:"Player Two", number:"12" },
+      { id:"p3", name:"Player Three", number:"21" },
+    ]},
+    { id:"tigers13u", name:"Rawlings Tigers 13U", players:[
+      { id:"p4", name:"Player Four", number:"3" },
+      { id:"p5", name:"Player Five", number:"18" },
+    ]},
+  ],
+  pitch_sets: [
+    { id:"set_fb_ch", name:"FB vs CH", pitches:["FB","CH"] },
+    { id:"set_fb_cb", name:"FB vs CB", pitches:["FB","CB"] },
+    { id:"set_fb_sl", name:"FB vs SL", pitches:["FB","SL"] },
+    { id:"set_mix4", name:"Mix 4 (FB/CH/CB/SL)", pitches:["FB","CH","CB","SL"] },
+    { id:"set_all10", name:"All 10 (FB/2S/CT/SP/FK/CB/SL/SV/CH/CCH)", pitches:["FB","2S","CT","SP","FK","CB","SL","SV","CH","CCH"] },
+  ],
+  drills: [
+    { id:"d_fb_ch", name:"FB vs CH", pitch_set_id:"set_fb_ch", difficulty:"Normal",
+      defaults:{ show_ms:1400, lock_ms:300, inter_ms:650, rounds:20 },
+      notes:"Beginner: focus on speed/tunnel differences."
+    },
+    { id:"d_mix4", name:"Mix 4", pitch_set_id:"set_mix4", difficulty:"Hard",
+      defaults:{ show_ms:1300, lock_ms:300, inter_ms:650, rounds:25 },
+      notes:"Hard: identify 4 pitches quickly."
+    },
+
+    { id:"d_all10", name:"All 10 (Diagram Mix)", pitch_set_id:"set_all10", difficulty:"Expert",
+      defaults:{ show_ms:1400, lock_ms:300, inter_ms:750, rounds:30 },
+      notes:"Expert: match the diagram-style paths across 10 pitch types."
+    },
+
+  ],
+  // Stimuli are placeholders. Later you can attach video URLs per stimulus.
+  stimuli: [
+    // Each pitch type maps to a style recipe used by the canvas renderer.
+    { id:"s_fb_1", type:"FB", recipe:{ trail:"straight", speed:1.0, wiggle:0.05 } },
+    { id:"s_fb_2", type:"FB", recipe:{ trail:"straight", speed:1.15, wiggle:0.03 } },
+    { id:"s_ch_1", type:"CH", recipe:{ trail:"straight", speed:0.78, wiggle:0.06 } },
+    { id:"s_ch_2", type:"CH", recipe:{ trail:"straight", speed:0.74, wiggle:0.08 } },
+    { id:"s_cb_1", type:"CB", recipe:{ trail:"curve", speed:0.72, wiggle:0.05 } },
+    { id:"s_cb_2", type:"CB", recipe:{ trail:"curve", speed:0.68, wiggle:0.07 } },
+    { id:"s_sl_1", type:"SL", recipe:{ trail:"slider", speed:0.86, wiggle:0.06 } },
+    { id:"s_sl_2", type:"SL", recipe:{ trail:"slider", speed:0.84, wiggle:0.08 } },
+  ],
+  sessions: [] // appended
+};
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return structuredClone(DEFAULT_DATA);
+    const obj = JSON.parse(raw);
+    // minimal guard:
+    if(!obj || !obj.teams || !obj.drills || !obj.stimuli) return structuredClone(DEFAULT_DATA);
+    return obj;
+  }catch(e){
+    console.warn("loadData failed, using defaults", e);
+    return structuredClone(DEFAULT_DATA);
+  }
+}
+function saveData(){
+  localStorage.setItem(LS_KEY, JSON.stringify(APP.data));
+}
+function resetDefaults(){
+  APP.data = structuredClone(DEFAULT_DATA);
+  saveData();
+  toast("Defaults restored.");
+  refreshAll();
+}
+/* @diq:end [PR-100] Data + Storage */
+
+/* @diq:begin [PR-110] App State */
+const APP = {
+  data: loadData(),
+  ui: {},
+  state: {
+    view: "home",
+    coachUnlocked: false,
+    player: { team_id:null, player_id:null, bats:"R" },
+    drill_id: null,
+    roundCfg: { rounds:20, show_ms:280, lock_ms:250, inter_ms:350 },
+    round: null, // active round object
+    zoneMode: false,
+    pitcherHand: "R",
+    holdAfterPitch: true,
+  }
+};
+/* @diq:end [PR-110] App State */
+
+/* @diq:begin [PR-120] Helpers */
+function $(id){ return document.getElementById(id); }
+function bySel(sel){ return document.querySelector(sel); }
+function bySelAll(sel){ return Array.from(document.querySelectorAll(sel)); }
+function toast(msg){
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>el.classList.remove("show"), 1600);
+}
+function uid(prefix="id"){
+  return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+}
+function fmtPct(x){
+  if(x==null || Number.isNaN(x)) return "—";
+  return `${Math.round(x*100)}%`;
+}
+function fmtMs(x){
+  if(x==null || Number.isNaN(x)) return "—";
+  return `${Math.round(x)}ms`;
+}
+function avg(arr){
+  if(!arr.length) return null;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+function byId(list, id){ return list.find(x=>x.id===id); }
+/* @diq:end [PR-120] Helpers */
+
+/* @diq:begin [PR-201] Pitch labels */
+const PITCH_LABELS = {
+  FB: "4S FB",
+  "2S": "2S FB",
+  CT: "Cutter",
+  SP: "Splitter",
+  FK: "Forkball",
+  CB: "Curve",
+  SL: "Slider",
+  SV: "Slurve",
+  CH: "Change",
+  CCH: "Circle CH",
+};
+/* @diq:end [PR-201] Pitch labels */
+
+/* @diq:begin [PR-200] UI Wiring */
+function bindUI(){
+  APP.ui = {
+    navHome:$("navHome"),
+    navPlay:$("navPlay"),
+    navResults:$("navResults"),
+    navCoach:$("navCoach"),
+    navHelp:$("navHelp"),
+    viewHome:$("viewHome"),
+    viewPlay:$("viewPlay"),
+    viewResults:$("viewResults"),
+    viewCoach:$("viewCoach"),
+    viewHelp:$("viewHelp"),
+
+    teamSel:$("teamSel"),
+    playerSel:$("playerSel"),
+    handSel:$("handSel"),
+    drillSel:$("drillSel"),
+    roundsInp:$("roundsInp"),
+    showMsInp:$("showMsInp"),
+    lockMsInp:$("lockMsInp"),
+    interMsInp:$("interMsInp"),
+    badgeDrill:$("badgeDrill"),
+
+    btnStart:$("btnStart"),
+    btnResume:$("btnResume"),
+    btnResetRound:$("btnResetRound"),
+    btnPickDefault:$("btnPickDefault"),
+    btnGoPlay:$("btnGoPlay"),
+
+    todayDate:$("todayDate"),
+    todayAcc:$("todayAcc"),
+    todayRt:$("todayRt"),
+    todayStreak:$("todayStreak"),
+    todayRounds:$("todayRounds"),
+
+    stimCanvas:$("stimCanvas"),
+    overlayCard:$("overlayCard"),
+    ansGrid:$("ansGrid"),
+    answerHint:$("answerHint"),
+    btnToggleZone:$("btnToggleZone"),
+    lastFeedback:$("lastFeedback"),
+    hudScore:$("hudScore"),
+    hudAcc:$("hudAcc"),
+    hudRt:$("hudRt"),
+    hudTimer:$("hudTimer"),
+    btnUndo:$("btnUndo"),
+    btnSkip:$("btnSkip"),
+    btnNext:$("btnNext"),
+    btnEnd:$("btnEnd"),
+
+    sumRounds:$("sumRounds"),
+    sumAcc:$("sumAcc"),
+    sumRt:$("sumRt"),
+    sumStreak:$("sumStreak"),
+    breakdownTbl:$("breakdownTbl"),
+    recentTbl:$("recentTbl"),
+    btnExportCSV:$("btnExportCSV"),
+    btnExportJSON:$("btnExportJSON"),
+    btnClearData:$("btnClearData"),
+
+    coachGate:$("coachGate"),
+    coachPass:$("coachPass"),
+    btnCoachUnlock:$("btnCoachUnlock"),
+    coachPanel:$("coachPanel"),
+    drillPitchSet:$("drillPitchSet"),
+    drillName:$("drillName"),
+    drillDifficulty:$("drillDifficulty"),
+    drillDefaultShow:$("drillDefaultShow"),
+    drillDefaultLock:$("drillDefaultLock"),
+    drillNotes:$("drillNotes"),
+    btnSaveDrill:$("btnSaveDrill"),
+    btnDeleteDrill:$("btnDeleteDrill"),
+    btnCoachExport:$("btnCoachExport"),
+    fileImport:$("fileImport"),
+    btnResetDefaults:$("btnResetDefaults"),
+    coachCounts:$("coachCounts"),
+    teamTbl:$("teamTbl"),
+  };
+
+  // Navigation
+  APP.ui.navHome.addEventListener("click", ()=>setView("home"));
+  APP.ui.navPlay.addEventListener("click", ()=>setView("play"));
+  APP.ui.navResults.addEventListener("click", ()=>setView("results"));
+  APP.ui.navCoach.addEventListener("click", ()=>setView("coach"));
+  APP.ui.navHelp.addEventListener("click", ()=>setView("help"));
+
+  // Selects
+  APP.ui.teamSel.addEventListener("change", ()=>{
+    APP.state.player.team_id = APP.ui.teamSel.value;
+    APP.state.player.player_id = null;
+    if(opts.save) saveState();
+    refreshPlayers();
+  });
+  APP.ui.playerSel.addEventListener("change", ()=>{
+    APP.state.player.player_id = APP.ui.playerSel.value;
+    saveState();
+    refreshAll();
+  });
+  APP.ui.handSel.addEventListener("change", ()=>{
+    APP.state.player.bats = APP.ui.handSel.value;
+    saveState();
+  });
+
+  APP.ui.drillSel.addEventListener("change", ()=>{
+    APP.state.drill_id = APP.ui.drillSel.value;
+    applyDrillDefaults();
+    saveState();
+    refreshAll();
+  });
+
+  for(const [inp, key, min, max] of [
+    [APP.ui.roundsInp,"rounds",5,100],
+    [APP.ui.showMsInp,"show_ms",80,2500],
+    [APP.ui.lockMsInp,"lock_ms",0,1200],
+    [APP.ui.interMsInp,"inter_ms",0,2500],
+  ]){
+    inp.addEventListener("change", ()=>{
+      const v = clamp(parseInt(inp.value||"0",10), min, max);
+      inp.value = String(v);
+      APP.state.roundCfg[key] = v;
+      saveState();
+    });
+  }
+
+  // Home quick buttons
+  APP.ui.btnPickDefault.addEventListener("click", ()=>{
+    APP.state.drill_id = "d_fb_ch";
+    APP.ui.drillSel.value = APP.state.drill_id;
+    applyDrillDefaults();
+    saveState();
+    refreshAll();
+    toast("Selected FB vs CH.");
+  });
+  APP.ui.btnGoPlay.addEventListener("click", ()=>setView("play"));
+
+  // Play controls
+  APP.ui.btnStart.addEventListener("click", startRound);
+  APP.ui.btnResume.addEventListener("click", resumeRound);
+  APP.ui.btnResetRound.addEventListener("click", resetRound);
+  APP.ui.btnToggleZone.addEventListener("click", ()=>{
+    APP.state.zoneMode = !APP.state.zoneMode;
+    APP.ui.btnToggleZone.textContent = `Zone: ${APP.state.zoneMode ? "ON" : "OFF"}`;
+    renderAnswerButtons();
+    saveState();
+  });
+  APP.ui.btnUndo.addEventListener("click", undoLast);
+  APP.ui.btnSkip.addEventListener("click", skipPitch);
+  APP.ui.btnNext.addEventListener("click", nextPitchManual);
+  APP.ui.btnEnd.addEventListener("click", endRound);
+
+  // Results
+  APP.ui.btnExportCSV.addEventListener("click", exportCSV);
+  APP.ui.btnExportJSON.addEventListener("click", exportJSON);
+  APP.ui.btnClearData.addEventListener("click", ()=>{
+    if(confirm("Clear ALL saved sessions/results?")){
+      APP.data.sessions = [];
+      saveData();
+      refreshAll();
+      toast("Cleared sessions.");
+    }
+  });
+
+  // Coach unlock
+  APP.ui.btnCoachUnlock.addEventListener("click", ()=>{
+    const ok = (APP.ui.coachPass.value || "") === "coach";
+    if(!ok){ toast("Wrong password."); return; }
+    APP.state.coachUnlocked = true;
+    saveState();
+    refreshCoachGate();
+    toast("Coach Tools unlocked.");
+  });
+
+  // Coach drill builder
+  APP.ui.btnSaveDrill.addEventListener("click", saveDrillFromForm);
+  APP.ui.btnDeleteDrill.addEventListener("click", deleteSelectedDrill);
+
+  // Coach export/import
+  APP.ui.btnCoachExport.addEventListener("click", exportAppJSON);
+  APP.ui.fileImport.addEventListener("change", importAppJSON);
+  APP.ui.btnResetDefaults.addEventListener("click", ()=>{
+    if(confirm("Reset app content to defaults (teams/drills/stimuli) and keep sessions?")){
+      const keep = APP.data.sessions;
+      APP.data = structuredClone(DEFAULT_DATA);
+      APP.data.sessions = keep;
+      saveData();
+      refreshAll();
+      toast("Defaults restored (sessions kept).");
+    }
+  });
+
+  // Keyboard shortcuts for play
+  
+// (keyboard shortcuts removed)
+
+
+  // Canvas setup
+  setupCanvas();
+
+  // Pitcher handedness toggle (affects perceived spin direction)
+  APP.ui.pitcherHandToggle = bySel("#pitcherHandToggle");
+  if(APP.ui.pitcherHandToggle){
+    const setHandUI = (hand)=>{
+      APP.state.pitcherHand = (hand==="L") ? "L" : "R";
+      for(const b of APP.ui.pitcherHandToggle.querySelectorAll(".segBtn")){
+        b.classList.toggle("active", b.dataset.hand===APP.state.pitcherHand);
+      }
+      saveState();
+    };
+    APP.ui.pitcherHandToggle.addEventListener("click", (e)=>{
+      const btn = e.target.closest(".segBtn");
+      if(!btn) return;
+      setHandUI(btn.dataset.hand || "R");
+    });
+    // init
+    setHandUI(APP.state.pitcherHand);
+  }
+
+  // Hold toggle (keep last pitch frame visible after animation finishes)
+  APP.ui.btnHoldToggle = bySel("#holdToggle");
+  const syncHold = ()=>{
+    const on = !!APP.state.holdAfterPitch;
+    if(APP.ui.btnHoldToggle) APP.ui.btnHoldToggle.textContent = "Hold: " + (on ? "ON" : "OFF");
+  };
+  if(APP.ui.btnHoldToggle){
+    APP.ui.btnHoldToggle.addEventListener("click", ()=>{
+      APP.state.holdAfterPitch = !APP.state.holdAfterPitch;
+      syncHold();
+      saveState();
+    });
+    syncHold();
+  }
+}
+
+function saveState(){
+  // Guard against any accidental re-entrancy causing stack overflows
+  if(saveState._busy) return;
+  saveState._busy = true;
+  try{
+    const s = APP.state;
+    // IMPORTANT: Only persist plain JSON-safe state (no DOM nodes, no functions)
+    const payload = {
+      view: s.view,
+      coachUnlocked: !!s.coachUnlocked,
+      player: s.player,
+      drill_id: s.drill_id,
+      roundCfg: s.roundCfg,
+      zoneMode: !!s.zoneMode,
+      pitcherHand: (s.pitcherHand==="L") ? "L" : "R",
+      holdAfterPitch: (typeof s.holdAfterPitch === "boolean") ? s.holdAfterPitch : true,
+      pitcherHand: s.pitcherHand || "R",
+      // Keep round state minimal to avoid bloating storage / accidental circular refs
+      round: s.round ? {
+        id: s.round.id,
+        active: !!s.round.active,
+        started_at: s.round.started_at,
+        ended_at: s.round.ended_at,
+        team_id: s.round.team_id,
+        player_id: s.round.player_id,
+        bats: s.round.bats,
+        drill_id: s.round.drill_id,
+        cfg: s.round.cfg,
+        allowed_pitches: s.round.allowed_pitches,
+        idx: s.round.idx,
+        current: s.round.current ? {
+          n: s.round.current.n,
+          type: s.round.current.type,
+          stim_id: s.round.current.stim_id,
+          recipe: s.round.current.recipe,
+          shown_at: s.round.current.shown_at,
+          lock_until: s.round.current.lock_until
+        } : null,
+        awaiting: !!s.round.awaiting,
+        answered: s.round.answered,
+        correct: s.round.correct,
+        rts: s.round.rts,
+        streak: s.round.streak,
+        best_streak: s.round.best_streak,
+        events: s.round.events
+      } : null
+    };
+    localStorage.setItem(LS_KEY+"_state", JSON.stringify(payload));
+  }catch(e){
+    console.warn("saveState failed (non-fatal):", e);
+  }finally{
+    saveState._busy = false;
+  }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY+"_state");
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(!s) return;
+    APP.state.view = s.view || "home";
+    APP.state.coachUnlocked = !!s.coachUnlocked;
+    APP.state.player = s.player || APP.state.player;
+    APP.state.drill_id = s.drill_id || APP.state.drill_id;
+    APP.state.roundCfg = s.roundCfg || APP.state.roundCfg;
+    APP.state.zoneMode = !!s.zoneMode;
+    APP.state.pitcherHand = (s.pitcherHand==="L") ? "L" : "R";
+    APP.state.holdAfterPitch = (typeof s.holdAfterPitch === "boolean") ? s.holdAfterPitch : true;
+    APP.state.pitcherHand = (s.pitcherHand==="L") ? "L" : "R";
+    APP.state.round = s.round || null;
+  }catch(e){ console.warn("loadState failed", e); }
+}
+/* @diq:end [PR-200] UI Wiring */
+
+/* @diq:begin [PR-210] View switching */
+function setView(v, opts={save:true}){
+  APP.state.view = v;
+  if(opts.save) saveState();
+
+  const map = {
+    home: APP.ui.viewHome,
+    play: APP.ui.viewPlay,
+    results: APP.ui.viewResults,
+    coach: APP.ui.viewCoach,
+    help: APP.ui.viewHelp
+  };
+  for(const [k, el] of Object.entries(map)){
+    el.classList.toggle("hidden", k !== v);
+  }
+
+  if(v==="results") refreshResults();
+  if(v==="coach") refreshCoachGate();
+  if(v==="play"){
+    requestAnimationFrame(()=>{
+      if(APP.ui._resizeCanvas) APP.ui._resizeCanvas();
+      drawIdle();
+    });
+  }
+}
+/* @diq:end [PR-210] View switching */
+
+/* @diq:begin [PR-220] Populate dropdowns */
+function refreshTeams(){
+  const sel = APP.ui.teamSel;
+  sel.innerHTML = "";
+  for(const t of APP.data.teams){
+    const opt = document.createElement("option");
+    opt.value = t.id; opt.textContent = t.name;
+    sel.appendChild(opt);
+  }
+  if(!APP.state.player.team_id) APP.state.player.team_id = APP.data.teams[0]?.id || null;
+  sel.value = APP.state.player.team_id || "";
+}
+function refreshPlayers(){
+  const team = byId(APP.data.teams, APP.state.player.team_id) || APP.data.teams[0];
+  if(!team) return;
+  const sel = APP.ui.playerSel;
+  sel.innerHTML = "";
+  for(const p of team.players){
+    const opt = document.createElement("option");
+    opt.value = p.id; opt.textContent = p.number ? `#${p.number} — ${p.name}` : p.name;
+    sel.appendChild(opt);
+  }
+  if(!APP.state.player.player_id) APP.state.player.player_id = team.players[0]?.id || null;
+  sel.value = APP.state.player.player_id || "";
+  saveState();
+  // refreshAll removed to avoid recursion
+}
+function refreshDrills(){
+  const sel = APP.ui.drillSel;
+  sel.innerHTML = "";
+  for(const d of APP.data.drills){
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    const ps = byId(APP.data.pitch_sets, d.pitch_set_id);
+    opt.textContent = `${d.name} • ${d.difficulty}${ps ? ` • ${ps.pitches.join("/")}`:""}`;
+    sel.appendChild(opt);
+  }
+  if(!APP.state.drill_id) APP.state.drill_id = APP.data.drills[0]?.id || null;
+  sel.value = APP.state.drill_id || "";
+}
+function applyDrillDefaults(){
+  const d = byId(APP.data.drills, APP.state.drill_id);
+  if(!d) return;
+  APP.state.roundCfg.rounds = d.defaults.rounds;
+  APP.state.roundCfg.show_ms = d.defaults.show_ms;
+  APP.state.roundCfg.lock_ms = d.defaults.lock_ms;
+  APP.state.roundCfg.inter_ms = d.defaults.inter_ms;
+  APP.ui.roundsInp.value = String(APP.state.roundCfg.rounds);
+  APP.ui.showMsInp.value = String(APP.state.roundCfg.show_ms);
+  APP.ui.lockMsInp.value = String(APP.state.roundCfg.lock_ms);
+  APP.ui.interMsInp.value = String(APP.state.roundCfg.inter_ms);
+}
+function refreshPitchSets(){
+  APP.ui.drillPitchSet.innerHTML = "";
+  for(const ps of APP.data.pitch_sets){
+    const opt = document.createElement("option");
+    opt.value = ps.id; opt.textContent = `${ps.name} • ${ps.pitches.join("/")}`;
+    APP.ui.drillPitchSet.appendChild(opt);
+  }
+}
+/* @diq:end [PR-220] Populate dropdowns */
+
+/* @diq:begin [PR-230] Today stats */
+function refreshToday(){
+  $("todayDate").textContent = new Date().toLocaleDateString();
+  const tid = APP.state.player.team_id;
+  const pid = APP.state.player.player_id;
+  const key = todayKey();
+  const sessions = APP.data.sessions.filter(s => s.team_id===tid && s.player_id===pid && (s.started_at||"").startsWith(key));
+  const pitches = sessions.flatMap(s=>s.events||[]).filter(e=>e.kind==="answer");
+  const correct = pitches.filter(e=>e.correct===true).length;
+  const rt = pitches.map(e=>e.rt_ms).filter(x=>typeof x==="number");
+  const acc = pitches.length ? correct/pitches.length : null;
+
+  // streak calculation from today only
+  let streak=0, best=0;
+  for(const e of pitches){
+    if(e.correct){ streak++; best=Math.max(best,streak); } else { streak=0; }
+  }
+
+  APP.ui.todayAcc.textContent = acc==null ? "—" : fmtPct(acc);
+  APP.ui.todayRt.textContent = rt.length ? fmtMs(avg(rt)) : "—";
+  APP.ui.todayStreak.textContent = `Streak: ${best || 0}`;
+  APP.ui.todayRounds.textContent = `Rounds: ${sessions.length}`;
+}
+/* @diq:end [PR-230] Today stats */
+
+/* @diq:begin [PR-300] Round engine */
+function canPlay(){
+  if(!APP.state.player.team_id || !APP.state.player.player_id) return false;
+  if(!APP.state.drill_id) return false;
+  return true;
+}
+
+function startRound(){
+  if(!canPlay()){ toast("Select Team, Player, and Drill first."); return; }
+  // End existing timer if any:
+  stopRoundTimers();
+
+  const drill = byId(APP.data.drills, APP.state.drill_id);
+  const ps = byId(APP.data.pitch_sets, drill.pitch_set_id);
+  const allowed = ps?.pitches || ["FB","CH"];
+
+  APP.state.round = {
+    id: uid("round"),
+    active: true,
+    started_at: nowISO(),
+    ended_at: null,
+    team_id: APP.state.player.team_id,
+    player_id: APP.state.player.player_id,
+    bats: APP.state.player.bats,
+    drill_id: APP.state.drill_id,
+    cfg: {...APP.state.roundCfg},
+    allowed_pitches: allowed,
+    idx: 0,
+    current: null,
+    awaiting: false,
+    answered: 0,
+    correct: 0,
+    rts: [],
+    streak: 0,
+    best_streak: 0,
+    events: [] // {kind:"show"/"answer"/"skip"}
+  };
+
+  APP.state.round.events.push({kind:"start", at: nowISO()});
+  saveState();
+
+  setView("play");
+  APP.ui.overlayCard.innerHTML = `<div style="font-weight:900">Get Ready…</div><div class="subtle">Round starting.</div>`;
+  APP.ui.lastFeedback.textContent = "—";
+  renderAnswerButtons();
+
+  // Kick off first pitch after a short delay so UI settles.
+  APP.state.round._timer = setTimeout(()=>nextPitchAuto(), 350);
+  refreshHUD();
+}
+
+function resumeRound(){
+  if(APP.state.round && APP.state.round.active){
+    setView("play");
+    toast("Resumed round.");
+    renderAnswerButtons();
+    refreshHUD();
+    // If nothing is currently awaiting, continue.
+    if(!APP.state.round.awaiting) nextPitchAuto();
+  }else{
+    toast("No active round to resume.");
+  }
+}
+
+function resetRound(){
+  stopRoundTimers();
+  APP.state.round = null;
+  saveState();
+  APP.ui.overlayCard.innerHTML = `<div style="font-weight:900">Press Start Round</div><div class="subtle">Your pitch will appear briefly, then vanish. Identify it fast.</div>`;
+  APP.ui.lastFeedback.textContent = "—";
+  clearCanvas();
+  renderAnswerButtons();
+  refreshHUD();
+  toast("Round reset.");
+}
+
+function stopRoundTimers(){
+  const r = APP.state.round;
+  if(r && r._timer){
+    clearTimeout(r._timer);
+    r._timer = null;
+  }
+}
+
+function endRound(){
+  const r = APP.state.round;
+  if(!r) return;
+  stopRoundTimers();
+  r.active = false;
+  r.ended_at = nowISO();
+  r.events.push({kind:"end", at: nowISO()});
+  // Persist session
+  APP.data.sessions.push(structuredClone(r));
+  saveData();
+
+  // Clear active round
+  APP.state.round = null;
+  saveState();
+
+  toast("Round saved.");
+  setView("results");
+  refreshAll();
+}
+
+function nextPitchManual(){
+  // In this MVP we allow manual next always, but it’s most useful when you want to pause between pitches.
+  nextPitchAuto(true);
+}
+
+function pickStimulusForPitch(type){
+  const pool = APP.data.stimuli.filter(s=>s.type===type);
+  if(!pool.length) return APP.data.stimuli[0];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function nextPitchAuto(manual=false){
+  const r = APP.state.round;
+  if(!r || !r.active) return;
+
+  if(r.idx >= r.cfg.rounds){
+    endRound();
+    return;
+  }
+
+  r.awaiting = false;
+  r.current = null;
+  saveState();
+
+  // choose pitch type and stimulus
+  const allowed = r.allowed_pitches;
+  const type = allowed[Math.floor(Math.random()*allowed.length)];
+  const stim = pickStimulusForPitch(type);
+
+  const pitch = {
+    n: r.idx+1,
+    type,
+    stim_id: stim.id,
+    recipe: stim.recipe
+  };
+  // carry pitch type into recipe for canvas spin rendering
+  if(pitch.recipe) pitch.recipe._ptype = type;
+
+  r.current = pitch;
+  r.idx++;
+  r.events.push({kind:"show", at: nowISO(), pitch_n:pitch.n, type, stim_id: stim.id});
+
+  // Display stimulus briefly, then hide and start reaction timer
+  APP.ui.hudTimer.textContent = manual ? "Manual" : "Auto";
+  APP.ui.overlayCard.classList.add("hidden");
+
+  showStimulus(pitch.recipe, r.cfg.show_ms, ()=>{
+    // After show: optionally keep last frame visible
+    if(!APP.state.holdAfterPitch){ clearCanvas(); }
+    r.awaiting = true;
+    r.current.shown_at = performance.now();
+    r.current.lock_until = r.current.shown_at + r.cfg.lock_ms;
+    saveState();
+
+    APP.ui.hudTimer.textContent = "Answer";
+    APP.ui.answerHint.textContent = APP.state.zoneMode ? "Pitch type, then Zone" : "Choose pitch type";
+    enableAnswers(true);
+  });
+
+  refreshHUD();
+}
+
+function enableAnswers(on){
+  for(const b of APP.ui.ansGrid.querySelectorAll(".ans")){
+    b.classList.toggle("disabled", !on);
+  }
+}
+
+function renderAnswerButtons(){
+  const r = APP.state.round;
+  const drill = byId(APP.data.drills, APP.state.drill_id);
+  const ps = drill ? byId(APP.data.pitch_sets, drill.pitch_set_id) : null;
+  const pitchTypes = ps?.pitches || ["FB","CH","CB","SL"];
+
+  const baseButtons = pitchTypes.map(t=>({kind:"pitch", value:t, label:(PITCH_LABELS[t]||t)}));
+  const zoneButtons = [
+    {kind:"zone", value:"In", label:"In"},
+    {kind:"zone", value:"Mid", label:"Mid"},
+    {kind:"zone", value:"Out", label:"Out"},
+    {kind:"zone", value:"Up", label:"Up"},
+    {kind:"zone", value:"Down", label:"Down"},
+  ];
+
+  const btns = APP.state.zoneMode ? [...baseButtons, ...zoneButtons] : baseButtons;
+
+  APP.ui.ansGrid.innerHTML = "";
+  btns.forEach((b)=>{
+    const el = document.createElement("button");
+    el.className = "ans";
+    el.textContent = b.label;
+    el.addEventListener("click", ()=>onAnswer(b.kind, b.value));
+    APP.ui.ansGrid.appendChild(el);
+  });
+
+  // Layout tweak for variable counts
+  APP.ui.ansGrid.style.gridTemplateColumns =
+    btns.length <= 2 ? "repeat(2,1fr)"
+    : btns.length === 3 ? "repeat(3,1fr)"
+    : btns.length === 4 ? "repeat(4,1fr)"
+    : "repeat(4,1fr)";
+
+  // If no active round, disable
+  const active = !!(r && r.active && r.awaiting);
+  enableAnswers(active);
+  APP.ui.btnToggleZone.textContent = `Zone: ${APP.state.zoneMode ? "ON" : "OFF"}`;
+}
+
+let pendingZone = null;
+
+function onAnswer(kind, value){
+  const r = APP.state.round;
+  if(!r || !r.active) return;
+  if(!r.awaiting) return;
+
+  // If zone mode, capture pitch first then optional zone (or allow pitch only and auto-advance)
+  if(APP.state.zoneMode){
+    if(kind === "zone"){
+      // allow zone selection only after a pitch type chosen
+      if(!pendingZone){
+        toast("Pick pitch type first.");
+        return;
+      }
+      pendingZone.zone = value;
+      finalizeAnswer(pendingZone);
+      pendingZone = null;
+      return;
+    }
+    if(kind === "pitch"){
+      // store pending and prompt zone; if lock window passes, still allow (MVP)
+      pendingZone = { guess_type:value, zone:null };
+      APP.ui.answerHint.textContent = "Optional: choose Zone (or tap pitch again to submit)";
+      // If they tap a pitch twice, submit without zone.
+      // Highlight selected pitch button:
+      highlightSelected(value);
+      return;
+    }
+    // fallback
+    return;
+  }
+
+  if(kind !== "pitch") return;
+  finalizeAnswer({ guess_type:value, zone:null });
+}
+
+function highlightSelected(pitchType){
+  for(const b of APP.ui.ansGrid.querySelectorAll(".ans")){
+    const isPitch = ["FB","CH","CB","SL"].includes(b.textContent);
+    b.classList.toggle("selected", isPitch && b.textContent===pitchType);
+  }
+}
+
+function finalizeAnswer({guess_type, zone}){
+  const r = APP.state.round;
+  if(!r || !r.active || !r.awaiting) return;
+
+  // If in zone mode and they tap the same pitch button again, submit
+  if(APP.state.zoneMode){
+    const selected = APP.ui.ansGrid.querySelector(".ans.selected");
+    if(selected && selected.textContent===guess_type && zone===null){
+      // ok submit w/out zone
+    } else {
+      // if they just selected pitch and haven't chosen zone yet, allow second tap on pitch to submit:
+      // but we can't detect second tap here; so accept submission when called by logic above.
+    }
+  }
+
+  enableAnswers(false);
+
+  const shownAt = r.current?.shown_at;
+  const rt = (typeof shownAt==="number") ? (performance.now() - shownAt) : null;
+  const correct = (guess_type === r.current.type);
+
+  r.answered++;
+  if(correct) r.correct++;
+  if(typeof rt==="number") r.rts.push(rt);
+
+  // streak
+  if(correct){
+    r.streak++;
+    r.best_streak = Math.max(r.best_streak, r.streak);
+  }else{
+    r.streak = 0;
+  }
+
+  r.events.push({
+    kind:"answer",
+    at: nowISO(),
+    pitch_n: r.current.n,
+    actual: r.current.type,
+    guess: guess_type,
+    zone: zone,
+    correct,
+    rt_ms: rt==null ? null : Math.round(rt)
+  });
+
+  // feedback
+  const acc = r.answered ? r.correct/r.answered : null;
+  APP.ui.lastFeedback.innerHTML = correct
+    ? `<span class="badge good">Correct</span> <span class="subtle">Actual: ${r.current.type} • RT ${fmtMs(rt)} • Acc ${fmtPct(acc)}</span>`
+    : `<span class="badge bad">Miss</span> <span class="subtle">Actual: ${r.current.type} • You: ${guess_type} • RT ${fmtMs(rt)} • Acc ${fmtPct(acc)}</span>`;
+
+  // clear selection state
+  pendingZone = null;
+  for(const b of APP.ui.ansGrid.querySelectorAll(".ans")) b.classList.remove("selected");
+
+  refreshHUD();
+  saveState();
+
+  // auto next after inter_ms
+  r.awaiting = false;
+  r._timer = setTimeout(()=>nextPitchAuto(), r.cfg.inter_ms);
+}
+
+function undoLast(){
+  const r = APP.state.round;
+  if(!r || !r.active) return;
+  // remove last answer event
+  for(let i=r.events.length-1;i>=0;i--){
+    const e = r.events[i];
+    if(e.kind==="answer"){
+      r.events.splice(i,1);
+      r.answered = Math.max(0, r.answered-1);
+      if(e.correct) r.correct = Math.max(0, r.correct-1);
+      // rebuild rts & streaks simply from answers so far
+      r.rts = r.events.filter(x=>x.kind==="answer" && typeof x.rt_ms==="number").map(x=>x.rt_ms);
+      // recompute streak/best streak
+      let s=0,b=0;
+      for(const a of r.events.filter(x=>x.kind==="answer")){
+        if(a.correct){ s++; b=Math.max(b,s); } else { s=0; }
+      }
+      r.streak = s; r.best_streak = b;
+      toast("Undid last answer.");
+      refreshHUD();
+      saveState();
+      return;
+    }
+  }
+  toast("Nothing to undo.");
+}
+
+function skipPitch(){
+  const r = APP.state.round;
+  if(!r || !r.active) return;
+  if(!r.current) return;
+  if(!r.awaiting) return;
+
+  enableAnswers(false);
+  r.awaiting = false;
+  r.events.push({kind:"skip", at: nowISO(), pitch_n:r.current.n, type:r.current.type});
+  APP.ui.lastFeedback.innerHTML = `<span class="badge warn">Skipped</span> <span class="subtle">Actual: ${r.current.type}</span>`;
+  saveState();
+  refreshHUD();
+  r._timer = setTimeout(()=>nextPitchAuto(), r.cfg.inter_ms);
+}
+/* @diq:end [PR-300] Round engine */
+
+/* @diq:begin [PR-310] HUD + canvas */
+function refreshHUD(){
+  const r = APP.state.round;
+  if(!r || !r.active){
+    APP.ui.hudScore.textContent = "0 / 0";
+    APP.ui.hudAcc.textContent = "Acc: —";
+    APP.ui.hudRt.textContent = "Avg RT: —";
+    APP.ui.hudTimer.textContent = "Ready";
+    APP.ui.btnResume.classList.toggle("hidden", true);
+    return;
+  }
+
+  APP.ui.btnResume.classList.toggle("hidden", false);
+
+  APP.ui.hudScore.textContent = `${r.correct} / ${r.answered}`;
+  const acc = r.answered ? r.correct/r.answered : null;
+  APP.ui.hudAcc.textContent = `Acc: ${fmtPct(acc)}`;
+  APP.ui.hudRt.textContent = `Avg RT: ${r.rts.length ? fmtMs(avg(r.rts)) : "—"}`;
+  APP.ui.hudTimer.textContent = r.awaiting ? "Answer" : "Wait";
+}
+
+function setupCanvas(){
+  const c = APP.ui.stimCanvas;
+  const wrap = c.parentElement;
+
+  function resize(tries=0){
+    const rect = wrap.getBoundingClientRect();
+    // If the play view is hidden or not laid out yet, rect can be 0x0. Retry a few times.
+    if(rect.width < 20 || rect.height < 20){
+      if(tries < 20){
+        setTimeout(()=>resize(tries+1), 60);
+      }
+      return;
+    }
+
+    const dpr = window.devicePixelRatio || 1;
+    c.width = Math.floor(rect.width * dpr);
+    c.height = Math.floor(rect.height * dpr);
+
+    // Keep CSS sizing handled by CSS (100% fill). Just ensure it's a block.
+    c.style.display = "block";
+
+    const ctx = c.getContext("2d");
+    // Draw in CSS pixels: reset then scale for DPR
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+
+    drawIdle();
+  }
+
+  APP.ui._canvasWrap = wrap;
+  APP.ui._resizeCanvas = resize;
+  window.addEventListener("resize", ()=>resize(0));
+
+  // Try immediately (may no-op if hidden)
+  resize(0);
+}
+
+function clearCanvas(){
+  const c = APP.ui.stimCanvas;
+  const ctx = c.getContext("2d");
+  const {w,h} = getCanvasCSSSize();
+  ctx.clearRect(0,0,w,h);
+  drawIdle(true);
+}
+
+function drawIdle(skipClear=false){
+  const c = APP.ui.stimCanvas;
+  const ctx = c.getContext("2d");
+  // Use wrapper size in CSS pixels (more reliable across browsers)
+  const {w,h} = getCanvasCSSSize();
+  if(!skipClear) ctx.clearRect(0,0,w,h);
+
+  // Plate & zone faint overlay
+  ctx.save();
+  ctx.globalAlpha = 0.9;
+  // zone box
+  const zx = w*0.42, zy = h*0.30, zw = w*0.16, zh = h*0.36;
+  ctx.strokeStyle = "rgba(100,116,139,.45)";
+  ctx.lineWidth = 2;
+  roundRect(ctx, zx, zy, zw, zh, 14);
+  ctx.stroke();
+
+  // plate (slightly larger, nearer the hitter)
+  const px = w*0.462, py = h*0.80, pw = w*0.076, ph = h*0.076;
+  ctx.fillStyle = "rgba(15,23,42,.10)";
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px+pw, py);
+  ctx.lineTo(px+pw, py+ph*0.6);
+  ctx.lineTo(px+pw*0.5, py+ph);
+  ctx.lineTo(px, py+ph*0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // mound dot
+  ctx.fillStyle = "rgba(15,23,42,.10)";
+  ctx.beginPath();
+  ctx.arc(w*0.5, h*0.10, 6, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+
+  // Watermark so you can confirm the canvas is rendering
+  ctx.save();
+  ctx.fillStyle = "rgba(100,116,139,.22)";
+  ctx.font = "700 14px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Pitch Rec MVP", w*0.5, h*0.5);
+  ctx.restore();
+}
+
+function getCanvasCSSSize(){
+  const wrap = APP.ui._canvasWrap || APP.ui.stimCanvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  return { w: rect.width, h: rect.height };
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+}
+
+
+function drawSpinningBaseball(ctx, x, y, rBall, spinAngle, axisTilt){
+  // Diagram style to match reference: bold outline + two dotted "half-moon" seams on left/right.
+  ctx.save();
+  ctx.translate(x, y);
+
+  // White ball
+  ctx.fillStyle = "rgba(255,255,255,0.98)";
+  ctx.beginPath();
+  ctx.arc(0, 0, rBall, 0, Math.PI*2);
+  ctx.fill();
+
+  // Bold black outline
+  ctx.strokeStyle = "rgba(0,0,0,0.92)";
+  ctx.lineWidth = Math.max(3.4, rBall*0.24);
+  ctx.beginPath();
+  ctx.arc(0, 0, rBall, 0, Math.PI*2);
+  ctx.stroke();
+
+  // Clip to ball
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(0, 0, rBall, 0, Math.PI*2);
+  ctx.clip();
+
+  // Orient seams then rotate for spin
+  ctx.rotate(axisTilt);
+  ctx.rotate(spinAngle);
+
+  // Dotted red stitches
+  ctx.strokeStyle = "rgba(239,68,68,0.95)";
+  ctx.lineWidth = Math.max(2.1, rBall*0.15);
+  ctx.lineCap = "round";
+  const dash = Math.max(2.1, rBall*0.22);
+  ctx.setLineDash([dash, dash*0.9]);
+
+  // Two "half-moon" arcs on the left and right sides
+  const rr = rBall * 0.78;
+  const xOff = rBall * 0.20;
+
+  // Left seam (bulges inward)
+  ctx.beginPath();
+  ctx.arc(-xOff, 0, rr, -Math.PI*0.35, Math.PI*0.35);
+  ctx.stroke();
+
+  // Right seam (bulges inward)
+  ctx.beginPath();
+  ctx.arc(xOff, 0, rr, Math.PI*0.65, Math.PI*1.35);
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.restore(); // clip
+
+  // subtle shading (keep very light)
+  ctx.fillStyle = "rgba(0,0,0,0.04)";
+  ctx.beginPath();
+  ctx.arc(-rBall*0.18, -rBall*0.18, rBall*0.95, 0, Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+function showStimulus(recipe, showMs, done){
+  const c = APP.ui.stimCanvas;
+  const ctx = c.getContext("2d");
+  const {w,h} = getCanvasCSSSize();
+
+  const start = performance.now();
+  const dur = Math.max(240, Math.round(showMs * 16.0)); // very slow flight (training-friendly)
+
+  const smooth = (t)=> t*t*(3 - 2*t); // smoothstep
+  const ptype = (recipe && recipe._ptype) ? recipe._ptype : "FB";
+
+  // Visual spin heuristics (training cue, not physics sim)
+  let rpm = 1600, axisTilt = 0.15;
+  if(ptype==="CH" || ptype==="CCH"){ rpm = 1100; axisTilt = 0.10; }
+  if(ptype==="CB"){ rpm = 1800; axisTilt = 0.95; }
+  if(ptype==="SL" || ptype==="SV"){ rpm = 1400; axisTilt = 0.55; }
+  if(ptype==="CT"){ rpm = 1650; axisTilt = 0.35; }
+  if(ptype==="2S"){ rpm = 1500; axisTilt = 0.22; }
+  if(ptype==="SP" || ptype==="FK"){ rpm = 1050; axisTilt = 0.20; }
+
+  const omega = (rpm * 2*Math.PI) / 60; // rad/sec
+  const dir = (APP.state.pitcherHand === "L") ? -1 : 1;
+
+  function profileFor(pt){
+    // Batter POV: armSide vs gloveSide depends on pitcher hand.
+    const armSide   = (dir === 1) ? -1 : 1;
+    const gloveSide = -armSide;
+
+    // Break magnitudes (screen-space) tuned to resemble the provided diagram.
+    // These are stylized cues for recognition (not measured movement).
+    const prof = { name: pt, hx:0, hy:0, hxLate:0, hyLate:0, xSign:0, latePow:4, early:false, color:"rgba(239,68,68,0.95)" };
+
+    if(pt==="FB"){ // four-seam: slight ride, minimal run
+      prof.hx = 0.010*w; prof.hy = -0.030*h; prof.xSign = 0; prof.early = true; prof.color="rgba(239,68,68,0.95)";
+    } else if(pt==="2S"){ // two-seam: arm-side run + sink
+      prof.hxLate = 0.090*w; prof.hyLate = 0.060*h; prof.xSign = armSide; prof.latePow=3; prof.color="rgba(239,68,68,0.92)";
+    } else if(pt==="CT"){ // cutter: small glove-side cut late
+      prof.hxLate = 0.070*w; prof.hyLate = 0.030*h; prof.xSign = gloveSide; prof.latePow=4; prof.color="rgba(239,68,68,0.92)";
+    } else if(pt==="SP"){ // splitter: straight then sharp late drop
+      prof.hxLate = 0.010*w; prof.hyLate = 0.140*h; prof.xSign = 0; prof.latePow=5; prof.color="rgba(239,68,68,0.88)";
+    } else if(pt==="FK"){ // forkball: even more drop (late)
+      prof.hxLate = 0.010*w; prof.hyLate = 0.180*h; prof.xSign = 0; prof.latePow=5; prof.color="rgba(249,115,22,0.92)";
+    } else if(pt==="CB"){ // curveball: big early bend + drop
+      prof.hx = 0.120*w; prof.hy = 0.120*h; prof.xSign = gloveSide; prof.early = true; prof.color="rgba(249,115,22,0.95)";
+    } else if(pt==="SL"){ // slider: late glove-side sweep + modest drop
+      prof.hxLate = 0.150*w; prof.hyLate = 0.050*h; prof.xSign = gloveSide; prof.latePow=4; prof.color="rgba(239,68,68,0.92)";
+    } else if(pt==="SV"){ // slurve: combo (more drop than SL, earlier than SL)
+      prof.hxLate = 0.130*w; prof.hyLate = 0.090*h; prof.xSign = gloveSide; prof.latePow=3; prof.color="rgba(249,115,22,0.95)";
+    } else if(pt==="CH"){ // changeup: arm-side fade + drop
+      prof.hxLate = 0.090*w; prof.hyLate = 0.090*h; prof.xSign = armSide; prof.latePow=3; prof.color="rgba(249,115,22,0.92)";
+    } else if(pt==="CCH"){ // circle change: more fade, a touch less drop than CH
+      prof.hxLate = 0.120*w; prof.hyLate = 0.075*h; prof.xSign = armSide; prof.latePow=3; prof.color="rgba(249,115,22,0.92)";
+    } else {
+      // fallback: treat unknown as FB
+      prof.hx = 0.010*w; prof.hy = -0.020*h; prof.xSign=0; prof.early=true; prof.color="rgba(239,68,68,0.95)";
+    }
+    return prof;
+  }
+
+  const prof = profileFor(ptype);
+
+  function posAt(u){
+    // Base straight-line travel (release high, plate low)
+    const x0 = w*0.5, y0 = h*0.10;
+    const x1 = w*0.5, y1 = h*0.78;
+
+    let x = x0 + (x1-x0)*u;
+    let y = y0 + (y1-y0)*u;
+
+    // Add stylized movement
+    const uu = smooth(u);
+    if(prof.early){
+      // early bend (sin curve gives the diagram-like arc)
+      x += prof.xSign * (Math.sin(u*Math.PI) * prof.hx);
+      y += (u*u) * prof.hy;
+    }else{
+      // late break (power curve makes it happen near the end)
+      const t = Math.pow(u, prof.latePow);
+      x += prof.xSign * (t * prof.hxLate);
+      y += t * prof.hyLate;
+    }
+
+    // Small wiggle (optional)
+    const wig = ((recipe && recipe.wiggle) ? recipe.wiggle : 0) * Math.sin(u*10) * w*0.010;
+    x += wig;
+
+    return {x,y,x0,y0};
+  }
+
+  function frame(tNow){
+    const raw = clamp((tNow - start)/dur, 0, 1);
+    const u = smooth(raw);
+
+    ctx.clearRect(0,0,w,h);
+    drawIdle(true);
+
+    const P = posAt(u);
+    const x = P.x, y = P.y;
+
+    // Perspective scaling / ball size
+    const nearScale = 2.55, farScale = 0.55;
+    const scale = farScale + (nearScale - farScale) * u;
+    const rBall = 5.2 + 3.6*scale;
+
+    // Tapered tail drawn along the SAME path points (matches diagram & avoids mismatched ribbon)
+    const steps = 44;
+    const wStart = 1.6;
+    const wEnd = Math.max(6, rBall*1.05);
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.shadowColor = "rgba(239,68,68,0.14)";
+    ctx.shadowBlur = 12;
+
+    // Outer ribbon (slightly translucent)
+    ctx.strokeStyle = prof.color.replace("0.95", "0.90").replace("0.92","0.88");
+    let prev = posAt(0);
+    for(let i=1;i<=steps;i++){
+      const uu = (i/steps) * u; // only draw up to current u
+      const cur = posAt(uu);
+      const g = smooth(uu);
+      const wseg = wStart + (wEnd - wStart)*g;
+      ctx.lineWidth = wseg;
+      ctx.beginPath();
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(cur.x, cur.y);
+      ctx.stroke();
+      prev = cur;
+    }
+
+    // Inner core
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = prof.color;
+    prev = posAt(0);
+    for(let i=1;i<=steps;i++){
+      const uu = (i/steps) * u;
+      const cur = posAt(uu);
+      const g = smooth(uu);
+      const wseg = (wStart*0.65) + (wEnd*0.62 - wStart*0.65)*g;
+      ctx.lineWidth = Math.max(1.2, wseg);
+      ctx.beginPath();
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(cur.x, cur.y);
+      ctx.stroke();
+      prev = cur;
+    }
+    ctx.restore();
+
+    // Spin (ultra-slow)
+    const spinAngle = dir * omega * ((tNow - start)/1000) * 0.03;
+    drawSpinningBaseball(ctx, x, y, rBall, spinAngle, axisTilt);
+
+    if(raw < 1){
+      requestAnimationFrame(frame);
+    }else{
+      done();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+/* @diq:end [PR-310] HUD + canvas */
+
+/* @diq:begin [PR-400] Results aggregation */
+function refreshResults(){
+  const tid = APP.state.player.team_id;
+  const pid = APP.state.player.player_id;
+  const sessions = APP.data.sessions.filter(s=>s.team_id===tid && s.player_id===pid);
+
+  const answers = sessions.flatMap(s=>s.events||[]).filter(e=>e.kind==="answer");
+  const correct = answers.filter(a=>a.correct).length;
+  const rt = answers.map(a=>a.rt_ms).filter(x=>typeof x==="number");
+  const acc = answers.length ? correct/answers.length : null;
+
+  // best streak across sessions
+  let best = 0;
+  for(const s of sessions) best = Math.max(best, s.best_streak||0);
+
+  APP.ui.sumRounds.textContent = String(sessions.length);
+  APP.ui.sumAcc.textContent = acc==null ? "—" : fmtPct(acc);
+  APP.ui.sumRt.textContent = rt.length ? fmtMs(avg(rt)) : "—";
+  APP.ui.sumStreak.textContent = String(best);
+
+  // breakdown by pitch
+  const map = new Map(); // type -> {seen, correct, rts[]}
+  for(const a of answers){
+    const t = a.actual;
+    if(!map.has(t)) map.set(t,{seen:0, correct:0, rts:[]});
+    const o = map.get(t);
+    o.seen++;
+    if(a.correct) o.correct++;
+    if(typeof a.rt_ms==="number") o.rts.push(a.rt_ms);
+  }
+  const tbody = APP.ui.breakdownTbl.querySelector("tbody");
+  tbody.innerHTML = "";
+  const types = [...map.keys()].sort();
+  for(const t of types){
+    const o = map.get(t);
+    const tr = document.createElement("tr");
+    const a = o.seen ? o.correct/o.seen : null;
+    tr.innerHTML = `
+      <td><span class="badge">${t}</span></td>
+      <td class="right">${o.seen}</td>
+      <td class="right">${o.correct}</td>
+      <td class="right">${a==null?"—":fmtPct(a)}</td>
+      <td class="right">${o.rts.length?fmtMs(avg(o.rts)):"—"}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  if(!types.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="5" class="muted">No results yet. Play a round to see stats.</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // recent table (last 12)
+  const recBody = APP.ui.recentTbl.querySelector("tbody");
+  recBody.innerHTML = "";
+  const recent = [...sessions].sort((a,b)=> (b.started_at||"").localeCompare(a.started_at||"")).slice(0,12);
+  for(const s of recent){
+    const team = byId(APP.data.teams, s.team_id);
+    const player = byId(team?.players||[], s.player_id);
+    const drill = byId(APP.data.drills, s.drill_id);
+    const ans = (s.events||[]).filter(e=>e.kind==="answer");
+    const c = ans.filter(e=>e.correct).length;
+    const rts = ans.map(e=>e.rt_ms).filter(x=>typeof x==="number");
+    const a = ans.length ? c/ans.length : null;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">${(s.started_at||"").slice(0,10)}</td>
+      <td>${team?.name || s.team_id}</td>
+      <td>${player ? (player.number?`#${player.number} — `:"") + player.name : s.player_id}</td>
+      <td>${drill?.name || s.drill_id}</td>
+      <td class="right">${ans.length}</td>
+      <td class="right">${a==null?"—":fmtPct(a)}</td>
+      <td class="right">${rts.length?fmtMs(avg(rts)):"—"}</td>
+    `;
+    recBody.appendChild(tr);
+  }
+  if(!recent.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="7" class="muted">No rounds saved yet.</td>`;
+    recBody.appendChild(tr);
+  }
+}
+/* @diq:end [PR-400] Results aggregation */
+
+/* @diq:begin [PR-410] Export */
+function downloadText(filename, text, mime="text/plain"){
+  const blob = new Blob([text], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+
+function exportCSV(){
+  const tid = APP.state.player.team_id;
+  const pid = APP.state.player.player_id;
+  const team = byId(APP.data.teams, tid);
+  const player = byId(team?.players||[], pid);
+
+  const sessions = APP.data.sessions.filter(s=>s.team_id===tid && s.player_id===pid);
+  const rows = [];
+  rows.push(["date","team","player","drill","pitch_n","actual","guess","correct","rt_ms","zone"].join(","));
+  for(const s of sessions){
+    const drill = byId(APP.data.drills, s.drill_id);
+    for(const e of (s.events||[])){
+      if(e.kind!=="answer") continue;
+      rows.push([
+        (s.started_at||"").slice(0,10),
+        safeCsv(team?.name||s.team_id),
+        safeCsv(player?.name||s.player_id),
+        safeCsv(drill?.name||s.drill_id),
+        e.pitch_n,
+        e.actual,
+        e.guess,
+        e.correct ? 1 : 0,
+        e.rt_ms ?? "",
+        e.zone ?? ""
+      ].join(","));
+    }
+  }
+  downloadText("pitch_recognition_results.csv", rows.join("\n"), "text/csv");
+  toast("CSV exported.");
+}
+function safeCsv(s){
+  const v = String(s ?? "");
+  if(/[",\n]/.test(v)) return `"${v.replaceAll('"','""')}"`;
+  return v;
+}
+
+function exportJSON(){
+  const tid = APP.state.player.team_id;
+  const pid = APP.state.player.player_id;
+  const sessions = APP.data.sessions.filter(s=>s.team_id===tid && s.player_id===pid);
+  downloadText("pitch_recognition_sessions.json", JSON.stringify(sessions, null, 2), "application/json");
+  toast("JSON exported.");
+}
+/* @diq:end [PR-410] Export */
+
+/* @diq:begin [PR-500] Coach Tools */
+function refreshCoachGate(){
+  const unlocked = !!APP.state.coachUnlocked;
+  APP.ui.coachGate.classList.toggle("hidden", unlocked);
+  APP.ui.coachPanel.classList.toggle("hidden", !unlocked);
+  if(unlocked){
+    refreshCoachPanel();
+  }
+}
+function refreshCoachPanel(){
+  refreshPitchSets();
+  // Default form values
+  APP.ui.drillDefaultShow.value = "1400";
+  APP.ui.drillDefaultLock.value = "300";
+  // counts
+  APP.ui.coachCounts.textContent = `teams=${APP.data.teams.length} • drills=${APP.data.drills.length} • pitch_sets=${APP.data.pitch_sets.length} • stimuli=${APP.data.stimuli.length} • sessions=${APP.data.sessions.length}`;
+  // team table
+  const tb = APP.ui.teamTbl.querySelector("tbody");
+  tb.innerHTML = "";
+  for(const t of APP.data.teams){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${t.name}</td><td class="right">${t.players.length}</td>`;
+    tb.appendChild(tr);
+  }
+
+  // When a drill is selected in main dropdown, load into form
+  const d = byId(APP.data.drills, APP.state.drill_id);
+  if(d){
+    APP.ui.drillName.value = d.name;
+    APP.ui.drillPitchSet.value = d.pitch_set_id;
+    APP.ui.drillDifficulty.value = d.difficulty;
+    APP.ui.drillDefaultShow.value = d.defaults.show_ms;
+    APP.ui.drillDefaultLock.value = d.defaults.lock_ms;
+    APP.ui.drillNotes.value = d.notes || "";
+  }
+}
+
+function saveDrillFromForm(){
+  const name = (APP.ui.drillName.value||"").trim();
+  const pitch_set_id = APP.ui.drillPitchSet.value;
+  const difficulty = APP.ui.drillDifficulty.value;
+  const show_ms = clamp(parseInt(APP.ui.drillDefaultShow.value||"700",10),80,2500);
+  const lock_ms = clamp(parseInt(APP.ui.drillDefaultLock.value||"250",10),0,1200);
+  const notes = (APP.ui.drillNotes.value||"").trim();
+
+  if(!name){ toast("Drill name is required."); return; }
+
+  let d = byId(APP.data.drills, APP.state.drill_id);
+  if(!d){
+    d = { id: uid("drill"), name, pitch_set_id, difficulty, defaults:{show_ms, lock_ms, inter_ms:350, rounds:20}, notes };
+    APP.data.drills.push(d);
+    APP.state.drill_id = d.id;
+  }else{
+    d.name = name;
+    d.pitch_set_id = pitch_set_id;
+    d.difficulty = difficulty;
+    d.defaults.show_ms = show_ms;
+    d.defaults.lock_ms = lock_ms;
+    d.notes = notes;
+  }
+
+  saveData();
+  saveState();
+  refreshDrills();
+  APP.ui.drillSel.value = APP.state.drill_id;
+  toast("Drill saved.");
+  refreshAll();
+}
+
+function deleteSelectedDrill(){
+  const id = APP.state.drill_id;
+  if(!id){ toast("No drill selected."); return; }
+  if(!confirm("Delete selected drill?")) return;
+  APP.data.drills = APP.data.drills.filter(d=>d.id!==id);
+  APP.state.drill_id = APP.data.drills[0]?.id || null;
+  saveData();
+  saveState();
+  refreshAll();
+  toast("Drill deleted.");
+}
+
+function exportAppJSON(){
+  const blob = {
+    meta: APP.data.meta,
+    teams: APP.data.teams,
+    pitch_sets: APP.data.pitch_sets,
+    drills: APP.data.drills,
+    stimuli: APP.data.stimuli
+  };
+  downloadText("pitch_recognition_app_content.json", JSON.stringify(blob, null, 2), "application/json");
+  toast("App JSON exported.");
+}
+
+async function importAppJSON(e){
+  const file = e.target.files?.[0];
+  if(!file) return;
+  try{
+    const txt = await file.text();
+    const obj = JSON.parse(txt);
+    // allow either full export or content-only
+    const next = structuredClone(APP.data);
+    if(obj.teams) next.teams = obj.teams;
+    if(obj.pitch_sets) next.pitch_sets = obj.pitch_sets;
+    if(obj.drills) next.drills = obj.drills;
+    if(obj.stimuli) next.stimuli = obj.stimuli;
+
+    APP.data = next;
+    saveData();
+    refreshAll();
+    toast("Imported content.");
+  }catch(err){
+    console.error(err);
+    toast("Import failed.");
+  }finally{
+    e.target.value = "";
+  }
+}
+/* @diq:end [PR-500] Coach Tools */
+
+/* @diq:begin [PR-900] Refresh all */
+function refreshAll(){
+  refreshTeams();
+  refreshPlayers();
+  refreshDrills();
+  // drill defaults if selected but inputs empty
+  if(!APP.ui.roundsInp.value) applyDrillDefaults();
+
+  APP.ui.handSel.value = APP.state.player.bats || "R";
+  APP.ui.btnToggleZone.textContent = `Zone: ${APP.state.zoneMode ? "ON" : "OFF"}`;
+
+  const drill = byId(APP.data.drills, APP.state.drill_id);
+  const ps = drill ? byId(APP.data.pitch_sets, drill.pitch_set_id) : null;
+  APP.ui.badgeDrill.textContent = drill ? `${drill.name} • ${drill.difficulty}` : "None selected";
+  APP.ui.badgeDrill.className = "badge" + (drill ? "" : " warn");
+
+  // Ensure inputs reflect cfg
+  APP.ui.roundsInp.value = String(APP.state.roundCfg.rounds);
+  APP.ui.showMsInp.value = String(APP.state.roundCfg.show_ms);
+  APP.ui.lockMsInp.value = String(APP.state.roundCfg.lock_ms);
+  APP.ui.interMsInp.value = String(APP.state.roundCfg.inter_ms);
+
+  refreshToday();
+  refreshHUD();
+  renderAnswerButtons();
+  refreshCoachGate();
+
+  // team/player changes should keep selected values
+  APP.ui.teamSel.value = APP.state.player.team_id || "";
+  APP.ui.playerSel.value = APP.state.player.player_id || "";
+  APP.ui.drillSel.value = APP.state.drill_id || "";
+
+  if(APP.state.view) setView(APP.state.view, {save:false});
+}
+/* @diq:end [PR-900] Refresh all */
+
+/* @diq:begin [PR-999] Init */
+(function init(){
+  bindUI();
+  loadState();
+
+  // if stored view is play but no active round, fall back to home
+  if(APP.state.view==="play" && !(APP.state.round && APP.state.round.active)){
+    APP.state.view="home";
+  }
+  // show resume button only when appropriate
+  APP.ui.btnResume.classList.toggle("hidden", !(APP.state.round && APP.state.round.active));
+
+  // Restore round? If active, keep it but stop timers until resumed
+  if(APP.state.round && APP.state.round.active){
+    stopRoundTimers();
+    APP.ui.overlayCard.innerHTML = `<div style="font-weight:900">Round paused</div><div class="subtle">Tap Resume to continue.</div>`;
+    APP.ui.overlayCard.classList.remove("hidden");
+  }
+
+  refreshAll();
+})();
+/* @diq:end [PR-999] Init */
+</script>
+</body>
+</html>
