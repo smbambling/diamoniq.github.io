@@ -166,8 +166,21 @@
   .sideCol{display:flex;flex-direction:column;gap:12px}
 
   /* Field + overlays */
-  #wrap{position:relative}
-  #fieldImg{display:block;width:100%;height:auto;border-radius:10px;background:#fff}
+  /* The play stage centers the field and ensures the field never grows beyond the viewport. */
+  #playCard{display:flex;flex-direction:column}
+  #playStage{flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+  /* Wrap should size to the rendered image so chip coordinates stay aligned even when the image is height-constrained. */
+  #wrap{position:relative;display:inline-block}
+  #fieldImg{
+    display:block;
+    width:auto;
+    height:auto;
+    max-width:100%;
+    /* keep the entire field visible within the browser window (account for header + card chrome) */
+    max-height:calc(100vh - 220px);
+    border-radius:10px;
+    background:#fff;
+  }
   .overlay{position:absolute;inset:0;pointer-events:none}
   #targetsLayer{pointer-events:none;z-index:2}
   #ballLayer{pointer-events:none;z-index:3}
@@ -399,6 +412,66 @@
     #sitSelect{ min-width:140px; }
   }
 
+
+/* Coach Tools headings */
+#coachCard .coachCardH1{
+  margin:0;
+  font-size:28px; /* h1-like */
+  line-height:1.15;
+  font-weight:800;
+  letter-spacing:-0.02em;
+}
+
+#adminCard .adminTitleH3{
+  margin:0;
+  font-size:18px; /* h3-like */
+  line-height:1.25;
+  font-weight:800;
+  color:#334155;
+}
+#adminCard .adminTitleH4{
+  margin:10px 0 6px;
+  font-size:15px; /* h4-like */
+  line-height:1.2;
+  font-weight:800;
+  color:#334155;
+}
+#adminCard .fieldHline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+#adminCard label.fieldHline{
+  flex-direction:row;
+}
+#adminCard label.fieldHline > input,
+#adminCard label.fieldHline > select,
+#adminCard label.fieldHline > .adminPassRow{
+  flex:1;
+  min-width:0;
+}
+#adminCard .fieldHline > span{
+  margin:0;
+  min-width:110px;
+  font-size:12px;
+  font-weight:700;
+  color:#64748b;
+  line-height:1.1;
+}
+#adminCard .fieldHline > input,
+#adminCard .fieldHline > select,
+#adminCard .fieldHline > textarea,
+#adminCard .fieldHline > .adminPassRow{
+  flex:1 1 auto;
+  min-width:0;
+}
+#adminCard .adminPassRow > input{flex:1 1 auto; min-width:0;}
+#coachCard .subsec > .title{
+  margin:0;
+  font-size:18px; /* h3-like */
+  line-height:1.25;
+  font-weight:800;
+}
 /* Player sidebar header */
 .cardTitleRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
 
@@ -549,11 +622,12 @@ header h1{font-size:18px;margin:0;}
 .header-actions{display:flex;align-items:center;gap:10px;}
 .hiddenDock{display:none !important;}
 main.app.prLayout{
-  max-width: 1280px;
+  /* Allow the main Play pane to grow on wide screens while keeping the sidebar reasonable. */
+  max-width: min(1800px, 96vw);
   margin: 18px auto 40px;
   padding: 0 14px;
   display: grid;
-  grid-template-columns: 420px 1fr;
+  grid-template-columns: clamp(280px, 22vw, 380px) 1fr;
   gap: 18px;
   align-items: start;
 }
@@ -588,6 +662,7 @@ main.app.prLayout{
   box-shadow:none;
 }
 .subcardTitle{font-weight:800;font-size:13px;margin-bottom:8px;}
+.subcardTitleH3{font-weight:900;font-size:16px;margin:0 0 8px;}
 /* make the old standalone panels look normal when mounted as subcards */
 #situationTargetMount #targetPanel,
 #situationSeqMount #seqPanel{border:none;box-shadow:none;padding:0;margin:0;}
@@ -664,12 +739,12 @@ main.app.prLayout{
       <div id="situationControlsMount"></div>
 
       <div class="subcard" id="situationTargetSubcard" style="display:none">
-        <div class="subcardTitle">Selected Target</div>
+        <h3 class="subcardTitle subcardTitleH3">Target Notes</h3>
         <div id="situationTargetMount"></div>
       </div>
 
       <div class="subcard" id="situationSeqSubcard" style="display:none">
-        <div class="subcardTitle">Play Sequence</div>
+        <h3 class="subcardTitleH3">Play Sequence</h3>
         <div id="situationSeqMount"></div>
       </div>
     </div>
@@ -731,12 +806,12 @@ main.app.prLayout{
         <div class="subsec">
           <div class="sectionTitle">Player Login</div>
           <div class="rowGrid playerLoginGrid">
-            <label class="field">
+            <label class="field fieldHline">
               <span>Team</span>
               <select id="playerTeamSelect" class="select"><option value="">— Select team —</option><option value="13u-black">13U Black</option><option value="13u-orange">13U Orange</option></select>
             </label>
 
-            <label class="field">
+            <label class="field fieldHline">
               <span>Player</span>
               <select id="playerNameSelect" class="select"><option value="">— Select player —</option><option value="13u-black-bob-smith-11">#11 Bob Smith</option><option value="13u-black-john-smith-12">#12 John Smith</option><option value="13u-black-kevin-smith-22">#22 Kevin Smith</option></select>
             </label>
@@ -777,7 +852,7 @@ main.app.prLayout{
 <div id="coachCard" class="card hidden">
       <div class="coachGrid">
   <div class="row">
-    <strong>Coach Tools</strong>
+    <h1 class="coachCardH1">Coach Tools</h1>
     <span id="coachStatus" class="mono" style="color:#64748b">locked</span>
     <span class="hint"> (drag chips, targets &amp; hit marker while unlocked)</span>
   
@@ -788,14 +863,14 @@ main.app.prLayout{
     </span>
 </div>
 
-  <div class="subsec diq-collapsible diq-collapsed" id="coachReviewSubsec" style="margin-top:14px;" data-diq-collapsible="1">
-        <div class="title">Coach Review<span class="diq-chevron">▾</span></div>
+  <div class="subsec diq-collapsible" id="coachReviewSubsec" style="margin-top:14px;" data-diq-collapsible="1">
+        <h3 class="title">Coach Review<span class="diq-chevron">▾</span></h3>
 
         
       <div class="diq-body"><div class="muted" style="margin-bottom:10px;">
           Paste a Coach Review Code from a player email to view a clean table + Phase 2 playback.
         </div><div class="grid" style="gap:10px;">
-          <label class="field">
+          <label class="field fieldHline">
             <span>Coach Review Code</span>
             <textarea id="coachReviewInput" class="textarea mono" rows="5" placeholder="DIQ1:..."></textarea>
           </label>
@@ -818,7 +893,7 @@ main.app.prLayout{
         </div></div></div>
 
     <div class="subsec diq-collapsible diq-collapsed" id="teamsSubsec" style="margin-top:14px;" data-diq-collapsible="1">
-        <div class="title">Teams<span class="diq-chevron">▾</span></div>
+        <h3 class="title">Teams<span class="diq-chevron">▾</span></h3>
 
       <div class="diq-body">
         <div style="display:flex; flex-direction:column; gap:10px; max-width:460px;">
@@ -837,7 +912,7 @@ main.app.prLayout{
     </div>
 
 <div class="subsec diq-collapsible diq-collapsed" id="situationBuilderSubsec" data-diq-collapsible="1">
-    <div class="title">Situation Builder<span class="diq-chevron">▾</span></div>
+    <h3 class="title">Situation Builder<span class="diq-chevron">▾</span></h3>
 
     
 
@@ -953,7 +1028,7 @@ main.app.prLayout{
   <div id="adminCard" class="card hidden">
   <div class="coachGrid">
     <div class="row">
-      <strong>Admin</strong>
+      <h1 class="coachCardH1">Admin</h1>
       <span id="adminStatus" class="mono" style="color:#64748b">locked</span>
       <span class="hint"> (admin-only tools)</span>
     </div>
@@ -969,7 +1044,8 @@ main.app.prLayout{
     <!-- TEAMS (Admin) -->
     <div class="subsec admin-subsec" id="adminTeamsSubsec" data-admin-collapsible="1" data-admin-open="1" style="margin-top:14px;">
       <div class="row" style="justify-content:space-between; align-items:center">
-        <div class="sectionTitle" style="margin:0">TEAMS</div>
+        
+        <h3 class="adminTitleH3">TEAMS</h3>
         <button class="btn btn-ghost adminSubsecToggle" type="button" aria-label="Collapse section">▾</button>
       </div>
 
@@ -995,17 +1071,17 @@ main.app.prLayout{
 
 
         <div class="rowGrid">
-          <label class="field">
+          <label class="field fieldHline">
             <span>Team</span>
             <select id="adminTeamSelect" class="select"></select>
           </label>
 
-          <label class="field">
+          <label class="field fieldHline">
             <span>Team Name</span>
             <input id="adminTeamName" class="input" type="text" placeholder="e.g., 13U Black"/>
           </label>
 
-          <label class="field">
+          <label class="field fieldHline">
             <span>Coach Email</span>
             <input id="adminTeamEmail" class="input" type="email" placeholder="coach@example.com"/>
           </label>
@@ -1019,26 +1095,26 @@ main.app.prLayout{
 
         <div class="divider"></div>
 
-        <div class="sectionTitle">Roster</div>
+        <h4 class="adminTitleH4">Roster</h4>
         <div class="rowGrid">
-          <label class="field">
+          <label class="field fieldHline">
             <span>Player</span>
             <select id="adminRosterSelect" class="select" disabled></select>
           </label>
 
-          <label class="field">
+          <label class="field fieldHline">
             <span>Player Name</span>
             <input id="adminPlayerName" class="input" type="text" placeholder="e.g., John Smith" disabled/>
           </label>
 
-          <label class="field">
+          <label class="field fieldHline">
             <span>Player Number</span>
             <input id="adminPlayerNumber" class="input" type="text" inputmode="numeric" placeholder="e.g., 12" disabled/>
           </label>
 
-          <label class="field">
+          <label class="field fieldHline">
             <span>Password</span>
-            <div style="display:flex; gap:8px; align-items:center;">
+            <div class="adminPassRow" style="display:flex; gap:8px; align-items:center;">
               <input id="adminPlayerPass" class="input" type="text" placeholder="e.g., 4821" disabled/>
               <button id="adminGenPassBtn" class="btn btn-ghost" type="button" disabled>Gen</button>
             </div>
@@ -1058,7 +1134,8 @@ main.app.prLayout{
     <!-- SITUATIONS (Admin) -->
     <div class="subsec admin-subsec" id="adminSituationsSubsec" data-admin-collapsible="1" data-admin-open="0" style="margin-top:14px;">
       <div class="row" style="justify-content:space-between; align-items:center">
-        <div class="sectionTitle" style="margin:0">SITUATIONS</div>
+        
+        <h3 class="adminTitleH3">SITUATIONS</h3>
         <button class="btn btn-ghost adminSubsecToggle" type="button" aria-label="Collapse section">▾</button>
       </div>
 
@@ -1099,6 +1176,7 @@ main.app.prLayout{
       <div id="playInfoMainBody"></div>
     </div>
     <!-- @diq:end [H_PLAYINFO_PANE] -->
+    <div id="playStage">
 
     <div id="wrap" style="--chip-size: 36px; --chip-font: 14px;">
       <img id="fieldImg" src="baseballfield.png" alt="Baseball Field">
@@ -1107,6 +1185,7 @@ main.app.prLayout{
       <div id="ballLayer" class="overlay"><svg viewBox="0 0 1136.953125 942.53125"></svg></div>
       <!-- chips, rings, and hit marker are appended directly to #wrap -->
     <div class="ball locked" style="display: none; width: 15px; height: 15px; box-shadow: rgb(0, 0, 0) 0px 0px 0px 1px, rgba(0, 0, 0, 0.35) 0px 1px 1px; left: 265.289063px; top: 350.180489px; z-index: 10;"></div><div class="chip Battery locked" style="left: 568.476563px; top: 618.12162px;">P</div><div class="chip Battery locked" style="left: 569.613516px; top: 813.676958px;">C</div><div class="chip Infield locked" style="left: 727.271016px; top: 540.809045px;">1B</div><div class="chip Infield locked" style="left: 695.815313px; top: 439.620527px;">2B</div><div class="chip Infield locked" style="left: 435.453047px; top: 438.104594px;">SS</div><div class="chip Infield locked" style="left: 409.303125px; top: 534.745313px;">3B</div><div class="chip Outfield locked" style="left: 280.448438px; top: 277.036728px;">LF</div><div class="chip Outfield locked" style="left: 578.709141px; top: 132.644124px;">CF</div><div class="chip Outfield locked" style="left: 859.536562px; top: 274.004863px;">RF</div><div class="tgt locked" data-id="P" style="left: 646.168359px; top: 574.159567px; width: 73px; height: 73px; display: none;"><span class="tgt-label">P</span></div><div class="tgt locked" data-id="C" style="left: 757.589766px; top: 706.424708px; width: 74px; height: 74px; display: none;"><span class="tgt-label">C</span></div><div class="tgt locked" data-id="1B" style="left: 733.334766px; top: 602.204325px; width: 65px; height: 65px; display: none;"><span class="tgt-label">1B</span></div><div class="tgt locked" data-id="2B" style="left: 568.855547px; top: 441.515443px; width: 65px; height: 65px; display: none;"><span class="tgt-label">2B</span></div><div class="tgt locked" data-id="SS" style="left: 422.567578px; top: 395.279491px; width: 65px; height: 65px; display: none;"><span class="tgt-label">SS</span></div><div class="tgt locked" data-id="3B" style="left: 408.166172px; top: 602.583308px; width: 65px; height: 65px; display: none;"><span class="tgt-label">3B</span></div><div class="tgt locked" data-id="LF" style="left: 266.047031px; top: 349.801505px; width: 65px; height: 65px; display: none;"><span class="tgt-label">LF</span></div><div class="tgt locked" data-id="CF" style="left: 305.840391px; top: 190.628556px; width: 80px; height: 80px; display: none;"><span class="tgt-label">CF</span></div><div class="tgt locked" data-id="RF" style="left: 747.736172px; top: 382.394062px; width: 80px; height: 80px; display: none;"><span class="tgt-label">RF</span></div></div>
+    </div>
   </section>
 
   </main>
@@ -7670,7 +7749,7 @@ function initCoachToolsCollapsibles(){
     }
 
     const key = subsec.id || (header.textContent || "").trim() || ("subsec_" + Math.random());
-    const defaultCollapsed = true;
+    const defaultCollapsed = (key !== "coachReviewSubsec"); // Coach Review open by default
     const collapsed = (key in map) ? !!map[key] : defaultCollapsed;
     if(collapsed) subsec.classList.add("diq-collapsed");
 
@@ -7949,6 +8028,17 @@ else { window.addEventListener('load', init, { once:true }); }
     if (adminTeamUpdateBtn) adminTeamUpdateBtn.disabled = !hasTeam;
     if (adminTeamRemoveBtn) adminTeamRemoveBtn.disabled = !hasTeam;
 
+    // enable/disable roster controls based on team selection
+    const rosterEnabled = !!t;
+    if (adminRosterSelect) adminRosterSelect.disabled = !rosterEnabled;
+    if (adminPlayerName) adminPlayerName.disabled = !rosterEnabled;
+    if (adminPlayerNumber) adminPlayerNumber.disabled = !rosterEnabled;
+    if (adminPlayerPass) adminPlayerPass.disabled = !rosterEnabled;
+    if (adminGenPassBtn) adminGenPassBtn.disabled = !rosterEnabled;
+    if (adminPlayerAddBtn) adminPlayerAddBtn.disabled = !rosterEnabled;
+    if (adminPlayerUpdateBtn) adminPlayerUpdateBtn.disabled = !rosterEnabled;
+    if (adminPlayerRemoveBtn) adminPlayerRemoveBtn.disabled = !rosterEnabled;
+
     adminRefreshRosterSelect();
     if (adminRosterSelect) adminRosterSelect.value = '';
     adminSetPlayerFieldsFromSelection();
@@ -7959,7 +8049,7 @@ else { window.addEventListener('load', init, { once:true }); }
     const teamId = adminTeamSelect.value;
     const t = teamId ? findTeam(teamId) : null;
     const pid = adminRosterSelect.value;
-    const p = (t && pid) ? findPlayer(t, pid) : null;
+    const p = (t && pid) ? findPlayer(teamId, pid) : null;
 
     if (adminPlayerName) adminPlayerName.value = p ? (p.name||'') : '';
     if (adminPlayerNumber) adminPlayerNumber.value = p ? (p.number!=null ? String(p.number) : '') : '';
@@ -8235,7 +8325,7 @@ else { window.addEventListener('load', init, { once:true }); }
       if(!t) return;
       const pid = adminRosterSelect ? adminRosterSelect.value : '';
       if(!pid) return alert('Select a player to update.');
-      const p = findPlayer(t, pid);
+      const p = findPlayer(teamId, pid);
       if(!p) return;
 
       p.name = String(adminPlayerName ? adminPlayerName.value : '').trim() || p.name;
