@@ -711,7 +711,7 @@ header .modeBtn.active{
 }
 
 .modePitchOnly{ display:none !important; }
-body.mode-pitch .modePitchOnly{ display:block !important; }
+body.mode-pitch .modePitchOnly:not(.hidden){ display:block !important; }
 body.mode-pitch .modeFieldingOnly{ display:none !important; }
 
 /* Allow hiding Pitch-only cards (like Drill) even while in pitch mode */
@@ -720,6 +720,9 @@ body.mode-pitch #drillCard.prLocked{ display:none !important; }
 /* Pitch Recognition play area (keeps your clean DIQ card style) */
 .prPlayWrap{ display:grid; gap:12px; }
 .prHudRow{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:flex-end; }
+body.mode-pitch #hud{ display:none !important; }
+body.mode-pitch .prHudRow{ display:flex !important; }
+
 .prBadge{
   display:inline-flex; align-items:center; gap:6px;
   font-size:12px; font-weight:900;
@@ -775,18 +778,23 @@ body.mode-pitch #drillCard.prLocked{ display:none !important; }
 }
 @media (max-width: 520px){ .prAnsGrid{ grid-template-columns:repeat(2,1fr); } }
 .prAns{
-  border:1px solid rgba(226,232,240,.95);
-  background:#fff;
+  border:1px solid rgba(15,23,42,.85);
+  background:#0f172a;
+  color:#fff;
   border-radius:14px;
-  padding:12px 10px;
+  padding:14px 12px;
+  min-height:56px;
   cursor:pointer;
   font-weight:900;
+  font-size:16px;
+  letter-spacing:.02em;
   user-select:none;
-  transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease;
+  transition:transform .05s ease, box-shadow .2s ease, border-color .2s ease, filter .15s ease;
 }
-.prAns:hover{ border-color:#cbd5e1; box-shadow:0 10px 25px rgba(15,23,42,.06); }
+.prAns:hover{ filter:brightness(1.05); box-shadow:0 12px 28px rgba(15,23,42,.18); }
 .prAns:active{ transform:translateY(1px); }
-.prAns.disabled{ opacity:.55; cursor:not-allowed; }
+.prAns:focus-visible{ outline:3px solid rgba(246,95,22,.35); outline-offset:2px; }
+.prAns.disabled{ opacity:.50; cursor:not-allowed; filter:saturate(.7); }
 /* @diq:end [MODE-100] Mode toggle + Pitch Recognition styles */
 
 </style>
@@ -896,6 +904,7 @@ body.mode-pitch #drillCard.prLocked{ display:none !important; }
     <button class="btn btn-primary" id="prBtnStart" type="button">Start Round</button>
     <button class="btn" id="prBtnResume" type="button">Resume</button>
     <button class="btn" id="prBtnReset" type="button">Reset</button>
+    <button class="btn" id="prBtnEnd" type="button">End Round</button>
   </div>
 </div>
 <!-- @diq:end [H_DRILL_CARD] -->
@@ -1177,7 +1186,49 @@ body.mode-pitch #drillCard.prLocked{ display:none !important; }
 
     </div>
 
-  <div id="adminCard" class="card hidden">
+  
+<div id="prCoachCard" class="card hidden modePitchOnly">
+  <div class="coachGrid">
+    <div class="row">
+      <h1 class="coachCardH1">Coach Tools</h1>
+      <span id="prCoachStatus" class="mono" style="color:#64748b">locked</span>
+      <span class="hint"> (Pitch Recognition coach tools)</span>
+
+      <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button id="prCoachCollapseAllBtn" class="btn-slate" type="button" title="Collapse sections">Collapse all</button>
+        <button id="prCoachExpandAllBtn" class="btn-slate" type="button" title="Expand sections">Expand all</button>
+        <button id="prCoachCardCloseBtn" class="btn btn-ghost" type="button">Close</button>
+      </span>
+    </div>
+
+    <div class="subsec diq-collapsible diq-collapsed" id="prDrillBuilderSubsec" style="margin-top:14px;" data-diq-collapsible="1">
+      <h3 class="title">Drill Builder<span class="diq-chevron">▾</span></h3>
+      <div class="diq-body">
+        <div class="grid" style="gap:10px;">
+          <label class="field fieldHline">
+            <span>Drill Name</span>
+            <input id="prDrillNameInput" class="input" type="text" placeholder="e.g., Fastball vs Changeup">
+          </label>
+
+          <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+            <label class="field fieldHline">
+              <span>Show Time (ms)</span>
+              <input id="prDrillShowMsInput" class="input" type="number" min="100" step="50" value="1400">
+            </label>
+            <label class="field fieldHline">
+              <span>Pitches</span>
+              <input id="prDrillPitchesInput" class="input" type="number" min="1" step="1" value="20">
+            </label>
+          </div>
+
+          <div class="muted">This is a scaffold for building Pitch Recognition drills. Saving/export will be added next.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="adminCard" class="card hidden">
   <div class="coachGrid">
     <div class="row">
       <h1 class="coachCardH1">Admin</h1>
@@ -2075,7 +2126,13 @@ function computeRosterPlayerId(teamObj, playerObj){
 
   const coachCollapseAllBtn = document.getElementById("coachCollapseAllBtn");
   const coachExpandAllBtn = document.getElementById("coachExpandAllBtn");
+const prCoachCard = document.getElementById("prCoachCard");
+  const prCoachStatus = document.getElementById("prCoachStatus");
+  const prCoachCollapseAllBtn = document.getElementById("prCoachCollapseAllBtn");
+  const prCoachExpandAllBtn = document.getElementById("prCoachExpandAllBtn");
+  const prCoachCardCloseBtn = document.getElementById("prCoachCardCloseBtn");
 
+  
   const coachRosterSelect = document.getElementById("coachRosterSelect");
   const coachPlayerName = document.getElementById("coachPlayerName");
   const coachPlayerNumber = document.getElementById("coachPlayerNumber");
@@ -4652,8 +4709,11 @@ function wireOnce(){
 
   // Coach tools collapsible sections
   initCoachToolsCollapsibles();
+  initPitchCoachToolsCollapsibles();
   if(coachCollapseAllBtn) coachCollapseAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(true));
   if(coachExpandAllBtn) coachExpandAllBtn.addEventListener('click', ()=> setAllCoachSubsecsCollapsed(false));
+  if(prCoachCollapseAllBtn) prCoachCollapseAllBtn.addEventListener('click', ()=> setAllPitchCoachSubsecsCollapsed(true));
+  if(prCoachExpandAllBtn) prCoachExpandAllBtn.addEventListener('click', ()=> setAllPitchCoachSubsecsCollapsed(false));
 
   // Coach Review (paste code → modal table + playback)
   const coachReviewModal = document.getElementById('coachReviewModal');
@@ -4992,7 +5052,22 @@ wireSeqBuilderOnce();
   }
 
   if (coachBtn) coachBtn.addEventListener('click', ()=>{
-    // Always reset the situation when the Coach Tools button is clicked
+    const pitchMode = document.body.classList.contains('mode-pitch');
+
+    if(pitchMode){
+      // Pitch Recognition: open/close the Pitch Coach Tools card (only after unlock)
+      const prCoachCardEl = document.getElementById('prCoachCard');
+      if (prCoachUnlocked){
+        prCoachOpen = !prCoachOpen;
+        if (prCoachCardEl) prCoachCardEl.classList.toggle('hidden', !(prCoachUnlocked && prCoachOpen));
+      } else {
+        _coachUnlockReqPitch = true;
+        openPwModal();
+      }
+      return;
+    }
+
+    // Fielding behavior (unchanged): reset situation when opening Coach Tools
     resetPlayers();
 
     if (coachUnlocked){
@@ -5020,6 +5095,16 @@ wireSeqBuilderOnce();
       if (coachCard) coachCard.classList.add('hidden');
     }
   });
+
+  // Close button on Pitch Recognition Coach Tools card
+  if (prCoachCardCloseBtn) prCoachCardCloseBtn.addEventListener('click', ()=>{
+    // Hide Pitch Recognition Coach Tools until explicitly opened again.
+    prCoachOpen = false;
+    prCoachUnlocked = false; // require password next time
+    const prCoachCardEl = document.getElementById('prCoachCard');
+    if (prCoachCardEl) prCoachCardEl.classList.add('hidden');
+  });
+
 
 
   // --- Admin button / modal (separate password) ---
@@ -5222,6 +5307,9 @@ let _allTargetsCorrect = false;
 let _phase1Summary = null; // { ok:boolean, triesUsed:number, elapsed:number, ts:number }
 
 let coachUnlocked = false;
+let prCoachOpen = false; // Pitch Coach Tools visibility (only opens via Coach Tools button)
+let prCoachUnlocked = false; // Pitch Coach Tools requires password each time it is opened
+let _coachUnlockReqPitch = false; // set when Coach Tools clicked in pitch mode while locked
 
 // Situation Builder edit history (Undo/Redo, per-situation; 10-step)
 const SB_HISTORY_MAX = 10;
@@ -6569,14 +6657,39 @@ function setBadgeState(el, state /* 'green'|'yellow'|'red' */, base){
 }
 
 function setCoachMode(enabled){
+  const pitchMode = document.body.classList.contains('mode-pitch');
   coachUnlocked = !!enabled;
-  coachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
-  coachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
 
-  // Ensure Coach Tools panel is only visible when unlocked
-  if (typeof coachCard !== 'undefined' && coachCard){
-    if (coachUnlocked) coachCard.classList.remove('hidden');
-    else coachCard.classList.add('hidden');
+  // Update status labels (fielding + pitch)
+  if(typeof coachStatus !== 'undefined' && coachStatus){
+    coachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
+    coachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
+  }
+  const prCoachStatus = document.getElementById('prCoachStatus');
+  if(prCoachStatus){
+    prCoachStatus.textContent = coachUnlocked ? 'unlocked' : 'locked';
+    prCoachStatus.style.color = coachUnlocked ? '#16a34a' : '#64748b';
+  }
+
+  // Show the appropriate Coach Tools card for the current mode
+  const coachCardEl = (typeof coachCard !== 'undefined') ? coachCard : document.getElementById('coachCard');
+  const prCoachCardEl = document.getElementById('prCoachCard');
+
+  if(pitchMode){
+    if(coachCardEl) coachCardEl.classList.add('hidden');
+    if(prCoachCardEl){
+      // In Pitch mode, coach tools panel should only appear when explicitly opened via Coach Tools button.
+      // Unlocking alone should not auto-open it.
+      prCoachCardEl.classList.toggle('hidden', !(coachUnlocked && prCoachOpen));
+    }
+    // Do NOT run fielding chip/target side effects while in Pitch Recognition.
+    return;
+  }
+
+  // Fielding Coach Tools behavior (original)
+  if (coachCardEl){
+    if (coachUnlocked) coachCardEl.classList.remove('hidden');
+    else coachCardEl.classList.add('hidden');
   }
 
   if (coachUnlocked) setChipsLocked(false); else setChipsLocked(!gameActive || remainingTries===0);
@@ -6591,9 +6704,26 @@ function setCoachMode(enabled){
     try{ window._diqCoachReviewAutoload(); }catch(e){}
   }
 }
+
 function openPwModal(){ pwModal.style.display='flex'; pwMsg.textContent=''; pwInput.value=''; pwInput.focus(); }
-function closePwModal(){ pwModal.style.display='none'; }
-function tryUnlock(){ if(pwInput.value===CALIB_PASSWORD){ closePwModal(); setCoachMode(true); } else { pwMsg.textContent='Incorrect password.'; } }
+function closePwModal(resetReq=true){ pwModal.style.display='none'; if(resetReq) _coachUnlockReqPitch = false; }
+function tryUnlock(){
+  const pitchMode = document.body.classList.contains('mode-pitch');
+  if(pwInput.value===COACH_PASSWORD){
+    closePwModal(false);
+    // Unlock coach tools; in Pitch mode, open the Pitch Coach Tools card only if the user initiated unlock via the Coach Tools button.
+    setCoachMode(true);
+    if(pitchMode && _coachUnlockReqPitch){
+      prCoachUnlocked = true;
+      prCoachOpen = true;
+      const prCoachCardEl = document.getElementById('prCoachCard');
+      if(prCoachCardEl) prCoachCardEl.classList.remove('hidden');
+    }
+    _coachUnlockReqPitch = false;
+  } else {
+    pwMsg.textContent='Incorrect password.';
+  }
+}
 
 // @diq:end [A7]
 /// @diq:begin [A8] Situations I/O & helpers
@@ -7972,6 +8102,90 @@ function setAllCoachSubsecsCollapsed(collapsed){
   });
   _saveCoachCollapseMap(map);
 }
+// Pitch Recognition Coach Tools collapsible sections (separate card + separate storage)
+const _PITCH_COACH_COLLAPSE_KEY = "diq_pitch_coach_collapse_map_v1";
+function _loadPitchCoachCollapseMap(){
+  try{ return JSON.parse(localStorage.getItem(_PITCH_COACH_COLLAPSE_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function _savePitchCoachCollapseMap(map){
+  try{ localStorage.setItem(_PITCH_COACH_COLLAPSE_KEY, JSON.stringify(map || {})); }catch(e){}
+}
+
+function initPitchCoachToolsCollapsibles(){
+  const card = document.getElementById("prCoachCard");
+  if(!card) return;
+
+  const map = _loadPitchCoachCollapseMap();
+  const subsecs = Array.from(card.querySelectorAll(".subsec"));
+  subsecs.forEach(subsec=>{
+    const already = (subsec.dataset.diqCollapsible === "1");
+    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
+    if(!header) return;
+
+    if(already){
+      subsec.classList.add("diq-collapsible");
+      if(!header.querySelector(".diq-chevron")){
+        const chev = document.createElement("span");
+        chev.className = "diq-chevron";
+        chev.textContent = "▾";
+        header.appendChild(chev);
+      }
+      let body = subsec.querySelector(":scope > .diq-body");
+      if(!body){
+        body = document.createElement("div");
+        body.className = "diq-body";
+        const kids = Array.from(subsec.children);
+        kids.forEach(el=>{ if(el!==header) body.appendChild(el); });
+        subsec.appendChild(body);
+      }
+    } else {
+      subsec.dataset.diqCollapsible = "1";
+      subsec.classList.add("diq-collapsible");
+      const chev = document.createElement("span");
+      chev.className = "diq-chevron";
+      chev.textContent = "▾";
+      header.appendChild(chev);
+
+      const body = document.createElement("div");
+      body.className = "diq-body";
+      const kids = Array.from(subsec.children);
+      kids.forEach(el=>{ if(el === header) return; body.appendChild(el); });
+      subsec.appendChild(body);
+    }
+
+    const key = subsec.id || (header.textContent || "").trim() || ("pr_subsec_" + Math.random());
+    const defaultCollapsed = true; // Pitch coach subsecs collapsed by default
+    const collapsed = (key in map) ? !!map[key] : defaultCollapsed;
+    if(collapsed) subsec.classList.add("diq-collapsed");
+
+    if(subsec.dataset.diqClickWired !== "1"){
+      subsec.dataset.diqClickWired = "1";
+      header.addEventListener("click", ()=>{
+        subsec.classList.toggle("diq-collapsed");
+        map[key] = subsec.classList.contains("diq-collapsed");
+        _savePitchCoachCollapseMap(map);
+      });
+    }
+  });
+}
+
+function setAllPitchCoachSubsecsCollapsed(collapsed){
+  const card = document.getElementById("prCoachCard");
+  if(!card) return;
+  const map = _loadPitchCoachCollapseMap();
+  const subsecs = Array.from(card.querySelectorAll(".subsec.diq-collapsible"));
+  subsecs.forEach(subsec=>{
+    const header = subsec.querySelector(":scope > .title") || subsec.querySelector(":scope > .sectionTitle");
+    const key = subsec.id || (header && header.textContent ? header.textContent.trim() : "");
+    if(!key) return;
+    if(collapsed) subsec.classList.add("diq-collapsed");
+    else subsec.classList.remove("diq-collapsed");
+    map[key] = !!collapsed;
+  });
+  _savePitchCoachCollapseMap(map);
+}
+
+
 
 /* @diq:begin [MODE-200] Fielding vs Pitch Recognition mode + embedded Pitch Recognition MVP */
 const DIQ_MODE_KEY = "diq_app_mode_v1"; // "fielding" | "pitch"
@@ -8009,6 +8223,8 @@ const DIQMode = (function(){
     // Explicit display toggles (in addition to CSS) so layout calculations are correct.
     if(e.drillCard){ const _loggedNow = (window.isPlayerLoggedInNow ? window.isPlayerLoggedInNow() : false); e.drillCard.classList.toggle("prLocked", pitch && !_loggedNow); e.drillCard.style.display = (pitch && _loggedNow) ? "block" : "none"; }
     if(e.pitchStage) e.pitchStage.style.display = pitch ? "grid" : "none";
+    // Keep Pitch Coach Tools card hidden when not in pitch mode
+    if(!pitch){ const prCoachCard = document.getElementById("prCoachCard"); if(prCoachCard) prCoachCard.classList.add("hidden"); }
 
     // If not logged in, show Pitch Recognition as locked (no drill controls)
     if(pitch){
@@ -8026,8 +8242,10 @@ const DIQMode = (function(){
       }
       const bStart = document.getElementById("prBtnStart");
       const bRes = document.getElementById("prBtnResume");
+      const bEnd = document.getElementById("prBtnEnd");
       if(bStart) bStart.disabled = !logged;
       if(bRes) bRes.disabled = !logged;
+      if(bEnd) bEnd.disabled = !logged;
     }
 
     if(e.fieldingStage) e.fieldingStage.style.display = pitch ? "none" : "block";
@@ -8110,7 +8328,9 @@ const PR = (function(){
   const state = {
     drill_id: "d_fb_ch",
     cfg: { rounds:20, show_ms:1400, lock_ms:300, inter_ms:650 },
-    round: null
+    round: null,
+    animToken: 0,
+    animRaf: 0
   };
 
   const ui = {};
@@ -8203,6 +8423,7 @@ const PR = (function(){
     ui.btnStart = document.getElementById("prBtnStart");
     ui.btnResume = document.getElementById("prBtnResume");
     ui.btnReset = document.getElementById("prBtnReset");
+    ui.btnEnd = document.getElementById("prBtnEnd");
 
     ui.canvas = document.getElementById("prCanvas");
     ui.ansGrid = document.getElementById("prAnsGrid");
@@ -8242,6 +8463,7 @@ const PR = (function(){
     if(ui.btnStart) ui.btnStart.addEventListener("click", startRound);
     if(ui.btnResume) ui.btnResume.addEventListener("click", resumeRound);
     if(ui.btnReset) ui.btnReset.addEventListener("click", resetRound);
+    if(ui.btnEnd) ui.btnEnd.addEventListener("click", endRound);
 
     setupCanvas();
   }
@@ -8278,9 +8500,11 @@ const PR = (function(){
       if(ui.hudRt) ui.hudRt.textContent = "Avg RT: —";
       if(ui.hudTimer) ui.hudTimer.textContent = "Ready";
       if(ui.btnResume) ui.btnResume.disabled = true;
+      if(ui.btnEnd) ui.btnEnd.disabled = true;
       return;
     }
     if(ui.btnResume) ui.btnResume.disabled = false;
+    if(ui.btnEnd) ui.btnEnd.disabled = false;
 
     if(ui.hudScore) ui.hudScore.textContent = `${r.correct} / ${r.answered}`;
     const acc = r.answered ? (r.correct/r.answered) : null;
@@ -8408,6 +8632,7 @@ const PR = (function(){
 
   function endRound(){
     stopTimers();
+    stopStimulus();
     const r = state.round;
     if(r) r.active = false;
     state.round = null;
@@ -8582,6 +8807,10 @@ const PR = (function(){
     const ctx = ui.canvas.getContext("2d");
     const {w,h} = getCanvasCSSSize();
 
+    // Each stimulus run gets a token so we can cancel cleanly (e.g., when ending a round).
+    const token = ++state.animToken;
+    if(state.animRaf){ cancelAnimationFrame(state.animRaf); state.animRaf = 0; }
+
     const start = performance.now();
     const dur = Math.max(240, Math.round(showMs * 16.0)); // slow, training-friendly
     const smooth = (t)=> t*t*(3 - 2*t);
@@ -8616,6 +8845,13 @@ const PR = (function(){
     }
 
     function frame(tNow){
+      // Stop animation if this run was cancelled or the round is no longer active.
+      if(token !== state.animToken || !(state.round && state.round.active)){
+        state.animRaf = 0;
+        ctx.clearRect(0,0,w,h);
+        drawIdle(false);
+        return;
+      }
       const raw = clamp((tNow - start)/dur, 0, 1);
       const u = smooth(raw);
 
@@ -8663,12 +8899,26 @@ const PR = (function(){
       ctx.restore();
 
       if(raw < 1){
-        requestAnimationFrame(frame);
+        state.animRaf = requestAnimationFrame(frame);
       }else{
+        state.animRaf = 0;
         done && done();
       }
     }
-    requestAnimationFrame(frame);
+    state.animRaf = requestAnimationFrame(frame);
+  }
+
+
+  function stopStimulus(){
+    // Cancel any in-flight animation and reset to idle.
+    state.animToken++;
+    if(state.animRaf){ cancelAnimationFrame(state.animRaf); state.animRaf = 0; }
+    if(ui.canvas){
+      const ctx = ui.canvas.getContext("2d");
+      const {w,h} = getCanvasCSSSize();
+      ctx.clearRect(0,0,w,h);
+      drawIdle(false);
+    }
   }
 
   function refreshAll(){
