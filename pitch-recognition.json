@@ -26,7 +26,7 @@
       "pitch_set_id": "set_fb_ch",
       "defaults": {
         "rounds": 20,
-        "show_ms": 1400,
+        "show_ms": 200,
         "lock_ms": 300,
         "inter_ms": 650
       }
