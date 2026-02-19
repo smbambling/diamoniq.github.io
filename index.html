@@ -887,8 +887,8 @@ body.mode-pitch .prHudRow{ display:flex !important; }
       <input id="prRoundsInp" type="number" min="5" max="100" step="1" />
     </div>
     <div class="fieldHline">
-      <label for="prShowMsInp">Show (ms)</label>
-      <input id="prShowMsInp" type="number" min="80" max="2500" step="10" />
+      <label for="prShowMsInp">Pitch Speed (ms)</label>
+      <input id="prShowMsInp" type="number" min="80" max="2500" step="10" value="200" />
     </div>
     <div class="fieldHline">
       <label for="prLockMsInp">Lock (ms)</label>
@@ -1212,8 +1212,8 @@ body.mode-pitch .prHudRow{ display:flex !important; }
 
           <div class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
             <label class="field fieldHline">
-              <span>Show Time (ms)</span>
-              <input id="prDrillShowMsInput" class="input" type="number" min="100" step="50" value="1400">
+              <span>Pitch Speed (ms)</span>
+              <input id="prDrillShowMsInput" class="input" type="number" min="100" step="50" value="200">
             </label>
             <label class="field fieldHline">
               <span>Pitches</span>
@@ -8311,7 +8311,7 @@ const PR = (function(){
     ],
     drills: [
       { id:"d_fb_ch", name:"FB vs CH", pitch_set_id:"set_fb_ch",
-        defaults:{ rounds:20, show_ms:1400, lock_ms:300, inter_ms:650 }
+        defaults:{ rounds:20, show_ms:200, lock_ms:300, inter_ms:650 }
       },
       { id:"d_mix4", name:"Mix 4", pitch_set_id:"set_mix4",
         defaults:{ rounds:25, show_ms:1300, lock_ms:300, inter_ms:650 }
@@ -8327,7 +8327,7 @@ const PR = (function(){
 
   const state = {
     drill_id: "d_fb_ch",
-    cfg: { rounds:20, show_ms:1400, lock_ms:300, inter_ms:650 },
+    cfg: { rounds:20, show_ms:200, lock_ms:300, inter_ms:650 },
     round: null,
     animToken: 0,
     animRaf: 0
@@ -8486,6 +8486,7 @@ const PR = (function(){
     const d = byId(data.drills, state.drill_id);
     if(!d) return;
     state.cfg = {...d.defaults};
+    if(state.cfg.show_ms==null) state.cfg.show_ms=200;
     if(ui.roundsInp) ui.roundsInp.value = String(state.cfg.rounds);
     if(ui.showMsInp) ui.showMsInp.value = String(state.cfg.show_ms);
     if(ui.lockMsInp) ui.lockMsInp.value = String(state.cfg.lock_ms);

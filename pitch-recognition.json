@@ -37,7 +37,7 @@
       "pitch_set_id": "set_mix4",
       "defaults": {
         "rounds": 25,
-        "show_ms": 1300,
+        "show_ms": 200,
         "lock_ms": 300,
         "inter_ms": 650
       }
